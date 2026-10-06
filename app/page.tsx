@@ -39,7 +39,7 @@ export default function Home() {
         </header>
 
         <section className="dashboardHero ravsCinematicHero">
-          <img className="ravsHeroPhoto" src="/brand/website-header-rain.webp" alt="" aria-hidden="true" fetchPriority="high" width={1920} height={800} />
+          <img className="ravsHeroPhoto" src="/brand/website-header-real-wet.webp" alt="" aria-hidden="true" fetchPriority="high" width={1920} height={800} />
           <div className="ravsHeroShade" aria-hidden="true" />
           <div className="heroInner">
             <div className="eyebrow"><Sparkles size={14} /> Монгол хэл дээрх AI бүтээлч студи</div>
