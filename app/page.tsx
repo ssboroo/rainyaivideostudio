@@ -10,6 +10,7 @@ import {
   WandSparkles,
 } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
+import { RavsWordmark } from "@/components/ravs-logo";
 import { VideoShowcase } from "@/components/video-showcase";
 import { TrendShowcase } from "@/components/trend-showcase";
 import { CommunityInspiration } from "@/components/community-inspiration";
@@ -24,8 +25,8 @@ export default function Home() {
       <Sidebar />
       <section className="content productHome">
         <header className="topbar">
-          <div className="topBrand">
-            <b>RAVS</b>
+          <div className="topBrand ravsTopBrand">
+            <RavsWordmark className="ravsTopWordmark" />
             <span>AI Creative Suite</span>
           </div>
           <div className="topActions">
