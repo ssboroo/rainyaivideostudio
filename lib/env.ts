@@ -10,11 +10,11 @@ export const env = {
   generationRateLimit: () => intEnv("GENERATION_RATE_LIMIT_PER_MINUTE", 6),
   higgsfieldBaseUrl: () => (process.env.HIGGSFIELD_BASE_URL || "https://api.higgsfield.ai").replace(/\/$/, ""),
   higgsfieldCredentials: () => process.env.HF_CREDENTIALS || "",
-  qpayEnv: () => (process.env.QPAY_ENV || "sandbox").toLowerCase(),
-  qpayClientId: () => process.env.QPAY_CLIENT_ID || "",
-  qpayClientSecret: () => process.env.QPAY_CLIENT_SECRET || "",
-  qpayInvoiceCode: () => process.env.QPAY_INVOICE_CODE || "",
-  qpayCallbackSecret: () => process.env.QPAY_CALLBACK_SECRET || ""
+  wireApiUrl: () => (process.env.WIRE_MN_API_URL || "https://api.wire.mn/v1").replace(/\/$/, ""),
+  wireApiKey: () => (process.env.WIRE_MN_API_KEY || "").trim(),
+  wireWebhookSecret: () => (process.env.WIRE_MN_WEBHOOK_SECRET || "").trim(),
+  wireAllowedOperators: () => (process.env.WIRE_MN_ALLOWED_OPERATORS || "").split(",").map(v => v.trim()).filter(Boolean),
+  wireWebhookAllowedIps: () => (process.env.WIRE_MN_WEBHOOK_ALLOWED_IPS || "").split(",").map(v => v.trim()).filter(Boolean)
 };
 export function assertRuntimeConfig() {
   const missing: string[] = [];

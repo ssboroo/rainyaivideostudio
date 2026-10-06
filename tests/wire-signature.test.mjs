@@ -1,0 +1,10 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import crypto from "node:crypto";
+process.env.WIRE_MN_WEBHOOK_SECRET="whsec_local_test_only";
+const {verifyWebhookSignature,mapIntentStatus,toMinorUnits}=await import("../lib/wire.ts");
+const body=JSON.stringify({type:"endpoint.verification"}),secret=process.env.WIRE_MN_WEBHOOK_SECRET;
+const sign=(ts,payload=body)=>`t=${ts},v1=${crypto.createHmac("sha256",secret).update(`${ts}.${payload}`).digest("hex")}`;
+test("Wire signature validates documented format",()=>{const now=Math.floor(Date.now()/1000);assert.equal(verifyWebhookSignature(body,sign(now)),true);assert.equal(verifyWebhookSignature(body+" ",sign(now)),false)});
+test("Wire signature rejects stale deliveries",()=>{const now=Math.floor(Date.now()/1000);assert.equal(verifyWebhookSignature(body,sign(now-301)),false);assert.equal(verifyWebhookSignature(body,sign(now+301)),false)});
+test("Wire MNT and status mapping",()=>{assert.equal(toMinorUnits(500),500);assert.equal(mapIntentStatus("requires_payment_method"),"PENDING");assert.equal(mapIntentStatus("succeeded"),"PAID");assert.equal(mapIntentStatus("expired"),"CANCELED")});

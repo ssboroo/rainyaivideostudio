@@ -93,7 +93,7 @@ model CreditLedger {
 model Payment {
   id           String        @id @default(cuid())
   userId       String
-  provider     String        @default("qpay")
+  provider     String        @default("wire")
   packageId    String
   amountMnt    Int
   credits      Int
