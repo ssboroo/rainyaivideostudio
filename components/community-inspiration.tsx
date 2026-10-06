@@ -27,22 +27,6 @@ function CommunityMedia({ item }: { item: CommunityItem }) {
     return () => { alive = false; };
   }, [item.sourceHref]);
 
-  if (meta.video && !videoFailed) {
-    return (
-      <video
-        className="communityVideo"
-        src={meta.video}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        poster={meta.image || undefined}
-        onError={() => setVideoFailed(true)}
-      />
-    );
-  }
-
   if (meta.image) {
     return <img className="communityPoster" src={meta.image} alt={item.title + " preview"} loading="lazy" />;
   }
