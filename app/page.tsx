@@ -12,6 +12,7 @@ import {
 import { Sidebar } from "@/components/sidebar";
 import { VideoShowcase } from "@/components/video-showcase";
 import { TrendShowcase } from "@/components/trend-showcase";
+import { CommunityInspiration } from "@/components/community-inspiration";
 import { promptPresets, workflows } from "@/lib/product";
 import { models } from "@/lib/models";
 
@@ -97,6 +98,7 @@ export default function Home() {
 
         <VideoShowcase compact />
 
+        <CommunityInspiration surface="home" title="Community дээр хүмүүс юу бүтээж байна?" />
         <section className="productSection splitSection">
           <div>
             <div className="sectionTitleRow compact">

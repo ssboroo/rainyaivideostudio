@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Compass, Sparkles } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
+import { CommunityInspiration } from "@/components/community-inspiration";
 import { promptPresets, workflows } from "@/lib/product";
 import { models } from "@/lib/models";
 
@@ -21,6 +22,7 @@ export default function ExplorePage() {
             <p>Workflow, prompt preset болон verified API model-уудаас өөрийн ажлын хамгийн хурдан замыг сонго.</p>
           </div>
 
+          <CommunityInspiration surface="explore" title="Explore community projects" />
           <div className="catalogSection">
             <div className="sectionTitleRow compact"><div><small>WORKFLOWS</small><h2>Creative workflow</h2></div></div>
             <div className="workflowGrid">

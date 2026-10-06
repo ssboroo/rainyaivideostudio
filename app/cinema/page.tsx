@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Aperture, ArrowRight, Clock3, Film, Layers3, SlidersHorizontal } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
+import { CommunityInspiration } from "@/components/community-inspiration";
 
 const features = [
   [Clock3, "30 секунд", "Нэг generation дотор scene-ийн beat хөгжих хангалттай хугацаа."],
@@ -24,6 +25,7 @@ export default function CinemaPage() {
             <div className="cinemaFrames" aria-hidden><div/><div/><div/></div>
           </div>
           <div className="featureGrid">{features.map(([Icon,title,desc])=><div className="featureCell" key={title}><Icon/><b>{title}</b><p>{desc}</p></div>)}</div>
+          <CommunityInspiration surface="cinema" title="Community film inspiration" />
           <div className="featureCallout"><div><small>WORKFLOW</small><h2>Reference → Direction → Generate → Remix</h2><p>RAVS generation history-д бүх result үлдэнэ. Completed result-оо татах, дахин prompt болгох, өөр model-р үргэлжлүүлэхэд бэлэн.</p></div><Link href="/studio?model=cinema-studio-4" className="primary">Эхлэх <ArrowRight size={15}/></Link></div>
         </section>
       </section>

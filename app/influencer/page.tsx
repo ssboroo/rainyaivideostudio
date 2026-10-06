@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, ScanFace, Sparkles, Upload, WandSparkles } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
+import { CommunityInspiration } from "@/components/community-inspiration";
 
 export default function InfluencerPage() {
   return (
@@ -25,6 +26,7 @@ export default function InfluencerPage() {
             <div className="featureCell"><b>Bold</b><p>Feed дээр ялгарах ч approachable character direction.</p></div>
             <div className="featureCell"><b>Extreme</b><p>Meme, comedy, sketch, highly distinctive character direction.</p></div>
           </div>
+          <CommunityInspiration surface="influencer" title="Creator & character inspiration" />
         </section>
       </section>
     </main>
