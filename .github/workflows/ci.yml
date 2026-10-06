@@ -21,6 +21,7 @@ jobs:
       - name: Production dependency audit
         run: npm run audit:prod
       - run: npm run check
+      - run: npm test
       - run: npm run build
       - name: Verify Railway Docker image builds
         run: docker build -t ravs:ci .
