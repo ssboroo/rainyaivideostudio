@@ -88,14 +88,6 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="sidebarPromo">
-        <div className="promoIcon"><RavsLogo compact /></div>
-        <div>
-          <b>Нэг студи</b>
-          <small>Видео · Зураг · Зар</small>
-        </div>
-      </div>
-
       <div className="sidebarFoot">
         <div className="avatar"><RavsLogo compact /></div>
         <div>

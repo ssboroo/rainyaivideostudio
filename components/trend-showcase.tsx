@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { DemoPlayer } from "@/components/demo-player";
 import { ArrowRight, TrendingUp } from "lucide-react";
 import { trendDemos } from "@/lib/trend-demos";
@@ -10,7 +11,10 @@ function TrendMedia({item}:{item:(typeof trendDemos)[number]}) {
 }
 
 export function TrendShowcase({ compact = false }: { compact?: boolean }) {
-  const items = compact ? trendDemos.slice(0, 4) : trendDemos;
+  const [category,setCategory]=useState("all");
+  const [search,setSearch]=useState("");
+  const matching=trendDemos.filter(item=>(category==="all"||(item.category||"effects")===category)&&[item.title,item.description,item.use].join(" ").toLowerCase().includes(search.toLowerCase().trim()));
+  const items = compact ? trendDemos.slice(0, 8) : matching;
 
   return (
     <section className={compact ? "productSection trendSection" : "catalogPage trendPage"}>
@@ -23,6 +27,8 @@ export function TrendShowcase({ compact = false }: { compact?: boolean }) {
         {compact && <Link href="/trends">Бүгдийг харах <ArrowRight size={15} /></Link>}
       </div>
 
+      {!compact && <div className="videoLibraryToolbar"><div className="videoLibraryFilters">{[["all","Бүгд"],["effects","Эффект"],["genjutsu","Genjutsu"]].map(([value,label])=><button key={value} type="button" aria-pressed={category===value} onClick={()=>setCategory(value)}>{label} · {trendDemos.filter(item=>value==="all"||(item.category||"effects")===value).length}</button>)}</div><input aria-label="Видео жишээ хайх" placeholder="Видео жишээ хайх…" value={search} onChange={event=>setSearch(event.target.value)}/><span>{items.length} жишээ</span></div>}
+      {!compact && items.length===0 && <p className="videoLibraryEmpty">Тохирох жишээ олдсонгүй. Өөр үгээр хайгаарай.</p>}
       <div className={compact ? "trendGrid compact" : "trendGrid"}>
         {items.map((item) => (
           <article className="trendCard" key={item.id}>
@@ -35,7 +41,7 @@ export function TrendShowcase({ compact = false }: { compact?: boolean }) {
               <p>{item.description}</p>
               <div className="trendUse"><b>Юунд тохирох вэ?</b><span>{item.use}</span></div>
               <div className="trendActions">
-                <Link className="primary" href="/apps">Эффект турших <ArrowRight size={12} /></Link>
+                <Link className="primary" href={item.category==="genjutsu"?"/studio?group=Genjutsu":"/apps"}>Бүтээж эхлэх <ArrowRight size={12} /></Link><a className="ghost" href={item.official} target="_blank" rel="noopener noreferrer">Эх сурвалж ↗</a>
               </div>
             </div>
           </article>
