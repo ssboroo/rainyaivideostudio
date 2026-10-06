@@ -4,7 +4,8 @@ import { WorkflowIcon } from "@/components/workflow-icon";
 import { Sidebar } from "@/components/sidebar";
 import { CommunityInspiration } from "@/components/community-inspiration";
 import { promptPresets, workflows } from "@/lib/product";
-import { models } from "@/lib/models";
+import { ModelCatalog } from "@/components/model-catalog";
+import { MediaSizeGuide } from "@/components/model-guide";
 
 export default function ExplorePage() {
   return (
@@ -12,7 +13,7 @@ export default function ExplorePage() {
       <Sidebar />
       <section className="content">
         <header className="topbar">
-          <div><b>Explore</b><span>Хэрэгсэл, бэлэн санаа, AI загвар</span></div>
+          <div><b>Бүтээлийн сан</b><span>Хэрэгсэл, бэлэн санаа, AI загвар</span></div>
           <Link href="/studio" className="primary">Studio нээх</Link>
         </header>
 
@@ -55,18 +56,8 @@ export default function ExplorePage() {
             </div>
           </div>
 
-          <div className="catalogSection">
-            <div className="sectionTitleRow compact"><div><small>AI ЗАГВАРУУД</small><h2>Model-ууд</h2></div></div>
-            <div className="catalogModelGrid">
-              {models.map((model) => (
-                <Link href={"/studio?model=" + model.slug} className="catalogModel" key={model.slug}>
-                  <div className={"modelGlyph large tone-" + (model.tone || "violet")}><WorkflowIcon id={model.slug} size={26}/></div>
-                  <div><small>{model.maker || model.provider}</small><h3>{model.name}</h3><p>{model.description}</p></div>
-                  <div className="catalogModelMeta"><span>{model.badge}</span><span>{model.creditRate}{model.pricingType === "second" ? "/сек" : ""} cr</span></div>
-                </Link>
-              ))}
-            </div>
-          </div>
+          <ModelCatalog />
+          <MediaSizeGuide />
         </section>
       </section>
     </main>

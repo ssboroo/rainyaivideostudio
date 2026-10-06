@@ -206,8 +206,9 @@ function enrichModel(model:RavsModel):RavsModel {
  const fields=spec?.parameters||[];
  const field=(name:string)=>fields.find(f=>f.name===name);
  const duration=field("duration");
+ const maxReferences=model.modelId.startsWith("marketing-studio/")?16:model.slug==="genjutsu-restyle"?5:model.slug==="qwen-image-3-edit"?3:model.maxReferences||8;
  const ordered=(f:HfParameter|undefined,fallback:string[])=>f?.options?[(String(f.default)),...f.options].filter((x,i,a)=>f.options!.includes(x)&&a.indexOf(x)===i):typeof f?.default==="string"?[f.default]:fallback;
- return {...model,apiVerified:!!spec?.verified,badge:spec?.verified?model.badge:"API ШАЛГАЖ БАЙНА",apiReason:spec?.reason||"API баримтыг баталгаажуулж байна.",apiSource:spec?.source,parameters:fields,
+ return {...model,maxReferences,apiVerified:!!spec?.verified,badge:spec?.verified?model.badge:"API ШАЛГАЖ БАЙНА",apiReason:spec?.verified?"":"Энэ хувилбарын API баримт эсвэл холболтын шаардлага бүрэн баталгаажаагүй. Параметртэй өөр хувилбар сонгоно уу.",apiSource:spec?.source,parameters:fields,
   resolutions:ordered(field("resolution"),["auto"]),aspectRatios:ordered(field("aspect_ratio"),["auto"]),
   minDuration:duration?(duration.minimum||Math.min(...(duration.options?.map(Number)||[Number(duration.default)||5]))):undefined,
   maxDuration:duration?(duration.maximum||Math.max(...(duration.options?.map(Number)||[Number(duration.default)||5]))):undefined,
@@ -220,9 +221,9 @@ function enrichModel(model:RavsModel):RavsModel {
 }
 // Keep stable website slugs; canonical endpoint IDs come from model-specific docs.
 export const models:RavsModel[]=[...existingModels.map(m=>({...m,modelId:m.slug==="genjutsu-motion"?"higgsfield/genjutsu/motion-transfer/v1.0":m.modelId})),
- ...hfModelSpecs.filter(s=>!existingModels.some(m=>(m.slug==="genjutsu-motion"?"higgsfield/genjutsu/motion-transfer/v1.0":m.modelId)===s.id)).map((s):RavsModel=>{
+ ...hfModelSpecs.filter(s=>s.id!=="higgsfield/genjutsu/object-swap/v1.0"&&!existingModels.some(m=>(m.slug==="genjutsu-motion"?"higgsfield/genjutsu/motion-transfer/v1.0":m.modelId)===s.id)).map((s):RavsModel=>{
  const image=/text-to-image|image-to-image|soul|qwen|z-image|ideogram|recraft|grok-imagine-image|marketing-studio|ai-influencer/.test(s.id);
- return {slug:s.id.replace(/[^a-z0-9]+/gi,"-"),name:s.name+(/text-to-video/.test(s.id)&&!/text to video/i.test(s.name)?" · Текст → Видео":""),provider:"Higgsfield API",maker:s.id.split('/')[0],modelId:s.id,kind:image?"image":"video",group:image?"Зураг":"Видео",badge:s.verified?"API":"БАТАЛГААЖУУЛАХ",description:image?"Тайлбар, жишиг материалаар зураг бүтээх загвар.":"Тайлбар, жишиг материалаар видео бүтээх загвар.",pricingType:image?"flat":"second",creditRate:image?120:720,resolutions:["auto"],aspectRatios:["auto"],maxReferences:8};
+ return {slug:s.id.replace(/[^a-z0-9]+/gi,"-"),name:(s.id==="marketing-studio/image/flare"?"Marketing Studio 2.5 Flare":s.id==="marketing-studio/image/sunburst"?"Marketing Studio 2.5 Sunburst":s.name)+(/text-to-video/.test(s.id)&&!/text to video/i.test(s.name)?" · Текст → Видео":""),provider:"Higgsfield API",maker:s.id.split('/')[0],modelId:s.id,kind:image?"image":/motion-control|motion-transfer|video-edit|video-extend|restyle|object-swap/.test(s.id)?"workflow":"video",group:image?"Зураг":/motion-control/.test(s.id)?"Motion":/video-edit|video-extend/.test(s.id)?"Видео засвар":"Видео",badge:s.verified?"API":"БАТАЛГААЖУУЛАХ",description:image?"Тайлбар, жишиг материалаар зураг бүтээх загвар.":"Тайлбар, жишиг материалаар видео бүтээх загвар.",pricingType:image?"flat":"second",creditRate:image?120:720,resolutions:["auto"],aspectRatios:["auto"],maxReferences:8};
  })].map(enrichModel);
 
 export const getModel = (slug: string) => models.find((model) => model.slug === slug);
@@ -288,7 +289,7 @@ function validateParameter(field:HfParameter,value:unknown):unknown {
 export function buildProviderInput(model:RavsModel,raw:Record<string,unknown>){
  if(!model.apiVerified)throw new Error(model.apiReason||"Энэ загварын API холболтыг баталгаажуулж байна.");
  const extra=objectValue(raw.modelOptions);
- if(Array.isArray(raw.referenceUrls)&&raw.referenceUrls.length>(model.maxReferences||8))throw new Error("Жишиг материалын тоо хэтэрсэн байна.");
+ if(Array.isArray(raw.referenceUrls)&&raw.referenceUrls.length+(raw.imageUrl?1:0)>(model.maxReferences||8))throw new Error("Жишиг материалын тоо хэтэрсэн байна.");
  const image=url(raw.imageUrl),video=url(raw.videoUrl),refs=urls(raw.referenceUrls,model.maxReferences||8);
  const candidates:Record<string,unknown>={
   prompt:typeof raw.prompt==="string"?raw.prompt.trim():undefined,
@@ -304,7 +305,7 @@ export function buildProviderInput(model:RavsModel,raw:Record<string,unknown>){
   if(value===undefined||value===""&&!field.required)value=field.default;
   value=validateParameter(field,value);if(value!==undefined)input[field.name]=value;
  }
- if(model.slug==="marketing-studio"&&input.enhance_prompt&&(!input.preset_id||!(input.image_urls as unknown[])?.length))throw new Error("Зарын хэв маяг болон бүтээгдэхүүний зураг сонгоно уу.");
+ if(model.modelId.startsWith("marketing-studio/image")&&input.enhance_prompt&&(!input.preset_id||!(input.image_urls as unknown[])?.length))throw new Error("Зарын хэв маяг болон бүтээгдэхүүний зураг сонгоно уу.");
  if(model.slug==="qwen-image-3"||model.slug==="qwen-image-3-edit")if(input.enable_thinking===true&&input.prompt_extend===false)throw new Error("Сэтгэх горимд тайлбар сайжруулалтыг идэвхжүүлнэ үү.");
  if(["genjutsu-motion","genjutsu-object"].includes(model.slug)&&Array.isArray(input.image_urls)&&input.image_urls.length>8)throw new Error("Хамгийн ихдээ 8 жишиг зураг оруулна уу.");
  if(model.slug==="qwen-image-3-edit"&&Array.isArray(input.image_urls)&&input.image_urls.length>3)throw new Error("Хамгийн ихдээ 3 жишиг зураг оруулна уу.");

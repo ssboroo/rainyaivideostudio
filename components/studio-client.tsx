@@ -23,6 +23,8 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
+import { ModelGuide } from "@/components/model-guide";
+import { parameterLabel, parameterHelp, optionLabel, modelGuide, resolutionLabel, aspectLabel } from "@/lib/model-guides";
 import { GenerationResult } from "@/components/generation-result";
 import { WorkflowIcon } from "@/components/workflow-icon";
 import { mediaFrom } from "@/lib/generation-media";
@@ -56,34 +58,22 @@ type ProviderHealth = "checking" | "ready" | "missing";
 function surfaceLabel(kind: ModelKind | "all") {
   if (kind === "video") return "Видео";
   if (kind === "image") return "Зураг";
-  if (kind === "workflow") return "Workflow";
+  if (kind === "workflow") return "Хөдөлгөөн / Засвар";
   return "Бүгд";
 }
 
 function quickPrompts(model: RavsModel) {
-  if (model.slug === "marketing-studio") {
-    return ["Clean product hero shot", "Bold social ad", "Marketplace listing", "Luxury campaign"];
-  }
-  if (model.group === "Genjutsu") {
-    return ["Keep the motion, change the world", "Replace the outfit and product", "Cinematic dark restyle"];
-  }
-  if (model.slug === "ai-influencer") {
-    return ["Монгол төрхтэй modern lifestyle creator", "Clean beauty creator", "Bold street fashion persona"];
-  }
-  if (model.kind === "image") {
-    return ["Editorial portrait", "Premium poster", "Brand campaign", "Cinematic still"];
-  }
-  return ["Cinematic tracking shot", "Fast social reel", "Luxury commercial", "Night city sequence"];
+  return [modelGuide(model).prompt, model.kind === "image" ? "Зөөлөн студийн гэрэл, бодит бүтэц, цэвэр дэвсгэр" : "Камер зөөлөн ойртоно, нэг гол үйлдэл, байгалийн гэрэл"];
 }
 
 function statusText(status: string) {
   const map: Record<string, string> = {
     PENDING: "Хүлээж байна",
-    SUBMITTED: "Queue-д",
+    SUBMITTED: "Дараалалд",
     PROCESSING: "Үүсгэж байна",
     COMPLETED: "Бэлэн",
     FAILED: "Алдаа",
-    NSFW: "Content filter",
+    NSFW: "Агуулгын шүүлтүүр",
     CANCELED: "Цуцлагдсан",
   };
   return map[status] || status;
@@ -151,13 +141,14 @@ export function StudioClient() {
   useEffect(()=>{const queryPrompt=params.get("prompt");if(queryPrompt)setPrompt(queryPrompt);},[params.get("prompt")]);
 
   useEffect(() => {
-    const requestedDuration = Number(params.get("duration"));
+    const requestedDuration = params.has("duration") ? Number(params.get("duration")) : Number(model.parameters?.find(f=>f.name==="duration")?.default || model.minDuration || 5);
     const safeDuration = Number.isFinite(requestedDuration) && model.minDuration && model.maxDuration
       ? Math.max(model.minDuration, Math.min(requestedDuration, model.maxDuration))
       : model.minDuration || 5;
     const requestedAspect = params.get("aspect");
-    setDuration(safeDuration);
+    setDuration(model.durationOptions?.includes(safeDuration)===false ? model.durationOptions[0] : safeDuration);
     setResolution(model.resolutions[0]);
+    setAudio(Boolean(model.parameters?.find(f=>f.name==="generate_audio")?.default ?? (model.parameters?.find(f=>f.name==="sound")?.default !== "off" && model.parameters?.find(f=>f.name==="keep_original_sound")?.default !== "no")));
     setAspect(requestedAspect && model.aspectRatios.includes(requestedAspect) ? requestedAspect : model.aspectRatios[0]);
     setModelOptions({});
     setImageUrl("");
@@ -167,8 +158,9 @@ export function StudioClient() {
     setPresets([]);
     setPresetError("");
     setMessage("");
-    if (model.slug === "genjutsu-restyle") {
-      fetch("/api/catalog/presets?kind=restyle")
+    if (model.slug === "genjutsu-restyle" || model.modelId.startsWith("marketing-studio/image")) {
+      const presetKind = model.slug === "genjutsu-restyle" ? "restyle" : "marketing";
+      fetch("/api/catalog/presets?kind="+presetKind)
         .then((response) => (response.ok ? response.json() : null))
         .then((data) => { const items=Array.isArray(data?.items)?data.items:[];setPresets(items);if(!items.length)setPresetError("Хэв маягийн жагсаалт түр боломжгүй байна. Өөр хэрэгсэл сонгоорой."); })
         .catch(() => setPresetError("Хэв маяг ачаалж чадсангүй."));
@@ -326,14 +318,14 @@ export function StudioClient() {
         <header className="topbar">
           <div className="topBrand">
             <b>RAVS Studio</b>
-            <span>Video · Image · Workflow</span>
+            <span>Видео · Зураг · Засвар</span>
           </div>
           <div className="topActions">
             <span className={"providerDot " + providerHealth}>
               <i />
               {providerHealth === "ready" ? "Үйлчилгээ бэлэн" : providerHealth === "checking" ? "Үйлчилгээ шалгаж байна" : "Үйлчилгээ бэлтгэгдэж байна"}
             </span>
-            <a href="/billing" className="creditPill"><WalletCards size={15} />{user?.credits ?? 0} credit</a>
+            <a href="/billing" className="creditPill"><WalletCards size={15} />{user?.credits ?? 0} кредит</a>
             <button className="ghost" onClick={logout}>Гарах</button>
           </div>
         </header>
@@ -341,12 +333,12 @@ export function StudioClient() {
         <div className="studioV2">
           <aside className="modelBrowser">
             <div className="browserHeader">
-              <b>Models</b>
+              <b>Загварууд</b>
               <span>{visibleModels.length}</span>
             </div>
             <label className="modelSearch">
               <Search size={14} />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Model хайх" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Загвар хайх" />
             </label>
             <div className="surfaceTabs">
               {(["all", "video", "image", "workflow"] as const).map((item) => (
@@ -370,7 +362,7 @@ export function StudioClient() {
                   <span>{item.creditRate}{item.pricingType === "second" ? "/s" : ""}</span>
                 </button>
               ))}
-              {!visibleModels.length && <div className="browserEmpty">Тохирох model олдсонгүй.</div>}
+              {!visibleModels.length && <div className="browserEmpty">Тохирох загвар олдсонгүй.</div>}
             </div>
           </aside>
 
@@ -381,7 +373,7 @@ export function StudioClient() {
                 <h1>{model.name}</h1>
                 <p>{model.description}</p>
               </div>
-              <div className="estimateBadge"><span>Estimate</span><b>{cost} credit</b></div>
+              <div className="estimateBadge"><span>Кредитийн тооцоо</span><b>{cost} кредит</b></div>
             </div>
 
             <div className="composerPanel">
@@ -395,14 +387,14 @@ export function StudioClient() {
                 value={prompt}
                 onChange={(event) => setPrompt(event.target.value)}
                 placeholder={model.requiresPrompt === false
-                  ? "Optional prompt — reference-ээ оруулаад шууд generate хийж болно…"
-                  : "Монгол хэлээр санаагаа бич. Subject, camera, хөдөлгөөн, гэрэл, style-аа хүссэнээрээ тайлбарла…"}
+                  ? "Тайлбар нэмэх эсвэл шаардлагатай жишиг материалаа оруул…"
+                  : "Гол дүр → үйлдэл → камер → гэрэл → орчин. Санаагаа тодорхой бич…"}
               />
 
               <div className="quickPromptRow">
-                {quickPrompts(model).map((item) => (
+                {quickPrompts(model).map((item,index) => (
                   <button key={item} onClick={() => setPrompt((current) => current ? current + ", " + item : item)}>
-                    <Sparkles size={12} /> {item}
+                    <Sparkles size={12} /> {index===0?"Жишээ тайлбар ашиглах":"Бодит гэрэл, хөдөлгөөн нэмэх"}
                   </button>
                 ))}
               </div>
@@ -411,7 +403,7 @@ export function StudioClient() {
                 {model.supportsImage && (
                   <label className={"referenceSlot " + (imageUrl ? "filled" : "")}>
                     <ImagePlus size={17} />
-                    <span>{imageUrl ? "Primary image бэлэн" : "Primary image"}</span>
+                    <span>{imageUrl ? "Эх зураг бэлэн" : "Эх зураг"}</span>
                     <input
                       type="file"
                       disabled={uploading || providerHealth!=="ready"}
@@ -423,7 +415,7 @@ export function StudioClient() {
                 {model.supportsVideo && (
                   <label className={"referenceSlot " + (videoUrl ? "filled" : "")}>
                     <Video size={17} />
-                    <span>{videoUrl ? "Source video бэлэн" : "Source video"}</span>
+                    <span>{videoUrl ? "Эх видео бэлэн" : "Эх видео"}</span>
                     <input
                       type="file"
                       disabled={uploading || providerHealth!=="ready"}
@@ -435,7 +427,7 @@ export function StudioClient() {
                 {model.supportsMultipleReferences && (
                   <label className="referenceSlot">
                     <Upload size={17} />
-                    <span>References {refs.length}/{model.maxReferences || 16}</span>
+                    <span>Жишиг зураг {refs.length}/{model.maxReferences || 16}</span>
                     <input
                       type="file"
                       disabled={uploading || providerHealth!=="ready"}
@@ -445,7 +437,7 @@ export function StudioClient() {
                   </label>
                 )}
                 {!model.supportsImage && !model.supportsVideo && !model.supportsMultipleReferences && (
-                  <div className="referenceHint"><WandSparkles size={16} /> Prompt-only model</div>
+                  <div className="referenceHint"><WandSparkles size={16} /> Тайлбараас бүтээх загвар</div>
                 )}
               </div>
 
@@ -453,13 +445,13 @@ export function StudioClient() {
               <div className="inputPreview">{[imageUrl,...refs].filter(Boolean).map((url,index)=><div key={url+index}><img src={url} alt={`Жишиг зураг ${index+1}`}/><button aria-label="Жишиг зураг хасах" onClick={()=>imageUrl===url?setImageUrl(""):setRefs(current=>current.filter(value=>value!==url))}><X size={12}/></button></div>)}{videoUrl&&<button className="ghost" onClick={()=>setVideoUrl("")}><Video size={14}/> Жишиг видео хасах</button>}</div>
               {presets.length > 0 && (
                 <select className="fullSelect" value={presetId} onChange={(event) => setPresetId(event.target.value)}>
-                  <option value="">Restyle preset сонгох</option>
+                  <option value="">{model.slug === "genjutsu-restyle"?"Видео хэв маяг сонгох":"Зарын хэв маяг · сайжруулалтын горимд"}</option>
                   {presets.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}
                 </select>
               )}
 
               {!model.apiVerified&&<p className="serviceState" role="status">{model.apiReason}</p>}
-              <details className="modelExtraSettings"><summary>Нэмэлт тохиргоо</summary><div className="modelApiFields">{(model.parameters||[]).filter(f=>!["prompt","duration","resolution","aspect_ratio","image_url","video_url","image_urls","video_urls","reference_urls","first_frame_url","start_image_url","generate_audio","sound","keep_original_sound","preset_id"].includes(f.name)).map(f=><label key={f.name}><span>{({fps:"Кадрын хурд",end_image_url:"Төгсгөлийн зураг URL",last_image_url:"Сүүлийн зураг URL",negative_prompt:"Харагдах ёсгүй зүйл",camera_movement:"Камерын хөдөлгөөн",enhance_prompt:"Тайлбар сайжруулах",prompt_extend:"Тайлбар баяжуулах",enable_thinking:"Сэтгэх горим",seed:"Санамсаргүй үр",quality:"Чанарын түвшин",batch_size:"Зургийн тоо",output_format:"Файлын төрөл",rendering_speed:"Үүсгэх хурд",multi_shots:"Олон кадр",aigc_watermark:"AI тэмдэглэгээ",audio_url:"Жишиг дуу URL",audio_urls:"Жишиг дууны холбоосууд",image_weight:"Зургийг хадгалах хүч",cfg_scale:"Тайлбар дагах хүч"} as Record<string,string>)[f.name]||f.name}{f.required?" *":""}</span>{f.options?<select value={String(modelOptions[f.name]??f.default??f.options[0])} onChange={e=>setModelOptions(o=>({...o,[f.name]:/integer|number/.test(f.type)?Number(e.target.value):e.target.value}))}>{f.options.map(v=><option key={v}>{v}</option>)}</select>:f.type.includes("boolean")?<input type="checkbox" checked={Boolean(modelOptions[f.name]??f.default)} onChange={e=>setModelOptions(o=>({...o,[f.name]:e.target.checked}))}/>:f.type.includes("array")||f.type.includes("object")?<textarea placeholder={f.type.includes("object")?"{}":"[]"} aria-label={f.name} onChange={e=>{try{const value=JSON.parse(e.target.value||"null");setModelOptions(o=>({...o,[f.name]:value}));}catch{setModelOptions(o=>({...o,[f.name]:e.target.value}));}}}/>:<input type={/integer|number/.test(f.type)?"number":"text"} min={f.minimum} max={f.maximum} maxLength={f.maxLength} value={String(modelOptions[f.name]??f.default??"")} onChange={e=>setModelOptions(o=>({...o,[f.name]:e.target.value===""?undefined:/integer|number/.test(f.type)?Number(e.target.value):e.target.value}))}/>}</label> )}</div></details>
+              <details className="modelExtraSettings"><summary>Нэмэлт тохиргоо</summary><div className="modelApiFields">{(model.parameters||[]).filter(f=>!["prompt","duration","resolution","aspect_ratio","image_url","video_url","image_urls","video_urls","reference_urls","first_frame_url","start_image_url","generate_audio","sound","keep_original_sound","preset_id"].includes(f.name)).map(f=><label key={f.name}><span>{parameterLabel(f.name)}{f.required?" *":""}</span><small>{parameterHelp(f)}</small>{f.options?<select value={String(modelOptions[f.name]??f.default??"")} onChange={e=>setModelOptions(o=>({...o,[f.name]:e.target.value===""?undefined:/integer|number/.test(f.type)?Number(e.target.value):e.target.value}))}>{f.default===undefined&&<option value="">Үндсэн горим</option>}{f.options.map(v=><option value={v} key={v}>{optionLabel(v)}</option>)}</select>:f.type.includes("boolean")?<input type="checkbox" checked={Boolean(modelOptions[f.name]??f.default)} onChange={e=>setModelOptions(o=>({...o,[f.name]:e.target.checked}))}/>:f.type.includes("array")||f.type.includes("object")?<textarea placeholder={f.type.includes("object")?"{}":"[]"} aria-label={parameterLabel(f.name)} onChange={e=>{try{const value=JSON.parse(e.target.value||"null");setModelOptions(o=>({...o,[f.name]:value}));}catch{setModelOptions(o=>({...o,[f.name]:e.target.value}));}}}/>:<input type={/integer|number/.test(f.type)?"number":"text"} min={f.minimum} max={f.maximum} maxLength={f.maxLength} value={String(modelOptions[f.name]??f.default??"")} onChange={e=>setModelOptions(o=>({...o,[f.name]:e.target.value===""?undefined:/integer|number/.test(f.type)?Number(e.target.value):e.target.value}))}/>}</label> )}</div></details>
               {model.apiSource&&<a className="modelApiSource" href={model.apiSource} target="_blank" rel="noopener noreferrer">Загварын албан заавар ↗</a>}
               <div className="composerBottom">
                 <div className="inlineSettings" id="studio-settings">
@@ -472,21 +464,21 @@ export function StudioClient() {
                       </select>
                     </label>
                   )}
-                  <label>
-                    <span>Чанар</span>
+                  {model.parameters?.some(f=>f.name==="resolution")&&<label>
+                    <span>Нягтаршил</span>
                     <select value={resolution} onChange={(event) => setResolution(event.target.value)}>
-                      {model.resolutions.map((item) => <option key={item}>{item}</option>)}
+                      {model.resolutions.map((item) => <option value={item} key={item}>{optionLabel(item)}</option>)}
                     </select>
-                  </label>
-                  <label>
-                    <span>Харьцаа</span>
+                  </label>}
+                  {model.parameters?.some(f=>f.name==="aspect_ratio")&&<label>
+                    <span>Кадрын харьцаа</span>
                     <select value={aspect} onChange={(event) => setAspect(event.target.value)}>
-                      {model.aspectRatios.map((item) => <option key={item}>{item}</option>)}
+                      {model.aspectRatios.map((item) => <option value={item} key={item}>{optionLabel(item)}</option>)}
                     </select>
-                  </label>
+                  </label>}
                   {model.supportsAudio && (
                     <label className="audioToggle">
-                      <span>Audio</span>
+                      <span>Дуу</span>
                       <input type="checkbox" checked={audio} onChange={(event) => setAudio(event.target.checked)} />
                     </label>
                   )}
@@ -495,7 +487,7 @@ export function StudioClient() {
                 <button className="generateButton" disabled={!canSubmit} onClick={submit}>
                   {busy ? <LoaderCircle className="spin" size={17} /> : <ArrowUp size={17} />}
                   <span>{busy ? "Илгээж байна" : "Үүсгэх"}</span>
-                  <b>{cost} cr</b>
+                  <b>{cost} кредит</b>
                 </button>
               </div>
 
@@ -505,14 +497,15 @@ export function StudioClient() {
               {message && <div className={"studioMessage " + (message.includes("алдаа") || message.includes("дутуу") ? "error" : "")}>{message}</div>}
             </div>
 
+            <ModelGuide model={model} compact/>
             <section className="modelInfoStrip">
-              <div><small>INPUT</small><b>{model.supportsVideo ? "Video + " : ""}{model.supportsImage || model.supportsMultipleReferences ? "Reference + " : ""}Prompt</b></div>
-              <div><small>OUTPUT</small><b>{model.kind === "image" ? "Image" : "Video"}</b></div>
-              <div><small>RESOLUTION</small><b>{model.resolutions.join(" · ")}</b></div>
+              <div><small>ОРОЛТ</small><b>{model.supportsVideo ? "Видео + " : ""}{model.supportsImage || model.supportsMultipleReferences ? "Зураг + " : ""}Тайлбар</b></div>
+              <div><small>ГАРАЛТ</small><b>{model.kind === "image" ? "Зураг" : "Видео"}</b></div>
+              <div><small>ХЭМЖЭЭ</small><b>{resolutionLabel(model)}</b></div>
               <div><small>БҮТЭЭЛҮҮД</small><b>Хувийн түүх</b></div>
             </section>
 
-            <CommunityInspiration surface={model.kind === "video" ? "video" : model.group === "Genjutsu" ? "apps" : model.group === "Cinema" ? "cinema" : model.group === "Ads" ? "marketing" : model.group === "Influencer" ? "influencer" : "explore"} limit={4} title="Энэ model-д тохирох community inspiration" />
+            <CommunityInspiration surface={model.kind === "video" ? "video" : model.group === "Genjutsu" ? "apps" : model.group === "Cinema" ? "cinema" : model.group === "Ads" ? "marketing" : model.group === "Influencer" ? "influencer" : "explore"} limit={4} title="Энэ загварт тохирох бүтээлийн санаа" />
             <section id="generations" className="generationSection">
               <div className="historyHead">
                 <div><small>GENERATIONS</small><h2>Миний бүтээлүүд</h2></div>
@@ -546,14 +539,14 @@ export function StudioClient() {
                         )}
                       </div>
                       <div className="generationMeta">
-                        <div><b>{itemModel?.name || item.modelSlug}</b><span>{item.costCredits} cr</span></div>
+                        <div><b>{itemModel?.name || item.modelSlug}</b><span>{item.costCredits} кредит</span></div>
                         <p>{item.prompt || "Жишиг файлаар бүтээсэн"}</p>
                         {item.status==="FAILED"&&<p className="generationError">Үүсгэлт амжилтгүй боллоо. Оролтоо шалгаад дахин оролдоно уу.</p>}
                         {item.status==="COMPLETED"&&!media&&<p className="generationError">Үр дүнгийн холбоос олдсонгүй. Дахин шинэчилж шалгана уу.</p>}
                         <small>{new Date(item.createdAt).toLocaleString("mn-MN")}</small>
                         <div className="generationFooter">
                           {["PENDING","SUBMITTED"].includes(item.status) && <button onClick={() => cancel(item.id)}><X size={12} /> Цуцлах</button>}
-                          {item.refunded && <span className="refund"><CheckCircle2 size={12} /> Credit буцаасан</span>}
+                          {item.refunded && <span className="refund"><CheckCircle2 size={12} /> Кредит буцаасан</span>}
                         </div>
                       </div>
                     </article>
@@ -584,15 +577,15 @@ export function StudioClient() {
             <div className="contextCard">
               <small>CHECKLIST</small>
               <ul className="checkList">
-                <li className={hasInput ? "done" : ""}><i /> Prompt эсвэл reference</li>
-                <li className={user && user.credits >= cost ? "done" : ""}><i /> {cost} credit</li>
+                <li className={hasInput ? "done" : ""}><i /> Тайлбар эсвэл жишиг</li>
+                <li className={user && user.credits >= cost ? "done" : ""}><i /> {cost} кредит</li>
                 <li className={providerHealth === "ready" ? "done" : ""}><i /> Үүсгэх үйлчилгээ</li>
               </ul>
             </div>
             <div className="contextCard helperCard">
               <WandSparkles size={18} />
-              <b>Prompt зөвлөгөө</b>
-              <p>Subject → action → camera → lighting → mood → finish гэсэн дарааллаар бичвэл video prompt илүү ойлгомжтой болдог.</p>
+              <b>Тайлбар бичих зөвлөгөө</b>
+              <p>Дүр → үйлдэл → камер → гэрэл → орчин → хэв маяг гэсэн дарааллаар тайлбарла. Qwen-д Англи эсвэл Хятад тайлбар зөвлөсөн.</p>
             </div>
           </aside>
         </div>
