@@ -363,3 +363,14 @@ html,body{background:var(--ravs-black);color:var(--ravs-text)}
   .topBrand.ravsTopBrand>span{display:none}
   .authBrand .ravsLogoWordmark{width:165px}
 }
+
+.ravsHeroBrand{display:flex;justify-content:center;align-items:center;margin:0 0 18px}
+.ravsHeroBrand .ravsLogoDesktop{align-items:center}
+.ravsHeroBrand .ravsLogoWordmark{width:min(620px,74vw);filter:drop-shadow(0 0 18px #ffe6001e)}
+.ravsHeroBrand .ravsLogoSubtitle{font-size:12px;letter-spacing:.48em;margin-top:4px;color:#f1f1ee}
+.ravsHeroBrand .ravsLogoTagline{font-size:11px;letter-spacing:.42em;margin-top:13px;color:#ffe600}
+@media(max-width:760px){
+  .ravsHeroBrand .ravsLogoWordmark{width:min(430px,82vw)}
+  .ravsHeroBrand .ravsLogoSubtitle{font-size:9px;letter-spacing:.36em}
+  .ravsHeroBrand .ravsLogoTagline{font-size:8px;letter-spacing:.32em;margin-top:9px}
+}
