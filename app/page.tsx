@@ -10,7 +10,7 @@ import {
   WandSparkles,
 } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
-import { RavsWordmark } from "@/components/ravs-logo";
+import { RavsLogo, RavsWordmark } from "@/components/ravs-logo";
 import { VideoShowcase } from "@/components/video-showcase";
 import { TrendShowcase } from "@/components/trend-showcase";
 import { CommunityInspiration } from "@/components/community-inspiration";
@@ -40,10 +40,8 @@ export default function Home() {
           <div className="heroAtmosphere heroDots" />
           <div className="heroAtmosphere heroGlow" />
           <div className="heroInner">
-            <div className="heroVisuals" aria-hidden>
-              <div className="heroFrame heroFrameLeft"><span>VIDEO</span><div className="frameOrb orbA" /></div>
-              <div className="heroFrame heroFrameMain"><span>RAVS</span><div className="frameOrb orbB" /><i>AI CREATIVE STUDIO</i></div>
-              <div className="heroFrame heroFrameRight"><span>IMAGE</span><div className="frameOrb orbC" /></div>
+            <div className="ravsHeroBrand" aria-label="RAVS brand">
+              <RavsLogo showSubtitle showTagline />
             </div>
 
             <div className="eyebrow"><Sparkles size={14} /> Монгол хэл дээрх AI Creative Suite</div>
