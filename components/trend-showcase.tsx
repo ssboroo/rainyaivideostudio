@@ -1,6 +1,73 @@
+"use client";
+
 import Link from "next/link";
-import { ArrowRight, ExternalLink, Play, TrendingUp } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowRight, Pause, Play, TrendingUp, Volume2, VolumeX } from "lucide-react";
 import { trendDemos } from "@/lib/trend-demos";
+
+function TrendMedia({ item }: { item: (typeof trendDemos)[number] }) {
+  const [video, setVideo] = useState<string | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const ref = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/community/meta?url=" + encodeURIComponent(item.official))
+      .then((response) => response.ok ? response.json() : null)
+      .then((value) => {
+        if (alive && value?.video) setVideo(value.video);
+      })
+      .catch(() => null);
+    return () => { alive = false; };
+  }, [item.official]);
+
+  async function toggle() {
+    if (!ref.current || !video || failed) return;
+    if (ref.current.paused) {
+      try { await ref.current.play(); } catch {}
+    } else ref.current.pause();
+  }
+
+  function toggleMute() {
+    const next = !muted;
+    setMuted(next);
+    if (ref.current) ref.current.muted = next;
+  }
+
+  return (
+    <div className="trendMedia">
+      {video && !failed ? (
+        <video
+          ref={ref}
+          src={video}
+          poster={item.poster}
+          preload="metadata"
+          muted={muted}
+          loop
+          playsInline
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <img src={item.poster} alt={item.title + " preview"} loading="lazy" />
+      )}
+      <div className="trendOverlay" />
+      <span className="trendBadge">{item.badge}</span>
+      <button className={"trendPlay " + (!video || failed ? "disabled" : "")} type="button" disabled={!video || failed} onClick={toggle}>
+        {playing ? <Pause size={16} fill="currentColor" /> : <Play size={17} fill="currentColor" />}
+      </button>
+      {video && !failed && (
+        <button className="trendMute" type="button" onClick={toggleMute}>
+          {muted ? <VolumeX size={12} /> : <Volume2 size={12} />}
+        </button>
+      )}
+      <span className="trendDemoLabel">{video && !failed ? "Энд тоглуулна" : "Demo unavailable"}</span>
+    </div>
+  );
+}
 
 export function TrendShowcase({ compact = false }: { compact?: boolean }) {
   const items = compact ? trendDemos.slice(0, 4) : trendDemos;
@@ -11,7 +78,7 @@ export function TrendShowcase({ compact = false }: { compact?: boolean }) {
         <div>
           <small>HIGGSFIELD VIRAL · TRENDING</small>
           <h2>{compact ? "Одоо тренд болж буй video effects" : "Higgsfield trend demo-ууд"}</h2>
-          <p>Official Higgsfield public preview-үүдийг Монгол тайлбартайгаар нэг дор.</p>
+          <p>Public playable demo байвал card дотроо шууд тоглоно. External page нээгдэхгүй.</p>
         </div>
         {compact && <Link href="/trends">Бүгдийг харах <ArrowRight size={15} /></Link>}
       </div>
@@ -19,13 +86,7 @@ export function TrendShowcase({ compact = false }: { compact?: boolean }) {
       <div className={compact ? "trendGrid compact" : "trendGrid"}>
         {items.map((item) => (
           <article className="trendCard" key={item.id}>
-            <a className="trendMedia" href={item.official} target="_blank" rel="noreferrer">
-              <img src={item.poster} alt={item.title + " Higgsfield preview"} loading="lazy" />
-              <div className="trendOverlay" />
-              <span className="trendBadge">{item.badge}</span>
-              <span className="trendPlay"><Play size={17} fill="currentColor" /></span>
-              <span className="trendDemoLabel">Official demo үзэх</span>
-            </a>
+            <TrendMedia item={item} />
             <div className="trendBody">
               <div className="trendTitle">
                 <div><small>VIRAL PRESET</small><h3>{item.title}</h3></div>
@@ -34,7 +95,6 @@ export function TrendShowcase({ compact = false }: { compact?: boolean }) {
               <p>{item.description}</p>
               <div className="trendUse"><b>Юунд тохирох вэ?</b><span>{item.use}</span></div>
               <div className="trendActions">
-                <a className="ghost" href={item.official} target="_blank" rel="noreferrer">Official demo <ExternalLink size={12} /></a>
                 <Link className="primary" href="/apps">RAVS workflow <ArrowRight size={12} /></Link>
               </div>
             </div>
@@ -44,8 +104,8 @@ export function TrendShowcase({ compact = false }: { compact?: boolean }) {
 
       {!compact && (
         <div className="trendDisclaimer">
-          <b>Эдгээр preview нь Higgsfield-ийн public media.</b>
-          <p>RAVS нь media-г өөрийн сервер дээр хуулж хадгалахгүй. Card дарвал Higgsfield-ийн тухайн official demo page нээгдэнэ.</p>
+          <b>Demo playback зөвхөн RAVS дотор.</b>
+          <p>Media-г өөрийн серверт хуулж хадгалахгүй; public media URL байвал stream хийнэ. External official page руу redirect хийхгүй.</p>
         </div>
       )}
     </section>

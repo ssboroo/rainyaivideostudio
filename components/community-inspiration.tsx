@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, ExternalLink, Eye, Film, Play, RotateCcw, ShieldCheck } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowRight, Eye, Film, Pause, Play, RotateCcw, ShieldCheck, Volume2, VolumeX } from "lucide-react";
 import {
   communityFor,
   recreateHref,
@@ -10,53 +10,85 @@ import {
   type CommunitySurface,
 } from "@/lib/community-inspiration";
 
-type Meta = { image?: string | null };
+type Meta = { video?: string | null; image?: string | null };
 
-function CommunityMedia({ item }: { item: CommunityItem }) {
+function Card({ item }: { item: CommunityItem }) {
   const [meta, setMeta] = useState<Meta>({});
-  const [videoFailed, setVideoFailed] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     let alive = true;
     fetch("/api/community/meta?url=" + encodeURIComponent(item.sourceHref))
-      .then((response) => (response.ok ? response.json() : null))
+      .then((response) => response.ok ? response.json() : null)
       .then((value) => {
-        if (alive && value) setMeta({ image: value.image });
+        if (alive && value) setMeta({ video: value.video || null, image: value.image || null });
       })
       .catch(() => null);
     return () => { alive = false; };
   }, [item.sourceHref]);
 
-  if (meta.image) {
-    return <img className="communityPoster" src={meta.image} alt={item.title + " preview"} loading="lazy" />;
+  const playable = Boolean(meta.video && !failed);
+
+  async function togglePlay() {
+    if (!playable || !videoRef.current) return;
+    if (videoRef.current.paused) {
+      try { await videoRef.current.play(); } catch {}
+    } else {
+      videoRef.current.pause();
+    }
+  }
+
+  function toggleMute() {
+    const next = !muted;
+    setMuted(next);
+    if (videoRef.current) videoRef.current.muted = next;
   }
 
   return (
-    <div className={"communityFallback tone-" + item.tone}>
-      <Film size={24} />
-      <span>Official project preview</span>
-    </div>
-  );
-}
-
-function Card({ item }: { item: CommunityItem }) {
-  return (
     <article className="communityCard">
-      <a className="communityMedia" href={item.sourceHref} target="_blank" rel="noreferrer">
-        <CommunityMedia item={item} />
+      <div className="communityMedia">
+        {playable ? (
+          <video
+            ref={videoRef}
+            className="communityVideo"
+            src={meta.video || undefined}
+            poster={meta.image || undefined}
+            preload="metadata"
+            playsInline
+            muted={muted}
+            loop
+            onPlay={() => setPlaying(true)}
+            onPause={() => setPlaying(false)}
+            onError={() => setFailed(true)}
+          />
+        ) : meta.image ? (
+          <img className="communityPoster" src={meta.image} alt={item.title + " preview"} loading="lazy" />
+        ) : (
+          <div className={"communityFallback tone-" + item.tone}>
+            <Film size={24} />
+            <span>Preview</span>
+          </div>
+        )}
         <div className="communityShade" />
         <span className="communityBadge">{item.badge}</span>
-        <span className="communityPlay"><Play size={15} fill="currentColor" /></span>
+        <button className={"communityPlay " + (!playable ? "disabled" : "")} type="button" disabled={!playable} onClick={togglePlay}>
+          {playing ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
+        </button>
+        {playable && (
+          <button className="communityInlineMute" type="button" onClick={toggleMute}>
+            {muted ? <VolumeX size={11} /> : <Volume2 size={11} />}
+          </button>
+        )}
         {item.views && <span className="communityViews"><Eye size={11} /> {item.views}</span>}
-      </a>
+      </div>
       <div className="communityBody">
         <div><small>{item.creator}</small><h3>{item.title}</h3></div>
         <p>{item.description}</p>
         {item.note && <div className="communityNote"><ShieldCheck size={11} /> {item.note}</div>}
         <div className="communityActions">
-          <a className="ghost" href={item.sourceHref} target="_blank" rel="noreferrer">
-            Official <ExternalLink size={11} />
-          </a>
           {item.recreate ? (
             <Link className="primary" href={recreateHref(item)}>
               <RotateCcw size={11} /> Recreate in RAVS
@@ -64,6 +96,7 @@ function Card({ item }: { item: CommunityItem }) {
           ) : (
             <span className="studyOnly">Study only</span>
           )}
+          {!playable && <span className="demoUnavailable">Demo unavailable</span>}
         </div>
       </div>
     </article>
@@ -87,7 +120,7 @@ export function CommunityInspiration({
         <div>
           <small>COMMUNITY · TREND · ORIGINALS</small>
           <h2>{title}</h2>
-          <p>Official public project-ийг үзээд, зөвшөөрөгдсөн тохиолдолд RAVS-ийн шинэ original хувилбараар эхэл.</p>
+          <p>Demo-г энэ хуудсан дээр тоглуулаад Recreate дарж өөрийн шинэ хувилбарыг Studio-д нээ.</p>
         </div>
         <Link href="/community" className="ghost">Community бүгд <ArrowRight size={13} /></Link>
       </div>
@@ -100,6 +133,5 @@ export function CommunityAll() {
   const items = (["home","video","cinema","marketing","influencer","apps"] as CommunitySurface[])
     .flatMap((surface) => communityFor(surface, 8))
     .filter((item, index, all) => all.findIndex((entry) => entry.id === item.id) === index);
-
   return <section className="communitySection communityAll"><div className="communityGrid">{items.map((item) => <Card item={item} key={item.id} />)}</div></section>;
 }

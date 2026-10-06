@@ -1,23 +1,25 @@
 import Link from "next/link";
 import { ArrowRight, UsersRound } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
-import { CommunityAll } from "@/components/community-inspiration";
+import { CommunityFeed } from "@/components/community-feed";
 
 export default function CommunityPage() {
   return (
     <main className="shell">
       <Sidebar />
-      <section className="content">
+      <section className="content communityPage">
         <header className="topbar">
-          <div><b>Community Inspiration</b><span>Official public projects · RAVS recreate</span></div>
-          <Link href="/studio" className="primary">Studio нээх <ArrowRight size={13} /></Link>
+          <div><b>Community</b><span>Playable demos · Recreate in RAVS</span></div>
+          <Link href="/studio?surface=video" className="primary">Видео үүсгэх <ArrowRight size={13} /></Link>
         </header>
-        <section className="videoGuideHero communityHero">
-          <div className="eyebrow"><UsersRound size={14} /> COMMUNITY INSPIRATION</div>
-          <h1>Үз. Сур. <em>Өөрийнхөөрөө шинээр бүтээ.</em></h1>
-          <p>RAVS community бүтээлийг mirror хийхгүй. Official source-ийг харуулж, зөвшөөрөгдсөн эсвэл ерөнхий creative direction дээр өөрийн шинэ prompt/model preset-ээр Recreate хийдэг.</p>
+
+        <section className="communityWallHero">
+          <div className="eyebrow"><UsersRound size={14} /> COMMUNITY WALL</div>
+          <h1>Үзээд шууд <em>өөрийн хувилбарыг</em> бүтээ.</h1>
+          <p>Higgsfield-ийн public demo media-г дахин upload хийхгүйгээр шууд stream хийнэ. Official page руу үсрэхгүй; play, mute, pause бүгд энэ хуудсан дээр.</p>
         </section>
-        <CommunityAll />
+
+        <CommunityFeed />
       </section>
     </main>
   );
