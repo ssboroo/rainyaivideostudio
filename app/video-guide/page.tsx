@@ -1,3 +1,4 @@
+import { WorkflowTutorials } from "@/components/workflow-tutorials";
 import Link from "next/link";
 import { ArrowRight, Clapperboard } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
@@ -21,7 +22,8 @@ export default function VideoGuidePage() {
             тохирох workflow-оор RAVS Studio руу ор.
           </p>
         </section>
-        <CommunityInspiration surface="video" title="Community video inspiration" />
+        <WorkflowTutorials />
+        <CommunityInspiration surface="video" title="Бүтээлчдийн видео санаа" />
         <VideoShowcase />
       </section>
     </main>

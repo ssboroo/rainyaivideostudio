@@ -1,3 +1,4 @@
+import { trendDemos } from "@/lib/trend-demos";
 export type CommunityFeedTab = "higgsfield" | "trending" | "new";
 
 export type CommunityFeedItem = {
@@ -13,6 +14,8 @@ export type CommunityFeedItem = {
   ratio: string;
   badge: string;
   views?: string;
+  previewSrc?: string;
+  poster?: string;
 };
 
 export const communityFeed: CommunityFeedItem[] = [
@@ -136,7 +139,8 @@ export const communityFeed: CommunityFeedItem[] = [
     model:"cinema-studio-4",
     prompt:"Original post-catastrophe cinematic sequence focused on an abandoned city after an unspecified disaster, silent streets, ash in the air, distant orange glow, restrained human perspective and haunting environmental storytelling.",
     aspect:"16:9", duration:10, ratio:"9 / 14", badge:"NEW", views:"244"
-  }
+  },
+  ...trendDemos.map((t):CommunityFeedItem=>({id:"library-"+t.id,tab:"higgsfield",title:t.title,creator:"Higgsfield · эффектийн жишээ",sourceHref:t.official,model:t.category==="genjutsu"?(t.id.startsWith("motion")?"genjutsu-motion":"genjutsu-object"):"seedance-2-5-image",prompt:t.description+" "+t.use+". Эх материалын гол дүр, объектын хэлбэрийг хадгал. Камерын хөдөлгөөн жигд, гэрэл байгалийн.",aspect:"9:16",duration:5,ratio:"9 / 16",badge:t.badge,previewSrc:t.previewSrc,poster:t.poster})),
 ];
 
 export function communityFeedHref(item: CommunityFeedItem) {

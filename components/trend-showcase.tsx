@@ -40,8 +40,8 @@ export function TrendShowcase({ compact = false }: { compact?: boolean }) {
               </div>
               <p>{item.description}</p>
               <div className="trendUse"><b>Юунд тохирох вэ?</b><span>{item.use}</span></div>
-              <div className="trendActions">
-                <Link className="primary" href={item.category==="genjutsu"?"/studio?group=Genjutsu":"/apps"}>Бүтээж эхлэх <ArrowRight size={12} /></Link><a className="ghost" href={item.official} target="_blank" rel="noopener noreferrer">Эх сурвалж ↗</a>
+              <details className="trendLesson"><summary>Хэрхэн бүтээх вэ?</summary><ol><li>Гол дүр эсвэл объект тод харагдах эх материал бэлтгэ.</li><li>Жишээний хөдөлгөөн, хувирах мөчийг ажигла.</li><li>Жишиг тайлбарыг өөрийн орчин, дүрээр солино.</li><li>Үр дүнг үзэж нүүр, хэлбэр, шилжилтийг шалга.</li></ol><Link href={"/video-guide#"+(item.category==="genjutsu"?"genjutsu":"apps")}>Дэлгэрэнгүй заавар ↗</Link></details><div className="trendActions">
+                <Link className="primary" href={(item.category==="genjutsu"?(item.id.startsWith("motion")?"/studio?model=genjutsu-motion":"/studio?model=genjutsu-object"):"/studio?model=seedance-2-5-image")+"&prompt="+encodeURIComponent(item.description+" "+item.use+". Гол дүр, объектын хэлбэрийг хадгал.")}>Бүтээж эхлэх <ArrowRight size={12} /></Link><a className="ghost" href={item.official} target="_blank" rel="noopener noreferrer">Эх сурвалж ↗</a>
               </div>
             </div>
           </article>

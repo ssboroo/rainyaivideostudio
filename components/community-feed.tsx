@@ -14,7 +14,7 @@ const tabs: Array<{ id: CommunityFeedTab; label: string }> = [
 ];
 
 function FeedCard({ item }: { item: CommunityFeedItem }) {
-  const [meta, setMeta] = useState<MediaMeta>({});
+  const [meta, setMeta] = useState<MediaMeta>({video:item.previewSrc,image:item.poster});
   const [loading, setLoading] = useState(true);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
@@ -23,6 +23,7 @@ function FeedCard({ item }: { item: CommunityFeedItem }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
+    if(item.previewSrc){setMeta({video:item.previewSrc,image:item.poster});setLoading(false);return;}
     let alive = true;
     setLoading(true);
     fetch("/api/community/meta?url=" + encodeURIComponent(item.sourceHref))
@@ -34,7 +35,7 @@ function FeedCard({ item }: { item: CommunityFeedItem }) {
       .catch(() => null)
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [item.sourceHref]);
+  }, [item.sourceHref,item.previewSrc,item.poster]);
 
   async function togglePlay() {
     const video = videoRef.current;
@@ -82,7 +83,7 @@ function FeedCard({ item }: { item: CommunityFeedItem }) {
         <div className="communityMasonryShade" />
         <div className="communityMasonryTop">
           <span>{item.badge}</span>
-          {item.views && <span><Eye size={10} /> {item.views}</span>}
+          
         </div>
 
         {playable && <button
@@ -104,7 +105,7 @@ function FeedCard({ item }: { item: CommunityFeedItem }) {
         <div className="communityMasonryInfo">
           <small>{item.creator}</small>
           <h3>{item.title}</h3>
-          <div className="communityMasonryActions">
+          <details className="communityPrompt"><summary>Жишиг тайлбар</summary><p>{item.prompt}</p></details><div className="communityMasonryActions">
             <Link href={communityFeedHref(item)} className="communityRecreate">
               <RotateCcw size={11} /> Шинээр бүтээх
             </Link>
@@ -117,19 +118,20 @@ function FeedCard({ item }: { item: CommunityFeedItem }) {
 }
 
 export function CommunityFeed() {
-  const [active, setActive] = useState<CommunityFeedTab>("higgsfield");
-  const items = useMemo(() => communityFeed.filter((item) => item.tab === active), [active]);
+  const [active, setActive] = useState<CommunityFeedTab | "all">("all");
+  const [search,setSearch]=useState("");
+  const items = useMemo(() => communityFeed.filter((item) => (active==="all"||item.tab === active)&&[item.title,item.creator,item.badge,item.prompt].join(" ").toLowerCase().includes(search.trim().toLowerCase())), [active,search]);
 
   return (
     <section className="communityFeed">
       <div className="communityFeedTabs" role="tablist" aria-label="Community feed">
-        {tabs.map((tab) => (
+        {[{id:"all",label:"Бүх бүтээл"},...tabs].map((tab) => (
           <button
             type="button"
             role="tab"
             aria-selected={active === tab.id}
             className={active === tab.id ? "active" : ""}
-            onClick={() => setActive(tab.id)}
+            onClick={() => setActive(tab.id as CommunityFeedTab | "all")}
             key={tab.id}
           >
             {tab.label}
@@ -139,13 +141,13 @@ export function CommunityFeed() {
 
       <div className="communityFeedIntro">
         <div>
-          <small>PLAY · EXPLORE · RECREATE</small>
-          <h2>{tabs.find((tab) => tab.id === active)?.label}</h2>
+          <small>ҮЗ · САНАА АВ · БҮТЭЭ</small>
+          <h2>{active==="all"?"Санаа авах бүтээлүүд":tabs.find((tab) => tab.id === active)?.label}</h2>
         </div>
-        <p>Official page руу шилжихгүй. Demo боломжтой card-уудыг эндээс шууд тоглуулаад Шинээр бүтээх дарж Studio-д үргэлжлүүл.</p>
+        <p>Эффект, дүр хувиргалт, киноны жишээг судлаарай. Жишгийн тайлбарыг Studio-д нээж өөрийн эх материалтай шинэ бүтээл эхлүүлнэ.</p>
       </div>
 
-      <div className="communityMasonry">
+      <div className="videoLibraryToolbar"><input aria-label="Бүтээл хайх" placeholder="Бүтээл, эффект, зохиогч хайх…" value={search} onChange={e=>setSearch(e.target.value)}/><span>{items.length} / {communityFeed.length} жишээ</span><Link href="/video-guide">Алхамчилсан заавар ↗</Link></div>{items.length===0&&<p className="videoLibraryEmpty">Тохирох бүтээл олдсонгүй. <button onClick={()=>{setSearch("");setActive("all");}}>Бүх бүтээлийг харах</button></p>}<div className="communityMasonry">
         {items.map((item) => <FeedCard item={item} key={item.id} />)}
       </div>
     </section>
