@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { env } from "@/lib/env";
+import { env } from "./env.ts";
 
 export interface WirePaymentIntent {
   id: string;
