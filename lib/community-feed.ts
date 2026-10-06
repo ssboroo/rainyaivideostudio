@@ -20,49 +20,6 @@ export type CommunityFeedItem = {
 
 export const communityFeed: CommunityFeedItem[] = [
   {
-    id:"earth-zoom-out", tab:"higgsfield", title:"Earth Zoom Out", creator:"Higgsfield Viral",
-    sourceHref:"https://higgsfield.ai/motion/70e490b9-26b7-4572-8d9c-2ac8dcc9adc0",
-    model:"seedance-2-5-image",
-    prompt:"A dramatic earth zoom-out transition starting close on the subject, accelerating backward through the street, city, clouds and atmosphere until the full planet is visible, seamless cinematic scale change, realistic lighting.",
-    aspect:"9:16", duration:8, ratio:"9 / 15", badge:"TOP CHOICE"
-  },
-  {
-    id:"eyes-in", tab:"higgsfield", title:"Eyes In", creator:"Higgsfield Viral",
-    sourceHref:"https://higgsfield.ai/motion/0ab33462-481e-4c78-8ffc-086bebd84187",
-    model:"seedance-2-5-image",
-    prompt:"Fast cinematic push-in toward the subject's eyes, macro detail, intense emotional focus, smooth accelerating camera motion, realistic skin texture and controlled depth of field.",
-    aspect:"9:16", duration:6, ratio:"4 / 5", badge:"TOP CHOICE"
-  },
-  {
-    id:"building-explosion", tab:"higgsfield", title:"Building Explosion", creator:"Higgsfield Viral",
-    sourceHref:"https://higgsfield.ai/motion/e974bca9-c9eb-4cc8-9318-5676cc110f17",
-    model:"seedance-2-5-image",
-    prompt:"Large cinematic building explosion behind the subject, realistic debris and pressure wave, dramatic camera shake, high-speed particles, believable lighting interaction, action-film finish.",
-    aspect:"9:16", duration:7, ratio:"9 / 16", badge:"VFX"
-  },
-  {
-    id:"disintegration", tab:"higgsfield", title:"Disintegration", creator:"Higgsfield Viral",
-    sourceHref:"https://higgsfield.ai/motion/4e981984-1cdc-4b96-a2b1-1a7c1ecb822d",
-    model:"seedance-2-5-image",
-    prompt:"The subject gradually disintegrates into thousands of tiny particles carried by the wind, realistic edge breakup, cinematic backlight, slow emotional timing, physically coherent particle motion.",
-    aspect:"9:16", duration:7, ratio:"4 / 6", badge:"VFX"
-  },
-  {
-    id:"face-punch", tab:"higgsfield", title:"Face Punch", creator:"Higgsfield Viral",
-    sourceHref:"https://higgsfield.ai/motion/cd5bfd11-5a1a-46e0-9294-b22b0b733b1e",
-    model:"seedance-2-5-image",
-    prompt:"Exaggerated action-comedy impact moment, sudden punch reaction, fast camera hit, brief speed ramp, realistic body motion and facial reaction, viral short-form pacing.",
-    aspect:"9:16", duration:5, ratio:"9 / 12", badge:"TREND"
-  },
-  {
-    id:"turning-metal", tab:"higgsfield", title:"Turning Metal + Melting", creator:"Higgsfield Viral",
-    sourceHref:"https://higgsfield.ai/motion/017ae2b7-bcff-42ef-863e-6e198f96c3ec",
-    model:"seedance-2-5-image",
-    prompt:"The subject transforms into reflective liquid metal and slowly begins to melt while preserving recognizable form, premium surreal fashion lighting, smooth material transition and cinematic macro detail.",
-    aspect:"9:16", duration:7, ratio:"4 / 5", badge:"MIXED"
-  },
-
-  {
     id:"grandma-wasp", tab:"trending", title:"GRANDMA vs WASP", creator:"@mrabujoe",
     sourceHref:"https://higgsfield.ai/contests/make-your-action-scene/submissions/4132edf8-f419-4e26-92c3-b2ce344b9592",
     model:"kling-3-standard",
