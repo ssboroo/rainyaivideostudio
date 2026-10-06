@@ -12,7 +12,7 @@ export default function ExplorePage() {
       <Sidebar />
       <section className="content">
         <header className="topbar">
-          <div><b>Explore</b><span>Workflow, preset, model</span></div>
+          <div><b>Explore</b><span>Хэрэгсэл, бэлэн санаа, AI загвар</span></div>
           <Link href="/studio" className="primary">Studio нээх</Link>
         </header>
 
@@ -20,12 +20,12 @@ export default function ExplorePage() {
           <div className="catalogHero">
             <div className="eyebrow"><Compass size={14} /> RAVS Explore</div>
             <h1>Юу хийхээ сонго. <em>Яаж хийхийг RAVS шийднэ.</em></h1>
-            <p>Workflow, prompt preset болон AI загваруудаас өөрийн ажлын хамгийн хурдан замыг сонго.</p>
+            <p>Хэрэгсэл, бэлэн тайлбар болон AI загваруудаас өөрийн ажилд тохирохыг сонго.</p>
           </div>
 
-          <CommunityInspiration surface="explore" title="Explore community projects" />
+          <CommunityInspiration surface="explore" title="Бүтээлчдийн жишээ" />
           <div className="catalogSection">
-            <div className="sectionTitleRow compact"><div><small>WORKFLOWS</small><h2>Creative workflow</h2></div></div>
+            <div className="sectionTitleRow compact"><div><small>WORKFLOWS</small><h2>Бүтээх хэрэгслүүд</h2></div></div>
             <div className="workflowGrid">
               {workflows.map((item) => (
                 <Link className={"workflowCard compactCard accent-" + item.accent} href={item.href} key={item.id}>
@@ -38,7 +38,7 @@ export default function ExplorePage() {
           </div>
 
           <div className="catalogSection">
-            <div className="sectionTitleRow compact"><div><small>PRESETS</small><h2>Prompt preset</h2></div></div>
+            <div className="sectionTitleRow compact"><div><small>PRESETS</small><h2>Бэлэн санаа</h2></div></div>
             <div className="explorePresetGrid">
               {promptPresets.map((preset, index) => (
                 <Link
@@ -49,7 +49,7 @@ export default function ExplorePage() {
                   <div className="presetArt"><Sparkles size={18} /></div>
                   <small>{preset.subtitle}</small>
                   <h3>{preset.title}</h3>
-                  <span>Preset ашиглах <ArrowRight size={14} /></span>
+                  <span>Санааг ашиглах <ArrowRight size={14} /></span>
                 </Link>
               ))}
             </div>
