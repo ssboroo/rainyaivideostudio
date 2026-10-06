@@ -56,7 +56,7 @@ export const trendDemos = [
     description: "Арьс, хувцас эсвэл дүр metallic болж хувираад дараа нь хайлах surreal transformation.",
     use: "Fashion, sci-fi, surreal content",
     poster: "https://static.higgsfield.ai/017ae2b7-bcff-42ef-863e-6e198f96c3ec.webp",
-    official: "https://higgsfield.ai/motion/46e23a6b-1047-40f1-9cf5-33f5f55ddf2e",
+    official: "https://higgsfield.ai/motion/017ae2b7-bcff-42ef-863e-6e198f96c3ec",
     accent: "lime"
   }
 ] as const;
