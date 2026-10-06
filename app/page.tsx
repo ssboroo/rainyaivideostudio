@@ -36,9 +36,9 @@ export default function Home() {
           </div>
         </header>
 
-        <section className="dashboardHero">
-          <div className="heroAtmosphere heroDots" />
-          <div className="heroAtmosphere heroGlow" />
+        <section className="dashboardHero ravsCinematicHero">
+          <img className="ravsHeroPhoto" src="/brand/website-header-background.webp" alt="" aria-hidden="true" fetchPriority="high" width={1920} height={800} />
+          <div className="ravsHeroShade" aria-hidden="true" />
           <div className="heroInner">
             <div className="ravsHeroBrand" aria-label="RAVS brand">
               <RavsLogo showSubtitle showTagline />

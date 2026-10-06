@@ -374,3 +374,19 @@ html,body{background:var(--ravs-black);color:var(--ravs-text)}
   .ravsHeroBrand .ravsLogoSubtitle{font-size:9px;letter-spacing:.36em}
   .ravsHeroBrand .ravsLogoTagline{font-size:8px;letter-spacing:.32em;margin-top:9px}
 }
+
+/* Approved RAVS cinematic brand assets */
+.ravsCinematicHero{position:relative;isolation:isolate;overflow:hidden;min-height:670px;background:#0b0b0b;justify-items:start}
+.ravsHeroPhoto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:75% center;z-index:-2}
+.ravsHeroShade{position:absolute;inset:0;background:linear-gradient(90deg,#0b0b0bf2 0%,#0b0b0bcc 35%,#0b0b0b30 73%,#0b0b0b10);z-index:-1}
+.ravsCinematicHero .heroInner{position:relative;margin:0;max-width:680px;width:60%;padding:64px 40px 54px;text-align:left;align-items:flex-start}
+.ravsCinematicHero .ravsHeroBrand{justify-content:flex-start;margin-bottom:30px}
+.ravsCinematicHero .ravsLogoDesktop{align-items:flex-start}
+.ravsCinematicHero .ravsLogoWordmark{width:min(420px,100%)}
+.ravsCinematicHero .ravsLogoSubtitle{font-size:9px;letter-spacing:.35em}
+.ravsCinematicHero .ravsLogoTagline{font-size:9px;letter-spacing:.32em}
+.ravsCinematicHero h1{font-size:clamp(36px,4vw,60px);text-align:left}
+.ravsCinematicHero p{margin-left:0;text-align:left;max-width:520px;color:#e5e5df}
+.ravsCinematicHero .heroQuick{justify-content:flex-start}
+@media(max-width:1000px){.ravsCinematicHero .heroInner{width:75%;padding:48px 24px}.ravsHeroShade{background:linear-gradient(90deg,#0b0b0bf2,#0b0b0b99 65%,#0b0b0b40)}}
+@media(max-width:600px){.ravsCinematicHero{min-height:760px}.ravsCinematicHero .heroInner{width:100%;padding:34px 18px 260px}.ravsHeroPhoto{object-position:80% bottom}.ravsHeroShade{background:linear-gradient(180deg,#0b0b0bf5 0%,#0b0b0bd9 52%,#0b0b0b10 100%)}.ravsCinematicHero .ravsLogoWordmark{width:min(300px,100%)}.ravsCinematicHero .ravsLogoSubtitle{font-size:7px}.ravsCinematicHero .ravsLogoTagline{font-size:7px}.ravsCinematicHero h1{font-size:36px}}
