@@ -3,6 +3,7 @@ on:
   push:
     branches: [main, production-v1]
   pull_request:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,5 +18,7 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      - name: Production dependency audit
+        run: npm run audit:prod
       - run: npm run check
       - run: npm run build
