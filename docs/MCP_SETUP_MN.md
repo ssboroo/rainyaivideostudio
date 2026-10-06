@@ -28,7 +28,7 @@ Remote Streamable HTTP endpoint: `https://rainyaivideostudio-production.up.railw
 Scope тохируулдаг клиентэд:
 - Унших: `ravs:read`
 - Үүсгэлт ба удаан хугацааны холболт: `ravs:read ravs:generate offline_access`
-- OAuth resource: endpoint-ийн бүтэн `/mcp` URL. Authorization ба token request хоёуланд resource indicator шаардана.
+- OAuth resource: endpoint-ийн бүтэн `/mcp` URL. Шинэ клиент authorization ба token request-д энэ resource indicator-ийг илгээнэ. Хуучин клиент параметрийг орхивол сервер зөвхөн энэ MCP хаягийг ашиглана; өөр, хоосон эсвэл давхар resource-ийг зөвшөөрөхгүй.
 
 ## Эрх ба хамгаалалт
 

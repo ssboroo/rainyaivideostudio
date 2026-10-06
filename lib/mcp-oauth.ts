@@ -33,12 +33,19 @@ export async function boundedBody(req: Request, limit = 16384) {
   return Buffer.concat(chunks).toString("utf8");
 }
 export type AuthorizationRequest = {clientId:string; redirectUri:string; challenge:string; resource:string; scope:string; state:string};
+function validateResource(p: URLSearchParams) {
+  // Older Claude OAuth clients omit RFC 8707 resource indicators. This issuer
+  // serves exactly one resource: omission selects that fixed audience only.
+  // Explicit foreign, empty or multiple resources remain invalid.
+  const requested=p.getAll("resource");
+  if(requested.length>1||(requested.length===1&&requested[0]!==mcpResourceUrl()))throw new OAuthError("invalid_target");
+}
 export async function validateAuthorization(p: URLSearchParams): Promise<AuthorizationRequest & {clientName:string}> {
   if (p.get("response_type") !== "code" || p.get("code_challenge_method") !== "S256" || !/^[A-Za-z0-9_-]{43}$/.test(p.get("code_challenge") || "")) throw new OAuthError("invalid_request");
   const clientId = p.get("client_id") || "", redirectUri = p.get("redirect_uri") || "";
   const client = await db.oAuthClient.findUnique({where:{id:clientId}});
   if (!client || !Array.isArray(client.redirectUris) || !client.redirectUris.includes(redirectUri)) throw new OAuthError("invalid_client");
-  if (p.get("resource") !== mcpResourceUrl()) throw new OAuthError("invalid_target");
+  validateResource(p);
   const scope = parseScopes(p.get("scope") || "ravs:read").join(" "); const state = p.get("state") || "";
   if (state.length > 2048) throw new OAuthError("invalid_request");
   return {clientId, clientName:client.name, redirectUri, challenge:p.get("code_challenge")!, resource:mcpResourceUrl(), scope, state};
@@ -62,7 +69,7 @@ export async function issueCode(userId: string, request: AuthorizationRequest) {
 }
 function tokenValues(scope: string) {const access = fresh(), refresh = scope.split(" ").includes("offline_access") ? fresh() : null; return {access,refresh,data:{accessHash:tokenHash(access),refreshHash:refresh?tokenHash(refresh):null,accessExpiresAt:new Date(Date.now()+3600_000),refreshExpiresAt:refresh?new Date(Date.now()+30*86400_000):null}};}
 export async function exchangeToken(p: URLSearchParams) {
-  const clientId = p.get("client_id") || ""; if (p.get("resource") !== mcpResourceUrl()) throw new OAuthError("invalid_target");
+  const clientId = p.get("client_id") || ""; validateResource(p);
   if (p.get("grant_type") === "authorization_code") {
     const verifier = p.get("code_verifier") || ""; if (!/^[A-Za-z0-9._~-]{43,128}$/.test(verifier)) throw new OAuthError("invalid_grant");
     const codeHash = tokenHash(p.get("code") || "");

@@ -59,3 +59,28 @@ test('refresh rotation invalidates the old token and preserves user-bound grant'
  const params=new URLSearchParams({grant_type:'refresh_token',client_id:'client',resource:old.grant.resource,refresh_token:'fake-unit-refresh'});
  try{db.$transaction=async fn=>fn(tx);const result=await oauth.exchangeToken(params);assert.equal(created.grantId,'grant');assert.equal(created.accessHash,oauth.tokenHash(result.access_token));assert.equal(used,true);await assert.rejects(oauth.exchangeToken(params),e=>e.error==='invalid_grant');}finally{db.$transaction=original;}
 });
+test('legacy authorization without resource remains bound to the one RAVS audience',async()=>{
+ const original=db.oAuthClient.findUnique;
+ const p=new URLSearchParams({response_type:'code',client_id:'registered-client',redirect_uri:'https://claude.ai/api/mcp/auth_callback',code_challenge_method:'S256',code_challenge:oauth.pkceChallenge('v'.repeat(43)),scope:'ravs:read offline_access'});
+ try{db.oAuthClient.findUnique=async()=>({id:'registered-client',name:'Claude',redirectUris:['https://claude.ai/api/mcp/auth_callback']});
+  const authorized=await oauth.validateAuthorization(p);assert.equal(authorized.resource,'https://ravs.example/mcp');
+  p.set('resource','https://evil.example/mcp');await assert.rejects(oauth.validateAuthorization(p),e=>e.error==='invalid_target');
+  p.set('resource','');await assert.rejects(oauth.validateAuthorization(p),e=>e.error==='invalid_target');
+  p.set('resource','https://ravs.example/mcp');p.append('resource','https://ravs.example/mcp');await assert.rejects(oauth.validateAuthorization(p),e=>e.error==='invalid_target');
+  p.delete('resource');p.delete('code_challenge');await assert.rejects(oauth.validateAuthorization(p),e=>e.error==='invalid_request');
+ }finally{db.oAuthClient.findUnique=original;}
+});
+test('legacy code exchange without resource cannot change the stored audience',async()=>{
+ const original=db.$transaction;const verifier='v'.repeat(43);let used=false;
+ const code={id:'code',userId:'alice',clientId:'client',scope:'ravs:read',resource:'https://ravs.example/mcp',redirectUri:'https://claude.ai/api/mcp/auth_callback',challenge:oauth.pkceChallenge(verifier),expiresAt:new Date(Date.now()+60000),usedAt:null};
+ const tx={oAuthCode:{findUnique:async()=>({...code,usedAt:used?new Date():null}),updateMany:async()=>{used=true;return{count:1};}},oAuthGrant:{create:async({data})=>{assert.equal(data.resource,'https://ravs.example/mcp');return{id:'grant'};}},oAuthToken:{create:async()=>({})}};
+ const p=new URLSearchParams({grant_type:'authorization_code',client_id:'client',redirect_uri:code.redirectUri,code:'test-code',code_verifier:verifier});
+ try{db.$transaction=async fn=>fn(tx);p.set('resource','https://evil.example/mcp');await assert.rejects(oauth.exchangeToken(p),e=>e.error==='invalid_target');assert.equal(used,false);p.delete('resource');assert.equal((await oauth.exchangeToken(p)).token_type,'Bearer');}finally{db.$transaction=original;}
+});
+test('legacy refresh without resource still rejects a stored foreign-audience grant',async()=>{
+ const original=db.$transaction;let issued=false;
+ const row={id:'refresh',grantId:'grant',revokedAt:null,refreshExpiresAt:new Date(Date.now()+60000),grant:{clientId:'client',resource:'https://evil.example/mcp',scope:'ravs:read offline_access',revokedAt:null}};
+ const tx={oAuthToken:{findUnique:async()=>row,updateMany:async()=>({count:1}),create:async()=>{issued=true;}}};
+ const p=new URLSearchParams({grant_type:'refresh_token',client_id:'client',refresh_token:'fake-test-refresh'});
+ try{db.$transaction=async fn=>fn(tx);await assert.rejects(oauth.exchangeToken(p),e=>e.error==='invalid_grant');assert.equal(issued,false);row.grant.resource='https://ravs.example/mcp';assert.equal((await oauth.exchangeToken(p)).token_type,'Bearer');assert.equal(issued,true);}finally{db.$transaction=original;}
+});
