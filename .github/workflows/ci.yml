@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ravs?schema=public
       SESSION_SECRET: ci-only-session-secret-at-least-32-characters
@@ -22,3 +22,5 @@ jobs:
         run: npm run audit:prod
       - run: npm run check
       - run: npm run build
+      - name: Verify Railway Docker image builds
+        run: docker build -t ravs:ci .
