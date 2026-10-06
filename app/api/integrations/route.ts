@@ -1,0 +1,2 @@
+import {getSessionUser} from "@/lib/session";import {db} from "@/lib/db";
+export async function GET(){const user=await getSessionUser();if(!user)return Response.json({error:"Нэвтэрнэ үү."},{status:401});const grants=await db.oAuthGrant.findMany({where:{userId:user.id,revokedAt:null},select:{id:true,scope:true,createdAt:true,client:{select:{name:true}}},orderBy:{createdAt:"desc"},take:100});return Response.json({connections:grants.map(g=>({id:g.id,clientName:g.client.name,scopes:g.scope.split(" "),createdAt:g.createdAt}))},{headers:{"Cache-Control":"no-store"}});}

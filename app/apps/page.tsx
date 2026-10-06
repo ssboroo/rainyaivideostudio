@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { WorkflowIcon } from "@/components/workflow-icon";
 import { Sidebar } from "@/components/sidebar";
-import { CommunityInspiration } from "@/components/community-inspiration";
 import { appTools } from "@/lib/product";
 
 export default function AppsPage() {
@@ -32,7 +31,6 @@ export default function AppsPage() {
             ))}
           </div>
 
-          <CommunityInspiration surface="apps" title="Effects ашигласан community санаанууд" />
           <div className="featureCallout"><div><small>АЛХАМЧИЛСАН ЗААВАР</small><h2>Эхний бүтээлээ хамтдаа эхлүүлье</h2><p>Хэрэгсэл бүрийн оролт, тохиргоо, үр дүнг тайлбарласан Монгол заавартай танилцаарай.</p></div><Link className="primary" href="/video-guide">Заавар үзэх <ArrowRight size={15}/></Link></div>
         </section>
       </section>

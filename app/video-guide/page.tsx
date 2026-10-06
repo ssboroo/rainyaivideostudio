@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ArrowRight, Clapperboard } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
 import { VideoShowcase } from "@/components/video-showcase";
-import { CommunityInspiration } from "@/components/community-inspiration";
 
 export default function VideoGuidePage() {
   return (
@@ -21,7 +20,6 @@ export default function VideoGuidePage() {
             тохирох workflow-оор RAVS Studio руу ор.
           </p>
         </section>
-        <CommunityInspiration surface="video" title="Бүтээлчдийн видео санаа" />
         <VideoShowcase />
       </section>
     </main>

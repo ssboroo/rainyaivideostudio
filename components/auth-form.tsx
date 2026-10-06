@@ -4,14 +4,14 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { Eye, EyeOff, ShieldCheck, LoaderCircle, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { RavsLogo } from "@/components/ravs-logo";
-export function AuthForm({mode}:{mode:"login"|"register"}){
+export function AuthForm({mode,returnTo}:{mode:"login"|"register";returnTo?:string}){
  const register=mode==="register",router=useRouter();
  const[name,setName]=useState(""),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[confirm,setConfirm]=useState(""),[show,setShow]=useState(false),[error,setError]=useState(""),[busy,setBusy]=useState(false);
  async function submit(e:FormEvent){
   e.preventDefault();if(busy)return;setError("");
   if(register&&password!==confirm){setError("Нууц үг давтан оруулсан утгатай таарахгүй байна.");return;}
   setBusy(true);
-  try{const r=await fetch(`/api/auth/${mode}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name,email,password})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Үйлчилгээ түр боломжгүй байна.");router.replace("/studio");router.refresh();}
+  try{const r=await fetch(`/api/auth/${mode}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name,email,password})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Үйлчилгээ түр боломжгүй байна.");router.replace(returnTo?.startsWith("/oauth/authorize?")?returnTo:"/studio");router.refresh();}
   catch(e){setError(e instanceof Error?e.message:"Сүлжээний холболтоо шалгаад дахин оролдоно уу.");}finally{setBusy(false);}
  }
  return <main className="authLayout">

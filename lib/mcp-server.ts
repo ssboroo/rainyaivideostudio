@@ -1,0 +1,60 @@
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { z } from 'zod';
+import { models, getModel, buildProviderInput, estimateCredits } from './models.ts';
+import { modelGuide, parameterLabel, parameterHelp, durationLabel, resolutionLabel, aspectLabel } from './model-guides.ts';
+
+export type McpIdentity = { userId: string; scopes: string[]; grantId: string };
+export type McpServices = {
+  createUserGeneration: (userId: string, raw: Record<string, unknown>, options: { idempotencyKey: string; maxCredits: number }) => Promise<unknown>;
+  getUserGeneration: (userId: string, id: string) => Promise<unknown>;
+  cancelUserGeneration: (userId: string, id: string) => Promise<unknown>;
+  listUserGenerations: (userId: string) => Promise<unknown>;
+  getUserAccount: (userId: string) => Promise<unknown>;
+};
+const readAnnotations = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
+const modelSlug = z.string().min(1).max(100).describe('ravs_list_models-оос сонгосон slug');
+const generationId = z.string().min(1).max(100);
+const generationInput = z.record(z.string().max(100), z.unknown()).describe('Studio оролт: prompt, duration, resolution, aspectRatio; файлын imageUrl/videoUrl; бусад албан параметр modelOptions объектод. base64 биш нийтийн HTTPS холбоос хэрэглэ.');
+function result(value: unknown) { return { content: [{ type: 'text' as const, text: JSON.stringify(value) }] }; }
+function error(message: string) { return { isError: true, content: [{ type: 'text' as const, text: message }] }; }
+function describeModel(m: typeof models[number]) {
+  return { slug: m.slug, name: m.name, maker: m.maker, kind: m.kind, mode: modelGuide(m).mode, description: m.description, ready: !!m.apiVerified, duration: durationLabel(m), resolution: resolutionLabel(m), aspectRatio: aspectLabel(m), pricing: { type: m.pricingType, creditRate: m.creditRate }, guidePath: `/models/${m.slug}` };
+}
+
+/** Each request gets an independent server and a validated account identity. */
+export function createRavsMcpServer(identity: McpIdentity, services: McpServices) {
+  const server = new McpServer({ name: 'RAVS Монгол бүтээлч студи', version: '1.0.0' }, {
+    instructions: 'Монгол хэлээр тусал. Эхлээд хэрэглэгчийн зорилгыг тодруулж, тохирох загварын албан тохиргоог шалга. Нэг хүсэлтэд санаа, storyboard, prompt, Монгол caption, hashtag, нийтлэх төлөвлөгөө бэлдэж болно. ravs_content_brief нь ажлын чиглэл өгдөг; бүтээлч бичвэрийг та өөрөө боловсруул. Үүсгэхийн өмнө ravs_estimate ашиглаад загвар, тохиргоо, кредитийг хэрэглэгчид харуулж тодорхой зөвшөөрөл ав. Зөвшөөрөлгүй confirmGeneration=true бүү өг. Үүсгэх нь төлбөртэй; эхэлсэн хүсэлт амжилттай дууссан гэсэн үг биш. COMPLETED ба media URL гарсан үед л бэлэн гэж хэл. FAILED/NSFW/CANCELED төлөвийг үнэн зөв мэдээл. HF түлхүүр хэзээ ч бүү хүс. Өөр хэрэглэгчийн мэдээлэлд хандах боломжгүй.',
+    maxToolInputElements: 300,
+  });
+  const guarded = async (scope: string, operation: () => Promise<unknown>) => {
+    if (!identity.scopes.includes(scope)) return error('Энэ холболтод шаардлагатай эрх алга. RAVS дээр дахин зөвшөөрөл өгнө үү.');
+    try { return result(await operation()); } catch (e) {
+      // Only service errors with a deliberate public status may cross the boundary.
+      return error(e instanceof Error && 'status' in e ? e.message : 'Хүсэлтийг гүйцэтгэж чадсангүй. Дахин оролдоно уу.');
+    }
+  };
+  server.registerTool('ravs_list_models', { title: 'Загвар сонгох', description: 'Зургийн, видеоны, засварлах загваруудын Монгол тайлбар ба зөвшөөрсөн хэмжээг харуулна. Баримт баталгаажаагүй загвараар үүсгэх боломжгүй.', inputSchema: { query: z.string().max(100).optional(), kind: z.enum(['video', 'image', 'workflow']).optional(), readyOnly: z.boolean().default(true) }, annotations: readAnnotations }, async ({ query, kind, readyOnly }) => guarded('ravs:read', async () => ({ models: models.filter(m => (!readyOnly || m.apiVerified) && (!kind || m.kind === kind) && (!query || `${m.name} ${m.maker} ${m.description}`.toLowerCase().includes(query.toLowerCase()))).map(describeModel) })));
+  server.registerTool('ravs_model_guide', { title: 'Загварын Монгол заавар', description: 'Тухайн хувилбарын алхам, хязгаар, шаардлагатай файлууд, prompt ба бүх API параметрийг шалгана.', inputSchema: { modelSlug }, annotations: readAnnotations }, async ({ modelSlug }) => guarded('ravs:read', async () => {
+    const m = getModel(modelSlug); if (!m) return { error: 'Загвар олдсонгүй.' };
+    return { ...describeModel(m), modelId: m.modelId, ...modelGuide(m), parameters: m.parameters?.map(p => ({ ...p, label: parameterLabel(p.name), help: parameterHelp(p) })), inputFormat: 'Үндсэн талбар: prompt, duration, resolution, aspectRatio, generateAudio, imageUrl, imageUrls, videoUrl. Бусад API параметрийг modelOptions объектод өгнө.' };
+  }));
+  server.registerTool('ravs_content_brief', { title: 'Монгол контентын ажлын чиглэл', description: 'Брэндийн Монгол кампанит ажлын бүтцийг өгнө. Энэ нь бэлэн AI бичвэр биш; туслах санаа, storyboard, caption болон prompt-ыг бүтэц дээр тулгуурлан бичнэ. Кредит зарцуулахгүй.', inputSchema: { brand: z.string().min(1).max(150), goal: z.string().min(1).max(1000), audience: z.string().min(1).max(500), channel: z.enum(['Reels', 'TikTok', 'YouTube', 'Facebook', 'Website']), modelSlug }, annotations: readAnnotations }, async (brief) => guarded('ravs:read', async () => {
+    const m = getModel(brief.modelSlug); if (!m) return { error: 'Загвар олдсонгүй.' };
+    return { brief, language: 'Монгол', model: describeModel(m), guide: modelGuide(m), deliverables: ['3 өөр санаа, тус бүр зорилго ба гол өгүүлбэр', 'Сонгосон санааны кадр бүрийн үйлдэл, камер, гэрэлтэй storyboard', 'Кадр тус бүрийн үүсгэх prompt ба албан тохиргоо', 'Монгол caption, эхний 2 секундийн hook, CTA ба hashtag', 'Нийтлэх хуваарь ба хувилбар харьцуулах шалгуур'], aspectRatioSuggestion: ['Reels', 'TikTok'].includes(brief.channel) ? '9:16' : brief.channel === 'YouTube' || brief.channel === 'Website' ? '16:9' : '1:1', checks: ['Брэндийн бүтээгдэхүүн, үнэ, амлалтыг хэрэглэгчийн өгсөн бодит мэдээллээр бич.', 'Тухайн загвар дэмждэг харьцаа, хугацааг л сонго.', 'Зураг шаардлагатай бол хэрэглэгчээс жишиг файлын холбоос ав.', 'Нэг үүсгэлт нэг хэсэг гаргана; олон хэсэгтэй нийт контентын эвлүүлгийг тусад нь төлөвлө.', 'Кредитийг тооцоолж хэрэглэгчийн зөвшөөрөл авах хүртэл үүсгэхгүй.'] };
+  }));
+  server.registerTool('ravs_estimate', { title: 'Кредит ба тохиргоо шалгах', description: 'Бодит үүсгэлт хийхгүйгээр оролтыг шалгаж RAVS кредитийг тооцоолно. Файлын MB хэмжээг нягтаршилаас таамаглахгүй.', inputSchema: { modelSlug, input: generationInput }, annotations: readAnnotations }, async ({ modelSlug, input }) => guarded('ravs:read', async () => {
+    const m = getModel(modelSlug); if (!m) return { error: 'Загвар олдсонгүй.' };
+    try { const payload = buildProviderInput(m, input); return { model: m.name, validatedInput: payload, credits: estimateCredits(m, Number(payload.duration)), billable: true, next: 'Хэрэглэгчид тохиргоо, кредитийг харуул. Зөвшөөрсөн бол шинэ idempotencyKey ба maxCredits-тай ravs_create_generation дууд.' }; }
+    catch (e) { return { error: e instanceof Error ? e.message : 'Оролт буруу байна.' }; }
+  }));
+  server.registerTool('ravs_account', { title: 'Миний кредит', description: 'Холболтыг зөвшөөрсөн хэрэглэгчийн кредитийг харуулна.', inputSchema: {}, annotations: readAnnotations }, async () => guarded('ravs:read', () => services.getUserAccount(identity.userId)));
+  server.registerTool('ravs_list_generations', { title: 'Миний бүтээлүүд', description: 'Зөвхөн өөрийн сүүлийн бүтээлүүдийг харуулна.', inputSchema: {}, annotations: readAnnotations }, async () => guarded('ravs:read', () => services.listUserGenerations(identity.userId)));
+  server.registerTool('ravs_generation_status', { title: 'Үүсгэлтийн төлөв', description: 'Өөрийн хүсэлтийн төлөвийг шалгаж дууссан үед медиа холбоосыг авна. Алдаатай/хориглогдсон/цуцлагдсан хүсэлтийг амжилт гэж хэлж болохгүй.', inputSchema: { generationId }, annotations: { ...readAnnotations, openWorldHint: true } }, async ({ generationId }) => guarded('ravs:read', () => services.getUserGeneration(identity.userId, generationId)));
+  if (identity.scopes.includes('ravs:generate')) {
+    server.registerTool('ravs_create_generation', { title: 'Төлбөртэй бүтээл үүсгэх', description: 'Кредит зарцуулна. ravs_estimate дараа хэрэглэгч тодорхой зөвшөөрсөн үед л дууд. Нэг үйлдлийн дахин оролдлогод ижил idempotencyKey хэрэглэ. maxCredits нь хэрэглэгчийн зөвшөөрсөн дээд кредит. SUBMITTED бол бэлэн видео биш.', inputSchema: { modelSlug, input: generationInput, confirmGeneration: z.literal(true), maxCredits: z.number().int().min(1).max(1000000), idempotencyKey: z.string().min(16).max(128).regex(/^[A-Za-z0-9_-]+$/) }, annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true } }, async ({ modelSlug, input, maxCredits, idempotencyKey }) => guarded('ravs:generate', () => services.createUserGeneration(identity.userId, { ...input, modelSlug }, { maxCredits, idempotencyKey })));
+    server.registerTool('ravs_cancel_generation', { title: 'Үүсгэлт цуцлах', description: 'Хэрэглэгч хүссэн үед өөрийн эхэлж амжаагүй үүсгэлтийг цуцална. Боловсруулж эхэлсэн хүсэлт цуцлагдахгүй.', inputSchema: { generationId, confirmCancel: z.literal(true) }, annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true } }, async ({ generationId }) => guarded('ravs:generate', () => services.cancelUserGeneration(identity.userId, generationId)));
+  }
+  server.registerPrompt('mongolian_campaign', { title: 'Монгол кампанит ажил', description: 'RAVS хэрэгслээр санаанаас нийтлэх контент хүртэл төлөвлөх', argsSchema: { brand: z.string().max(150), goal: z.string().max(1000), audience: z.string().max(500) } }, async ({ brand, goal, audience }) => ({ messages: [{ role: 'user', content: { type: 'text', text: `${brand} брэндэд Монгол хэлээр бүтэн контент бэлд. Зорилго: ${goal}. Үзэгчид: ${audience}. Эхлээд ravs_list_models, сонгосон ravs_model_guide ашигла. 3 санаа, storyboard, кадр бүрийн prompt/тохиргоо, caption, hook, CTA, нийтлэх төлөвлөгөө гарга. ravs_estimate ашиглаж кредитийг харуул. Миний тусдаа зөвшөөрөлгүйгээр төлбөртэй үүсгэлт бүү хий. Хүсэлт эхэлсэн бол ravs_generation_status-аар шалгаж, зөвхөн COMPLETED ба URL байвал бэлэн гэж хэл.` } }] }));
+  return server;
+}

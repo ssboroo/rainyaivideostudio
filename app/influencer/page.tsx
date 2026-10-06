@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, ScanFace, Sparkles, Upload, WandSparkles } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
-import { CommunityInspiration } from "@/components/community-inspiration";
 
 export default function InfluencerPage() {
   return (
@@ -26,7 +25,6 @@ export default function InfluencerPage() {
             <div className="featureCell"><Sparkles/><b>Онцгой төрх</b><p>Сошиалд ялгарах содон төрх, хувцас, хэв маяг.</p></div>
             <div className="featureCell"><WandSparkles/><b>Уран зөгнөлт төрх</b><p>Хошин болон уран зөгнөлт контентод зориулсан өвөрмөц дүр.</p></div>
           </div>
-          <CommunityInspiration surface="influencer" title="Дүр бүтээх санаанууд" />
         </section>
       </section>
     </main>

@@ -1,0 +1,2 @@
+import {getSessionUser} from "@/lib/session";import {db} from "@/lib/db";
+export async function DELETE(_req:Request,{params}:{params:Promise<{id:string}>}){const user=await getSessionUser();if(!user)return Response.json({error:"Нэвтэрнэ үү."},{status:401});const {id}=await params;const result=await db.oAuthGrant.updateMany({where:{id,userId:user.id,revokedAt:null},data:{revokedAt:new Date()}});return Response.json({revoked:result.count===1});}

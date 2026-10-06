@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ArrowRight, Compass, Sparkles } from "lucide-react";
 import { WorkflowIcon } from "@/components/workflow-icon";
 import { Sidebar } from "@/components/sidebar";
-import { CommunityInspiration } from "@/components/community-inspiration";
 import { promptPresets, workflows } from "@/lib/product";
 import { ModelCatalog } from "@/components/model-catalog";
 import { MediaSizeGuide } from "@/components/model-guide";
@@ -24,7 +23,6 @@ export default function ExplorePage() {
             <p>Хэрэгсэл, бэлэн тайлбар болон AI загваруудаас өөрийн ажилд тохирохыг сонго.</p>
           </div>
 
-          <CommunityInspiration surface="explore" title="Бүтээлчдийн жишээ" />
           <div className="catalogSection">
             <div className="sectionTitleRow compact"><div><small>WORKFLOWS</small><h2>Бүтээх хэрэгслүүд</h2></div></div>
             <div className="workflowGrid">

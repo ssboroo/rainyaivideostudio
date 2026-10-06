@@ -1,0 +1,2 @@
+import {boundedBody,checkOAuthLimit,revokeToken,OAuthError,oauthFailure,oauthResponse} from "@/lib/mcp-oauth";
+export async function POST(req:Request){try{checkOAuthLimit(req,"revoke",60);if(!req.headers.get("content-type")?.startsWith("application/x-www-form-urlencoded"))throw new OAuthError("invalid_request");const p=new URLSearchParams(await boundedBody(req));if(!p.get("token")||!p.get("client_id"))throw new OAuthError("invalid_request");await revokeToken(p.get("token")!,p.get("client_id")!);return oauthResponse({});}catch(e){return oauthFailure(e);}}

@@ -7,6 +7,7 @@ import { RavsLogo } from "@/components/ravs-logo";
 import {
   BadgeDollarSign,
   Boxes,
+  Plug,
   Clapperboard,
   Compass,
   Film,
@@ -51,6 +52,7 @@ const groups = [
     items: [
       ["/studio#generations", "Бүтээлүүд", LayoutGrid],
       ["/billing", "Кредит", WalletCards],
+      ["/integrations", "AI холболт", Plug],
       ["/admin", "Удирдлага", ShieldCheck],
     ],
   },

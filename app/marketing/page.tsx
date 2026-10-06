@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, BadgeDollarSign, Image, LayoutTemplate, Megaphone, ShoppingBag } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
-import { CommunityInspiration } from "@/components/community-inspiration";
 
 const lanes = [
   [Image, "Product Shots", "Бүтээгдэхүүний зургаас студийн болон амьдралын хэв маягийн зураг бүтээ."],
@@ -24,7 +23,6 @@ export default function MarketingPage() {
             <div className="featureActions"><Link className="primary large" href="/studio?model=marketing-studio">Контент бүтээж эхлэх <ArrowRight size={17}/></Link><Link className="ghost large" href="/apps">Хурдан хэрэгслүүд</Link></div>
           </div>
           <div className="laneGrid">{lanes.map(([Icon,title,desc])=><Link href={"/studio?model=marketing-studio&prompt="+encodeURIComponent(title+" — premium commercial creative")} className="laneCard" key={title}><Icon/><div><b>{title}</b><p>{desc}</p></div><ArrowRight size={15}/></Link>)}</div>
-          <CommunityInspiration surface="marketing" title="Маркетингийн контентын санаанууд" />
           <div className="featureCallout"><div><small>RAVS ADVANTAGE</small><h2>Монгол UI + ₮ credit + Wire.mn</h2><p>Нэг дансаар хэрэгслүүдээ ашиглаж, бүтээл бүрийн кредитийг үүсгэхээс өмнө харна. Кредит худалдан авах үйлчилгээ нээгдэх үед ₮-өөр төлөх боломжтой.</p></div><Link href="/billing" className="ghost">Credit авах</Link></div>
         </section>
       </section>

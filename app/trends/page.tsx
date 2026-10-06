@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ArrowRight, TrendingUp } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
 import { TrendShowcase } from "@/components/trend-showcase";
-import { CommunityInspiration } from "@/components/community-inspiration";
 
 export default function TrendsPage() {
   return (
@@ -18,7 +17,6 @@ export default function TrendsPage() {
           <h1>Одоо тренд болж буй <em>video effect</em>-үүд.</h1>
           <p>Higgsfield-ийн viral preset demo-уудыг Монгол тайлбартай харж, өөрийн creative workflow-оо сонго.</p>
         </section>
-        <CommunityInspiration surface="trends" title="Community trend inspiration" />
         <TrendShowcase />
       </section>
     </main>

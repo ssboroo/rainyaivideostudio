@@ -1,0 +1,11 @@
+import {AuthForm} from "@/components/auth-form";
+import {getSessionUser} from "@/lib/session";
+import {signConsent,validateAuthorization} from "@/lib/mcp-oauth";
+export const dynamic="force-dynamic";
+export const metadata={title:"MCP холболтын зөвшөөрөл",referrer:"no-referrer"};
+export default async function Page({searchParams}:{searchParams:Promise<Record<string,string|string[]|undefined>>}){
+ const values=await searchParams;const p=new URLSearchParams();for(const [key,value]of Object.entries(values)){if(typeof value==="string")p.set(key,value);else if(Array.isArray(value))return <main className="authPage"><p>Холболтын хүсэлт буруу байна.</p></main>;}
+ let request;try{request=await validateAuthorization(p);}catch{return <main className="authPage"><div className="authCard"><h1>Холболтын хүсэлт буруу байна</h1><p>MCP клиентээс холболтоо дахин эхлүүлнэ үү. Буцах хаяг болон PKCE хамгаалалт шаардлагатай.</p></div></main>;}
+ const user=await getSessionUser();if(!user)return <div className="authPage"><AuthForm mode="login" returnTo={`/oauth/authorize?${p.toString()}`}/></div>;
+ return <main className="authPage"><form className="authCard" method="POST" action="/oauth/consent"><h1>{request.clientName} холбох</h1><p>{user.email} бүртгэлийн зөвшөөрөл</p><p>Энэ клиент таны RAVS бүртгэлд дараах эрхээр ажиллана:</p><ul><li>Загвар, заавар, кредит болон таны бүтээлийн түүхийг унших.</li>{request.scope.includes("ravs:generate")&&<li>Таны баталгаажуулсан хүсэлтээр кредит зарцуулж бүтээл үүсгэх, хүлээгдэж буй хүсэлтийг цуцлах.</li>}{request.scope.includes("offline_access")&&<li>Дахин нэвтрэхгүйгээр холболтоо үргэлжлүүлэх. Та хүссэн үедээ салгаж болно.</li>}</ul><p>Клиентийн нэрийг бүртгүүлэгч өгсөн. Буцах хаягийг шалгана уу: <strong>{new URL(request.redirectUri).origin}</strong></p><p>Higgsfield API түлхүүр болон таны нууц үгийг клиентэд дамжуулахгүй.</p><input type="hidden" name="consent" value={signConsent(user.id,request)}/><button className="primary wide" name="decision" value="allow" type="submit">Эрхийг зөвшөөрч холбох</button><button className="secondary wide" name="decision" value="deny" type="submit">Татгалзах</button><p>Холболтыг /integrations хэсэгт цуцалж болно.</p></form></main>;
+}

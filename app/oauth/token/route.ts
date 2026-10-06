@@ -1,0 +1,3 @@
+import {boundedBody,checkOAuthLimit,exchangeToken,OAuthError,oauthFailure,oauthResponse} from "@/lib/mcp-oauth";
+export async function POST(req:Request){try{checkOAuthLimit(req,"token",60);if(!req.headers.get("content-type")?.startsWith("application/x-www-form-urlencoded"))throw new OAuthError("invalid_request");return oauthResponse(await exchangeToken(new URLSearchParams(await boundedBody(req))));}catch(e){return oauthFailure(e);}}
+export function OPTIONS(){return new Response(null,{status:204,headers:{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST, OPTIONS","Access-Control-Allow-Headers":"Content-Type"}});}

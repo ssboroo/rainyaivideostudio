@@ -26,10 +26,9 @@ import Link from "next/link";
 import { ModelGuide } from "@/components/model-guide";
 import { parameterLabel, parameterHelp, optionLabel, modelGuide, resolutionLabel, aspectLabel } from "@/lib/model-guides";
 import { GenerationResult } from "@/components/generation-result";
-import { WorkflowIcon } from "@/components/workflow-icon";
 import { mediaFrom } from "@/lib/generation-media";
 import { Sidebar } from "@/components/sidebar";
-import { CommunityInspiration } from "@/components/community-inspiration";
+import { ModelExamples } from "@/components/model-examples";
 import { buildProviderInput, estimateCredits, getModel, models, type ModelKind, type RavsModel } from "@/lib/models";
 
 type User = {
@@ -354,7 +353,6 @@ export function StudioClient() {
                   onClick={() => chooseModel(item.slug)}
                   className={"modelItem " + (selected === item.slug ? "active" : "")}
                 >
-                  <div className={"modelGlyph tone-" + (item.tone || "violet")}><WorkflowIcon id={item.slug} size={20}/></div>
                   <div>
                     <b>{item.name}</b>
                     <small>{item.maker || item.provider} · {item.badge}</small>
@@ -378,7 +376,6 @@ export function StudioClient() {
 
             <div className="composerPanel">
               <div className="composerMode">
-                <span className={"modelGlyph tiny tone-" + (model.tone || "violet")}><WorkflowIcon id={model.slug} size={20}/></span>
                 <div><b>{model.name}</b><small>{model.capabilities?.join(" · ")}</small></div>
                 <a className="outlineIcon" href="#studio-settings" aria-label="Үүсгэлтийн тохиргоо"><SlidersHorizontal size={15}/></a>
               </div>
@@ -505,7 +502,7 @@ export function StudioClient() {
               <div><small>БҮТЭЭЛҮҮД</small><b>Хувийн түүх</b></div>
             </section>
 
-            <CommunityInspiration surface={model.kind === "video" ? "video" : model.group === "Genjutsu" ? "apps" : model.group === "Cinema" ? "cinema" : model.group === "Ads" ? "marketing" : model.group === "Influencer" ? "influencer" : "explore"} limit={4} title="Энэ загварт тохирох бүтээлийн санаа" />
+            <ModelExamples model={model} onUsePrompt={setPrompt} />
             <section id="generations" className="generationSection">
               <div className="historyHead">
                 <div><small>GENERATIONS</small><h2>Миний бүтээлүүд</h2></div>
@@ -569,7 +566,6 @@ export function StudioClient() {
           <aside className="contextRail">
             <div className="contextCard">
               <small>MODEL</small>
-              <div className={"contextModel tone-" + (model.tone || "violet")}><WorkflowIcon id={model.slug} size={20}/></div>
               <h3>{model.name}</h3>
               <p>{model.description}</p>
               <div className="contextTags">{model.capabilities?.map((item) => <span key={item}>{item}</span>)}</div>
