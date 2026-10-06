@@ -1,7 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 62">
-  <path d="M3 4h50c15 0 23 7 23 19 0 10-5 16-15 19l20 16H59L41 43H20v15H3Zm17 12v15h31c5 0 8-2 8-7 0-5-3-8-8-8Z" fill="#fff"/>
-  <path d="M83 58 108 4h10l27 54h-18l-4-10H99l-4 10Z" fill="#FFD800"/>
-  <path d="M105 36h13l-6.8-15Z" fill="#050505"/>
-  <path d="M143 4h18l16 36 16-36h18l-25 54h-18Z" fill="#fff"/>
-  <path d="M209 4h38v12h-31c-4 0-6 2-6 5 0 3 2 5 6 5h18c12 0 18 5 18 16 0 11-7 16-20 16h-38V46h34c4 0 6-2 6-5 0-3-2-5-6-5h-18c-12 0-18-6-18-16 0-10 6-16 17-16Z" fill="#fff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 76">
+<defs>
+<linearGradient id="w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".54" stop-color="#f6f6f4"/><stop offset="1" stop-color="#e9e9e6"/></linearGradient>
+<linearGradient id="y" x1="0" y1="0" x2=".9" y2="1"><stop offset="0" stop-color="#fff900"/><stop offset=".58" stop-color="#ffe600"/><stop offset="1" stop-color="#f1d400"/></linearGradient>
+<filter id="g" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.1" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<path d="M5 10h55c19 0 29 8.5 29 24 0 11.6-6.2 19.2-18.5 22.6L92 69H67L49 57H27v12H5V37h56c4.4 0 6.8-2.2 6.8-6.5S65.4 24 61 24H5Z" fill="url(#w)"/>
+<path d="M94 69 122.5 11.5c2.3-4.7 5.2-7 8.8-7 3.6 0 6.4 2.1 8.6 6.4L169 69h-22.5l-7-15.2h-27.4L105 69Z" fill="url(#y)" filter="url(#g)"/>
+<path d="m119.2 43.5 12-24.7 11.2 24.7-11.3-7.4Z" fill="#050505"/>
+<path d="M164 10h23.5l22.5 42 22.7-42H256l-33 59h-26Z" fill="url(#w)"/>
+<path d="M258 10h57v14h-47.5c-4.5 0-6.8 2-6.8 5.8 0 3.7 2.4 5.6 7.1 5.6h27.7c13.8 0 21.5 5.8 21.5 16.8C317 63.5 309.1 69 293.4 69H253V55h39.6c4.6 0 7-1.9 7-5.7s-2.3-5.7-7-5.7h-28c-14 0-21.4-5.6-21.4-16.4C243.2 15.9 250.4 10 258 10Z" fill="url(#w)"/>
 </svg>
