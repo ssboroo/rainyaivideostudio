@@ -28,29 +28,29 @@ const groups = [
     label: "Бүтээх",
     items: [
       ["/", "Нүүр", Home],
-      ["/studio", "Studio", Clapperboard],
-      ["/explore", "Explore", Compass],
+      ["/studio", "Бүтээх студи", Clapperboard],
+      ["/explore", "Хэрэгсэл үзэх", Compass],
       ["/video-guide", "Видео гарын авлага", CirclePlay],
-      ["/trends", "Trend Video", TrendingUp],
-      ["/community", "Community", UsersRound],
+      ["/trends", "Тренд видео", TrendingUp],
+      ["/community", "Бүтээлчдийн сан", UsersRound],
     ],
   },
   {
-    label: "Workflow",
+    label: "Ажлын төрөл",
     items: [
-      ["/cinema", "Cinema Studio", Film],
+      ["/cinema", "Кино студи", Film],
       ["/studio?group=Genjutsu", "Genjutsu", WandSparkles],
-      ["/marketing", "Marketing", Megaphone],
-      ["/influencer", "AI Influencer", ScanFace],
-      ["/apps", "Effects & Apps", Sparkles],
+      ["/marketing", "Маркетинг", Megaphone],
+      ["/influencer", "AI дүр бүтээх", ScanFace],
+      ["/apps", "Эффект ба хэрэгсэл", Sparkles],
     ],
   },
   {
     label: "Сан",
     items: [
       ["/studio#generations", "Бүтээлүүд", LayoutGrid],
-      ["/billing", "Credit", WalletCards],
-      ["/admin", "Admin", ShieldCheck],
+      ["/billing", "Кредит", WalletCards],
+      ["/admin", "Удирдлага", ShieldCheck],
     ],
   },
 ] as const;
@@ -89,18 +89,18 @@ export function Sidebar() {
       </nav>
 
       <div className="sidebarPromo">
-        <div className="promoIcon"><Boxes size={16} /></div>
+        <div className="promoIcon"><RavsLogo compact /></div>
         <div>
-          <b>One Studio</b>
-          <small>Video · Image · Ads</small>
+          <b>Нэг студи</b>
+          <small>Видео · Зураг · Зар</small>
         </div>
       </div>
 
       <div className="sidebarFoot">
-        <div className="avatar">R</div>
+        <div className="avatar"><RavsLogo compact /></div>
         <div>
-          <b>Rainy AI</b>
-          <small>Монгол creative platform</small>
+          <b>RAVS</b>
+          <small>Монгол бүтээлч платформ</small>
         </div>
       </div>
     </aside>

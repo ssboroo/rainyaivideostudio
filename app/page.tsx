@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { WorkflowIcon } from "@/components/workflow-icon";
+import { WorkflowTutorials } from "@/components/workflow-tutorials";
 import {
   ArrowRight,
   ChevronRight,
@@ -27,7 +29,7 @@ export default function Home() {
         <header className="topbar">
           <div className="topBrand ravsTopBrand">
             <RavsWordmark className="ravsTopWordmark" />
-            <span>AI Creative Suite</span>
+            <span>AI бүтээлч студи</span>
           </div>
           <div className="topActions">
             <Link className="ghost" href="/login">Нэвтрэх</Link>
@@ -44,7 +46,7 @@ export default function Home() {
               <RavsLogo showSubtitle showTagline />
             </div>
 
-            <div className="eyebrow"><Sparkles size={14} /> Монгол хэл дээрх AI Creative Suite</div>
+            <div className="eyebrow"><Sparkles size={14} /> Монгол хэл дээрх AI бүтээлч студи</div>
             <h1>Санаанаас <em>бэлэн контент</em> хүртэл.</h1>
             <p>
               Video, image, cinema, motion, Genjutsu, product ads болон character workflow-уудыг
@@ -71,7 +73,7 @@ export default function Home() {
         <section className="productSection">
           <div className="sectionTitleRow">
             <div>
-              <small>WORKFLOWS</small>
+              <small>БҮТЭЭХ ХЭРЭГСЛҮҮД</small>
               <h2>Хийх зүйлээрээ сонго</h2>
               <p>Model нэр мэдэх шаардлагагүй. Ажлын төрлөө сонгоод шууд эхэл.</p>
             </div>
@@ -79,20 +81,22 @@ export default function Home() {
           </div>
           <div className="workflowGrid">
             {workflows.map((item) => (
-              <Link className={"workflowCard accent-" + item.accent} href={item.href} key={item.id}>
+              <article className={"workflowCard accent-" + item.accent} key={item.id}>
                 <div className="workflowTop">
                   <span>{item.eyebrow}</span>
                   <b>{item.badge}</b>
                 </div>
-                <div className="workflowArt"><div /><div /><div /></div>
+                <div className="workflowIconStage"><WorkflowIcon id={item.id} size={42}/><span>{item.title}</span></div>
                 <h3>{item.title}</h3>
                 <p>{item.description}</p>
                 <div className="tagRow">{item.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
-              </Link>
+                <div className="workflowActions"><Link href={item.href}>Бүтээж эхлэх <ArrowRight size={13}/></Link><Link href={"/video-guide#"+item.id}>Заавар үзэх</Link></div>
+              </article>
             ))}
           </div>
         </section>
 
+        <WorkflowTutorials compact />
         <TrendShowcase compact />
 
         <VideoShowcase compact />
@@ -102,7 +106,7 @@ export default function Home() {
           <div>
             <div className="sectionTitleRow compact">
               <div>
-                <small>START FAST</small>
+                <small>ХУРДАН ЭХЛЭХ</small>
                 <h2>Монгол prompt preset</h2>
                 <p>Нэг даралтаар Studio-д prompt болон model бэлэн нээгдэнэ.</p>
               </div>
@@ -125,7 +129,7 @@ export default function Home() {
           <div>
             <div className="sectionTitleRow compact">
               <div>
-                <small>MODELS</small>
+                <small>ЗАГВАРУУД</small>
                 <h2>Шилдэг engine-үүд</h2>
                 <p>RAVS model бүрийн оролт, хугацаа, харьцаа, reference-ийг автоматаар тааруулна.</p>
               </div>
@@ -133,7 +137,7 @@ export default function Home() {
             <div className="modelMiniGrid">
               {featured.map((model) => (
                 <Link href={"/studio?model=" + model.slug} className="modelMini" key={model.slug}>
-                  <div className={"modelGlyph tone-" + (model.tone || "violet")}><Play size={13} fill="currentColor" /></div>
+                  <div className={"modelGlyph tone-" + (model.tone || "violet")}><WorkflowIcon id={model.slug} size={20} /></div>
                   <div>
                     <b>{model.name}</b>
                     <small>{model.maker || model.provider} · {model.badge}</small>
@@ -147,7 +151,7 @@ export default function Home() {
 
         <section className="bottomCta">
           <div>
-            <small>RAVS CREATIVE CLOUD</small>
+            <small>БҮТЭЭЛЧ ОРЧИН</small>
             <h2>Нэг санаа. Олон формат. Нэг workflow.</h2>
             <p>9:16 Reel, 16:9 film, 1:1 ad, product image, poster — бүгд нэг төслөөс.</p>
           </div>

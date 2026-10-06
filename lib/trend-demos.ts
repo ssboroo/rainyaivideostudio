@@ -1,62 +1,8 @@
 export const trendDemos = [
-  {
-    id: "earth-zoom-out",
-    title: "Earth Zoom Out",
-    badge: "TOP CHOICE",
-    description: "Камер subject-оос асар хурдтай ухарч хот, тив, эцэст нь дэлхийг бүхэлд нь харуулдаг cinematic reveal.",
-    use: "Reel intro, travel, brand reveal",
-    poster: "https://static.higgsfield.ai/70e490b9-26b7-4572-8d9c-2ac8dcc9adc0.webp",
-    official: "https://higgsfield.ai/motion/70e490b9-26b7-4572-8d9c-2ac8dcc9adc0",
-    accent: "violet"
-  },
-  {
-    id: "eyes-in",
-    title: "Eyes In",
-    badge: "TOP CHOICE",
-    description: "Камер нүд рүү хүчтэй ойртож intense, emotional hook үүсгэнэ.",
-    use: "Beauty, character reveal, dramatic hook",
-    poster: "https://static.higgsfield.ai/0ab33462-481e-4c78-8ffc-086bebd84187.webp",
-    official: "https://higgsfield.ai/motion/0ab33462-481e-4c78-8ffc-086bebd84187",
-    accent: "blue"
-  },
-  {
-    id: "building-explosion",
-    title: "Building Explosion",
-    badge: "TOP CHOICE",
-    description: "Барилга асар хүчтэй дэлбэрч debris цацрах action-style VFX.",
-    use: "Action scene, trailer, dramatic transition",
-    poster: "https://static.higgsfield.ai/7339b262-6273-44e9-bd57-35e2d4de2803.webp",
-    official: "https://higgsfield.ai/motion/e974bca9-c9eb-4cc8-9318-5676cc110f17",
-    accent: "amber"
-  },
-  {
-    id: "disintegration",
-    title: "Disintegration",
-    badge: "TOP CHOICE",
-    description: "Дүр эсвэл object жижиг хэсгүүд болон сарниж алга болох cinematic dissolve effect.",
-    use: "Transformation, sci-fi, reveal",
-    poster: "https://static.higgsfield.ai/4e981984-1cdc-4b96-a2b1-1a7c1ecb822d.webp",
-    official: "https://higgsfield.ai/motion/4e981984-1cdc-4b96-a2b1-1a7c1ecb822d",
-    accent: "rose"
-  },
-  {
-    id: "face-punch",
-    title: "Face Punch",
-    badge: "TOP CHOICE",
-    description: "Impact moment-ыг exaggerated motion болон camera hit-тэйгээр гаргадаг viral action effect.",
-    use: "Comedy, action hook, meme",
-    poster: "https://static.higgsfield.ai/cd5bfd11-5a1a-46e0-9294-b22b0b733b1e.webp",
-    official: "https://higgsfield.ai/motion/cd5bfd11-5a1a-46e0-9294-b22b0b733b1e",
-    accent: "cyan"
-  },
-  {
-    id: "metal-melting",
-    title: "Turning Metal + Melting",
-    badge: "MIXED",
-    description: "Арьс, хувцас эсвэл дүр metallic болж хувираад дараа нь хайлах surreal transformation.",
-    use: "Fashion, sci-fi, surreal content",
-    poster: "https://static.higgsfield.ai/017ae2b7-bcff-42ef-863e-6e198f96c3ec.webp",
-    official: "https://higgsfield.ai/motion/017ae2b7-bcff-42ef-863e-6e198f96c3ec",
-    accent: "lime"
-  }
+ {id:"eyes-in",title:"Нүд рүү ойртох",badge:"ОЙРЫН КАДР",description:"Камер нүд рүү ойртож нүүрний жижиг деталь, сэтгэл хөдлөлийг тодруулна.",use:"Гоо сайхан, хөрөг, анхаарал татах эхлэл",poster:"https://cdn.higgsfield.ai/viral_hub/5354ce11-c68c-45a0-8a97-5aab94f52833.webp",previewSrc:"https://cdn.higgsfield.ai/viral_hub/dba03734-6e8a-4337-acb4-17ce943563d8.mp4",official:"https://higgsfield.ai/effects/examples/eyes-in",accent:"blue"},
+ {id:"world-morphing",title:"Орчны хувиралт",badge:"ХУВИРАЛТ",description:"Нэг орчноос өөр ертөнц рүү тасралтгүй хувирах шилжилт бүтээнэ.",use:"Аялал, уран зөгнөл, брэндийн танилцуулга",poster:"https://cdn.higgsfield.ai/viral_hub/0abb112e-068d-45e4-acea-9c8c44a16781.webp",previewSrc:"https://cdn.higgsfield.ai/viral_hub/950efc04-6ae6-4b31-bfa5-83c87244014c.mp4",official:"https://higgsfield.ai/effects/examples/world-morphing",accent:"violet"},
+ {id:"floating-fall",title:"Агаарт унах",badge:"ХӨДӨЛГӨӨН",description:"Дүрийг агаарт хөвөх мэт уналтаар харуулж, хүчтэй кино мэдрэмж төрүүлнэ.",use:"Загвар, клип, өвөрмөц Reel",poster:"https://cdn.higgsfield.ai/viral_hub/151664fa-7f7f-43d6-80fa-4683104a3c02.webp",previewSrc:"https://cdn.higgsfield.ai/viral_hub/d877f71c-d2f3-44df-9317-f3ce6889bcb6.mp4",official:"https://higgsfield.ai/effects/examples/floating-fall",accent:"amber"},
+ {id:"studio-slide",title:"Студийн гулсалт",badge:"ШИЛЖИЛТ",description:"Хөдөлгөөн болон камерын шилжилтээр энгийн дүрслэлийг эрч хүчтэй болгоно.",use:"Бүтээгдэхүүн, загвар, богино сурталчилгаа",poster:"https://cdn.higgsfield.ai/viral_hub/05201733-c72f-43ed-8393-8b8cea28b8ce.webp",previewSrc:"https://cdn.higgsfield.ai/viral_hub/c129fb83-2014-4a37-a3f8-6c7dfeab0254.mp4",official:"https://higgsfield.ai/effects/examples/studio-slide",accent:"cyan"},
+ {id:"high-flip",title:"Өндөр эргэлт",badge:"ЭКШН",description:"Агаар дахь эргэлт, хурдан хөдөлгөөнөөр экшн кадр бүтээнэ.",use:"Спорт, экшн, хурц эхлэл",poster:"https://cdn.higgsfield.ai/viral_hub/95cd0d73-4f3c-40d1-ac0b-c8668a99440b.webp",previewSrc:"https://cdn.higgsfield.ai/viral_hub/001156a7-cfdb-4e16-8f13-68c246ddc06c.mp4",official:"https://higgsfield.ai/effects/examples/high-flip",accent:"rose"},
+ {id:"cutout",title:"Дүрс таслан хувиргах",badge:"ЭФФЕКТ",description:"Дүрсийг таслан эвлүүлэх мэт өвөрмөц харагдах шилжилт үүсгэнэ.",use:"Постер хөдөлгөөн, бүтээлч зар, Reel",poster:"https://cdn.higgsfield.ai/viral_hub/b5c90864-c3c5-4b14-87a0-3739250fd00b.webp",previewSrc:"https://cdn.higgsfield.ai/viral_hub/a64711ac-93b8-46ee-a9ce-37ee5c18e148.mp4",official:"https://higgsfield.ai/effects/examples/cutout",accent:"lime"}
 ] as const;
