@@ -1,19 +1,56 @@
-export type RavsModel = {
-  id: string;
-  name: string;
-  provider: string;
-  kind: "video" | "image" | "workflow";
-  badge?: string;
-  description: string;
+export type ModelKind="video"|"image"|"workflow";
+export type RavsModel={
+  slug:string;name:string;provider:"Higgsfield";modelId:string;kind:ModelKind;group:string;badge:string;description:string;
+  pricingType:"second"|"flat";creditRate:number;minDuration?:number;maxDuration?:number;resolutions:string[];aspectRatios:string[];
+  supportsAudio?:boolean;supportsImage?:boolean;supportsVideo?:boolean;supportsMultipleReferences?:boolean;
 };
-
-export const models: RavsModel[] = [
-  { id: "kling-3", name: "Kling 3.0", provider: "Higgsfield", kind: "video", badge: "Шилдэг", description: "Cinematic video, multi-shot, audio" },
-  { id: "seedance-2-5", name: "Seedance 2.5", provider: "Higgsfield", kind: "video", badge: "Pro", description: "Text, image, video reference" },
-  { id: "wan-3-prime", name: "Wan 3 Prime", provider: "Higgsfield", kind: "video", badge: "Хурдан", description: "Хурдан, зардал багатай видео" },
-  { id: "cinema-studio", name: "Cinema Studio", provider: "Higgsfield", kind: "workflow", badge: "Cinema", description: "Кино түвшний scene workflow" },
-  { id: "genjutsu", name: "Genjutsu", provider: "Higgsfield", kind: "workflow", badge: "Edit", description: "Restyle, motion transfer, object swap" },
-  { id: "marketing-studio", name: "Marketing Studio", provider: "Higgsfield", kind: "workflow", badge: "Ads", description: "Product ads ба campaign creative" },
-  { id: "soul-2", name: "Soul 2", provider: "Higgsfield", kind: "image", badge: "Portrait", description: "Portrait, fashion, character зураг" },
-  { id: "ideogram-4", name: "Ideogram 4", provider: "Higgsfield", kind: "image", badge: "Text", description: "Poster ба typography зураг" }
+export const models:RavsModel[]=[
+ {slug:"kling-3-standard",name:"Kling 3.0 Standard",provider:"Higgsfield",modelId:"kling-video/v3.0/std/text-to-video",kind:"video",group:"Видео",badge:"Шилдэг",description:"Multi-shot cinematic + native audio",pricingType:"second",creditRate:12,minDuration:3,maxDuration:15,resolutions:["720p"],aspectRatios:["16:9","9:16","1:1"],supportsAudio:true},
+ {slug:"kling-3-turbo",name:"Kling 3.0 Turbo",provider:"Higgsfield",modelId:"kling-video/v3.0-turbo/text-to-video",kind:"video",group:"Видео",badge:"Хурдан",description:"Fast 720p/1080p text-to-video",pricingType:"second",creditRate:8,minDuration:3,maxDuration:15,resolutions:["720p","1080p"],aspectRatios:["16:9","9:16","1:1"]},
+ {slug:"kling-3-image",name:"Kling 3.0 Image → Video",provider:"Higgsfield",modelId:"kling-video/v3.0/pro/image-to-video",kind:"video",group:"Видео",badge:"Image → Video",description:"Reference image animation",pricingType:"second",creditRate:14,minDuration:3,maxDuration:15,resolutions:["720p"],aspectRatios:["16:9","9:16","1:1"],supportsAudio:true,supportsImage:true},
+ {slug:"seedance-2-5",name:"Seedance 2.5",provider:"Higgsfield",modelId:"bytedance/seedance-2.5/text-to-video",kind:"video",group:"Видео",badge:"30 сек",description:"Text-to-video up to 30 seconds",pricingType:"second",creditRate:14,minDuration:4,maxDuration:30,resolutions:["480p","720p","1080p"],aspectRatios:["16:9","4:3","1:1","3:4","9:16","21:9"],supportsAudio:true},
+ {slug:"seedance-2-5-image",name:"Seedance 2.5 Image → Video",provider:"Higgsfield",modelId:"bytedance/seedance-2.5/image-to-video",kind:"video",group:"Видео",badge:"Image → Video",description:"Animate image + optional audio",pricingType:"second",creditRate:14,minDuration:4,maxDuration:30,resolutions:["480p","720p","1080p"],aspectRatios:["16:9","4:3","1:1","3:4","9:16","21:9"],supportsAudio:true,supportsImage:true},
+ {slug:"seedance-reference",name:"Seedance 2.5 Reference",provider:"Higgsfield",modelId:"bytedance/seedance-2.5/reference-to-video",kind:"video",group:"Видео",badge:"Reference",description:"Image/video/audio reference generation",pricingType:"second",creditRate:17,minDuration:4,maxDuration:30,resolutions:["480p","720p","1080p"],aspectRatios:["16:9","4:3","1:1","3:4","9:16","21:9"],supportsAudio:true,supportsImage:true,supportsVideo:true,supportsMultipleReferences:true},
+ {slug:"seedance-edit",name:"Seedance 2.5 Video Edit",provider:"Higgsfield",modelId:"bytedance/seedance-2.5/video-edit",kind:"workflow",group:"Видео засвар",badge:"Edit",description:"Prompt-based video editing",pricingType:"second",creditRate:18,minDuration:4,maxDuration:30,resolutions:["480p","720p","1080p"],aspectRatios:["16:9","9:16","1:1"],supportsAudio:true,supportsVideo:true},
+ {slug:"wan-3-prime",name:"Wan 3.0 Prime",provider:"Higgsfield",modelId:"alibaba/wan-3.0-prime/text-to-video",kind:"video",group:"Видео",badge:"Үнэ/чанар",description:"Fast video generation up to 30s",pricingType:"second",creditRate:9,minDuration:2,maxDuration:30,resolutions:["720p","1080p"],aspectRatios:["16:9","9:16","1:1"]},
+ {slug:"wan-3-prime-image",name:"Wan 3.0 Prime Image → Video",provider:"Higgsfield",modelId:"alibaba/wan-3.0-prime/image-to-video",kind:"video",group:"Видео",badge:"Image → Video",description:"Start-frame guided generation",pricingType:"second",creditRate:10,minDuration:2,maxDuration:30,resolutions:["720p","1080p"],aspectRatios:["adaptive","16:9","9:16","1:1"],supportsAudio:true,supportsImage:true},
+ {slug:"kling-motion",name:"Kling 3 Motion Control",provider:"Higgsfield",modelId:"kling-video/v3/motion-control/std",kind:"workflow",group:"Motion",badge:"Motion",description:"Transfer video motion to an image",pricingType:"flat",creditRate:220,resolutions:["720p"],aspectRatios:["auto"],supportsImage:true,supportsVideo:true},
+ {slug:"cinema-studio-4",name:"Cinema Studio 4.0",provider:"Higgsfield",modelId:"higgsfield/cinema-studio/4.0",kind:"workflow",group:"Cinema",badge:"Cinema",description:"Automatic cinematic scene direction",pricingType:"second",creditRate:28,minDuration:4,maxDuration:30,resolutions:["480p","720p"],aspectRatios:["16:9","9:16","1:1"],supportsAudio:true,supportsMultipleReferences:true},
+ {slug:"genjutsu-motion",name:"Genjutsu Motion Transfer",provider:"Higgsfield",modelId:"higgsfiled/genjutsu/motion-transfer/v1.0",kind:"workflow",group:"Genjutsu",badge:"Motion Transfer",description:"Preserve source motion with new references",pricingType:"flat",creditRate:280,resolutions:["480p","720p"],aspectRatios:["auto"],supportsImage:true,supportsVideo:true,supportsMultipleReferences:true},
+ {slug:"genjutsu-object",name:"Genjutsu Object Swap",provider:"Higgsfield",modelId:"higgsfiled/genjutsu/object-swap/v1.0",kind:"workflow",group:"Genjutsu",badge:"Object Swap",description:"Replace characters/products/clothes",pricingType:"flat",creditRate:280,resolutions:["480p","720p"],aspectRatios:["auto"],supportsImage:true,supportsVideo:true,supportsMultipleReferences:true},
+ {slug:"genjutsu-restyle",name:"Genjutsu Restyle",provider:"Higgsfield",modelId:"higgsfield/genjutsu/restyle/v1.0",kind:"workflow",group:"Genjutsu",badge:"Restyle",description:"Restyle while preserving motion/audio",pricingType:"flat",creditRate:240,resolutions:["720p"],aspectRatios:["auto"],supportsImage:true,supportsVideo:true,supportsMultipleReferences:true},
+ {slug:"marketing-studio",name:"Marketing Studio",provider:"Higgsfield",modelId:"marketing-studio/image",kind:"image",group:"Ads",badge:"Ads",description:"Campaign and product ad images",pricingType:"flat",creditRate:24,resolutions:["1k","2k","4k"],aspectRatios:["auto","1:1","3:2","2:3","4:3","3:4","16:9","9:16","21:9"],supportsImage:true,supportsMultipleReferences:true},
+ {slug:"soul-2",name:"Soul 2",provider:"Higgsfield",modelId:"higgsfield-ai/soul/v2/standard",kind:"image",group:"Зураг",badge:"Portrait",description:"Realistic portrait and fashion",pricingType:"flat",creditRate:8,resolutions:["720p","1080p"],aspectRatios:["9:16","16:9","4:3","3:4","1:1","2:3","3:2"]},
+ {slug:"soul-2-image",name:"Soul 2 Image → Image",provider:"Higgsfield",modelId:"higgsfield-ai/soul/v2/image-to-image",kind:"image",group:"Зураг",badge:"Reference",description:"Generate from an image reference",pricingType:"flat",creditRate:9,resolutions:["720p","1080p"],aspectRatios:["9:16","16:9","4:3","3:4","1:1","2:3","3:2"],supportsImage:true},
+ {slug:"ideogram-4",name:"Ideogram 4.0",provider:"Higgsfield",modelId:"ideogram/v4.0",kind:"image",group:"Зураг",badge:"Text/Poster",description:"Posters and multilingual typography",pricingType:"flat",creditRate:14,resolutions:["default"],aspectRatios:["1:1","16:9","9:16","4:3","3:4"],supportsImage:true}
 ];
+export const getModel=(slug:string)=>models.find(m=>m.slug===slug);
+export function estimateCredits(m:RavsModel,duration?:number){if(m.pricingType==="flat")return m.creditRate;const d=Math.max(m.minDuration||1,Math.min(duration||m.minDuration||5,m.maxDuration||30));return Math.max(m.creditRate,Math.ceil(m.creditRate*d));}
+function url(v:unknown){if(typeof v!=="string")return undefined;try{const u=new URL(v);return ["http:","https:"].includes(u.protocol)?u.toString():undefined}catch{return undefined}}
+function urls(v:unknown,max:number){return Array.isArray(v)?v.map(url).filter((x):x is string=>Boolean(x)).slice(0,max):[]}
+export function buildProviderInput(m:RavsModel,r:Record<string,unknown>){
+ const prompt=typeof r.prompt==="string"?r.prompt.trim().slice(0,6000):"";
+ const duration=Math.max(m.minDuration||1,Math.min(Number(r.duration)||m.minDuration||5,m.maxDuration||30));
+ const resolution=m.resolutions.includes(String(r.resolution))?String(r.resolution):m.resolutions[0];
+ const aspect=m.aspectRatios.includes(String(r.aspectRatio))?String(r.aspectRatio):m.aspectRatios[0];
+ const imageUrl=url(r.imageUrl),videoUrl=url(r.videoUrl),refs=urls(r.referenceUrls,30);
+ switch(m.slug){
+ case"kling-3-standard":if(!prompt)throw new Error("Prompt шаардлагатай.");return{prompt,duration,aspect_ratio:aspect,sound:r.generateAudio===false?"off":"on",cfg_scale:Math.max(0,Math.min(Number(r.cfgScale)||.5,1)),multi_shots:Boolean(r.multiShots)};
+ case"kling-3-turbo":if(!prompt)throw new Error("Prompt шаардлагатай.");return{prompt,duration,resolution,aspect_ratio:aspect};
+ case"kling-3-image":if(!imageUrl)throw new Error("Reference зураг шаардлагатай.");return{prompt,image_url:imageUrl,duration,aspect_ratio:aspect,sound:r.generateAudio===false?"off":"on"};
+ case"seedance-2-5":if(!prompt)throw new Error("Prompt шаардлагатай.");return{prompt,duration,resolution,aspect_ratio:aspect,output_format:"mp4",generate_audio:r.generateAudio!==false};
+ case"seedance-2-5-image":if(!imageUrl)throw new Error("Reference зураг шаардлагатай.");return{prompt,image_url:imageUrl,duration,resolution,bitrate_mode:"high",generate_audio:r.generateAudio!==false};
+ case"seedance-reference":return{prompt:prompt||undefined,duration,resolution,aspect_ratio:aspect,output_format:"mp4",generate_audio:r.generateAudio!==false,image_urls:urls(r.imageUrls,8),video_urls:urls(r.videoUrls,4),audio_urls:urls(r.audioUrls,4)};
+ case"seedance-edit":if(!prompt||!videoUrl)throw new Error("Prompt болон source video шаардлагатай.");return{prompt,video_url:videoUrl,resolution,bitrate_mode:"high",generate_audio:r.generateAudio!==false};
+ case"wan-3-prime":if(!prompt)throw new Error("Prompt шаардлагатай.");return{prompt,duration,resolution,aspect_ratio:aspect,generate_audio:r.generateAudio!==false};
+ case"wan-3-prime-image":if(!prompt||!imageUrl)throw new Error("Prompt болон эхний зураг шаардлагатай.");return{prompt,duration,image_url:imageUrl,resolution,aspect_ratio:aspect,generate_audio:r.generateAudio!==false,enable_thinking:false};
+ case"kling-motion":if(!imageUrl||!videoUrl)throw new Error("Image болон motion video шаардлагатай.");return{prompt,image_url:imageUrl,video_url:videoUrl,keep_original_sound:r.generateAudio===false?"no":"yes",character_orientation:r.characterOrientation==="image"?"image":"video"};
+ case"cinema-studio-4":if(!prompt)throw new Error("Prompt шаардлагатай.");return{prompt,duration,resolution,aspect_ratio:aspect,reference_urls:refs,sound:r.generateAudio===false?"off":"on"};
+ case"genjutsu-motion":case"genjutsu-object":if(!videoUrl)throw new Error("Source video шаардлагатай.");return{prompt,video_url:videoUrl,image_urls:refs.slice(0,8),resolution};
+ case"genjutsu-restyle":if(!videoUrl||typeof r.presetId!=="string"||!r.presetId)throw new Error("Source video болон style preset шаардлагатай.");return{prompt,preset_id:r.presetId,video_url:videoUrl,image_urls:refs.slice(0,5),resolution};
+ case"marketing-studio":if(!prompt)throw new Error("Prompt шаардлагатай.");return{prompt,image_urls:refs.slice(0,16),preset_id:typeof r.presetId==="string"&&r.presetId?r.presetId:undefined,resolution,aspect_ratio:aspect,quality:typeof r.quality==="string"?r.quality:"high",moderation:"auto",enhance_prompt:Boolean(r.enhancePrompt)};
+ case"soul-2":if(!prompt)throw new Error("Prompt шаардлагатай.");return{prompt,batch_size:r.batchSize===4?4:1,resolution,aspect_ratio:aspect,enhance_prompt:r.enhancePrompt!==false,custom_reference_id:typeof r.customReferenceId==="string"?r.customReferenceId:undefined};
+ case"soul-2-image":if(!prompt||!imageUrl)throw new Error("Prompt болон reference зураг шаардлагатай.");return{prompt,image_url:imageUrl,batch_size:r.batchSize===4?4:1,resolution,aspect_ratio:aspect};
+ case"ideogram-4":if(!prompt)throw new Error("Prompt шаардлагатай.");return{prompt,aspect_ratio:aspect,image_url:imageUrl};
+ default:throw new Error("Дэмжигдээгүй model.");
+ }}

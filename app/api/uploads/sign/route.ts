@@ -1,0 +1,3 @@
+import { NextResponse } from "next/server";import { requireUser,jsonError } from "@/lib/http";import { createSignedUpload } from "@/lib/higgsfield";
+const allowed=new Set(["image/png","image/jpeg","image/webp","video/mp4","video/quicktime","audio/mpeg","audio/wav"]);
+export async function POST(req:Request){if(!await requireUser())return jsonError("Нэвтэрнэ үү.",401);try{const b=await req.json();const type=String(b.contentType||"");if(!allowed.has(type))return jsonError("Дэмжигдээгүй файл төрөл.");return NextResponse.json(await createSignedUpload(type))}catch(e){return jsonError(e instanceof Error?e.message:"Upload URL үүсгэж чадсангүй.",502)}}
