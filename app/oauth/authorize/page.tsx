@@ -3,7 +3,7 @@ import {getSessionUser} from "@/lib/session";
 import {signConsent,validateAuthorization,OAuthError} from "@/lib/mcp-oauth";
 import Link from "next/link";
 export const dynamic="force-dynamic";
-export const metadata={title:"MCP холболтын зөвшөөрөл",referrer:"no-referrer"};
+export const metadata={title:"MCP холболтын зөвшөөрөл",referrer:"same-origin"};
 export default async function Page({searchParams}:{searchParams:Promise<Record<string,string|string[]|undefined>>}){
  const values=await searchParams;const p=new URLSearchParams();for(const [key,value]of Object.entries(values)){if(typeof value==="string")p.set(key,value);else if(Array.isArray(value))return <main className="authPage"><p>Холболтын хүсэлт буруу байна.</p></main>;}
  let request;try{request=await validateAuthorization(p);}catch(error){

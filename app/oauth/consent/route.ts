@@ -3,7 +3,13 @@ import {env} from "@/lib/env";
 import {boundedBody,checkOAuthLimit,readConsent,validateAuthorization,issueCode,OAuthError,oauthFailure} from "@/lib/mcp-oauth";
 export async function POST(req:Request){try{
  checkOAuthLimit(req,"consent",20);
- if(req.headers.get("origin")!==new URL(env.appUrl()).origin||req.headers.get("sec-fetch-site")==="cross-site")throw new OAuthError("invalid_request",403);
+ const originMatches=req.headers.get("origin")===new URL(env.appUrl()).origin;
+ const crossSite=req.headers.get("sec-fetch-site")==="cross-site";
+ if(!originMatches||crossSite){
+  // Boolean diagnostics only; never log headers, consent payloads or credentials.
+  console.warn("[ravs_oauth_consent_origin]",JSON.stringify({originMatches,crossSite,nullOrigin:req.headers.get("origin")==="null",hasOrigin:req.headers.has("origin")}));
+  throw new OAuthError("invalid_request",403);
+ }
  const user=await getSessionUser();if(!user)throw new OAuthError("access_denied",401);
  if(!req.headers.get("content-type")?.startsWith("application/x-www-form-urlencoded"))throw new OAuthError("invalid_request");
  const p=new URLSearchParams(await boundedBody(req));const request=readConsent(p.get("consent")||"",user.id);
