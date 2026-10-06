@@ -222,7 +222,7 @@ function enrichModel(model:RavsModel):RavsModel {
 export const models:RavsModel[]=[...existingModels.map(m=>({...m,modelId:m.slug==="genjutsu-motion"?"higgsfield/genjutsu/motion-transfer/v1.0":m.modelId})),
  ...hfModelSpecs.filter(s=>!existingModels.some(m=>(m.slug==="genjutsu-motion"?"higgsfield/genjutsu/motion-transfer/v1.0":m.modelId)===s.id)).map((s):RavsModel=>{
  const image=/text-to-image|image-to-image|soul|qwen|z-image|ideogram|recraft|grok-imagine-image|marketing-studio|ai-influencer/.test(s.id);
- return {slug:s.id.replace(/[^a-z0-9]+/gi,"-"),name:s.name,provider:"Higgsfield API",maker:s.id.split('/')[0],modelId:s.id,kind:image?"image":"video",group:image?"Зураг":"Видео",badge:s.verified?"API":"БАТАЛГААЖУУЛАХ",description:image?"Тайлбар, жишиг материалаар зураг бүтээх загвар.":"Тайлбар, жишиг материалаар видео бүтээх загвар.",pricingType:"flat",creditRate:image?120:3600,resolutions:["auto"],aspectRatios:["auto"],maxReferences:8};
+ return {slug:s.id.replace(/[^a-z0-9]+/gi,"-"),name:s.name+(/text-to-video/.test(s.id)&&!/text to video/i.test(s.name)?" · Текст → Видео":""),provider:"Higgsfield API",maker:s.id.split('/')[0],modelId:s.id,kind:image?"image":"video",group:image?"Зураг":"Видео",badge:s.verified?"API":"БАТАЛГААЖУУЛАХ",description:image?"Тайлбар, жишиг материалаар зураг бүтээх загвар.":"Тайлбар, жишиг материалаар видео бүтээх загвар.",pricingType:image?"flat":"second",creditRate:image?120:720,resolutions:["auto"],aspectRatios:["auto"],maxReferences:8};
  })].map(enrichModel);
 
 export const getModel = (slug: string) => models.find((model) => model.slug === slug);
