@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Aperture,
   BadgeDollarSign,
   Boxes,
   Clapperboard,
@@ -67,9 +66,9 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <Link href="/" className="brand" aria-label="RAVS home">
-        <span className="brandMark"><Aperture size={18} /></span>
+        <span className="brandMark" aria-hidden><span className="brandMonogram">R</span></span>
         <span className="brandCopy">
-          <b>RAVS</b>
+          <b className="brandWordmark">RAVS</b>
           <small>Rainy AI Video Studio</small>
         </span>
       </Link>
