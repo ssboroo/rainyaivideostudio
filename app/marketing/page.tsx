@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, BadgeDollarSign, Image, LayoutTemplate, Megaphone, ShoppingBag } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
+import { CommunityInspiration } from "@/components/community-inspiration";
 
 const lanes = [
   [Image, "Product Shots", "Product reference-ээс clean, editorial, lifestyle campaign image."],
@@ -23,6 +24,7 @@ export default function MarketingPage() {
             <div className="featureActions"><Link className="primary large" href="/studio?model=marketing-studio">Product creative эхлэх <ArrowRight size={17}/></Link><Link className="ghost large" href="/apps">Quick tools</Link></div>
           </div>
           <div className="laneGrid">{lanes.map(([Icon,title,desc])=><Link href={"/studio?model=marketing-studio&prompt="+encodeURIComponent(title+" — premium commercial creative")} className="laneCard" key={title}><Icon/><div><b>{title}</b><p>{desc}</p></div><ArrowRight size={15}/></Link>)}</div>
+          <CommunityInspiration surface="marketing" title="Community marketing inspiration" />
           <div className="featureCallout"><div><small>RAVS ADVANTAGE</small><h2>Монгол UI + ₮ credit + Wire.mn</h2><p>Provider-ийн USD billing хэрэглэгчид харагдахгүй. RAVS credit ашиглаад нэг бүтээгдэхүүний creative pipeline-аа дотроо удирдана.</p></div><Link href="/billing" className="ghost">Credit авах</Link></div>
         </section>
       </section>

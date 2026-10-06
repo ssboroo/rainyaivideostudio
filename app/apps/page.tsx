@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
+import { CommunityInspiration } from "@/components/community-inspiration";
 import { appTools, suiteOnly } from "@/lib/product";
 
 export default function AppsPage() {
@@ -30,6 +31,7 @@ export default function AppsPage() {
             ))}
           </div>
 
+          <CommunityInspiration surface="apps" title="Effects ашигласан community санаанууд" />
           <div className="suiteNotice">
             <div><small>PROVIDER SUITE</small><h2>API contract баталгаажаагүй хэсгүүд</h2><p>RAVS ажиллахгүй fake товч харуулахгүй. Public API contract ил болсон үед эдгээрийг server-side adapter-аар холбоно.</p></div>
             <div className="suiteOnlyList">

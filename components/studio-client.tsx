@@ -23,6 +23,7 @@ import {
   X,
 } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
+import { CommunityInspiration } from "@/components/community-inspiration";
 import { estimateCredits, getModel, models, type ModelKind, type RavsModel } from "@/lib/models";
 
 type User = {
@@ -157,9 +158,14 @@ export function StudioClient() {
   }, [group, params]);
 
   useEffect(() => {
-    setDuration(model.minDuration || 5);
+    const requestedDuration = Number(params.get("duration"));
+    const safeDuration = Number.isFinite(requestedDuration) && model.minDuration && model.maxDuration
+      ? Math.max(model.minDuration, Math.min(requestedDuration, model.maxDuration))
+      : model.minDuration || 5;
+    const requestedAspect = params.get("aspect");
+    setDuration(safeDuration);
     setResolution(model.resolutions[0]);
-    setAspect(model.aspectRatios[0]);
+    setAspect(requestedAspect && model.aspectRatios.includes(requestedAspect) ? requestedAspect : model.aspectRatios[0]);
     setImageUrl("");
     setVideoUrl("");
     setRefs([]);
@@ -172,7 +178,7 @@ export function StudioClient() {
         .then((data) => setPresets(Array.isArray(data?.items) ? data.items : []))
         .catch(() => null);
     }
-  }, [selected]);
+  }, [selected, params]);
 
   async function load() {
     const me = await fetch("/api/auth/me", { cache: "no-store" });
@@ -487,6 +493,7 @@ export function StudioClient() {
               <div><small>API</small><b>Server-side</b></div>
             </section>
 
+            <CommunityInspiration surface={model.kind === "video" ? "video" : model.group === "Genjutsu" ? "apps" : model.group === "Cinema" ? "cinema" : model.group === "Ads" ? "marketing" : model.group === "Influencer" ? "influencer" : "explore"} limit={4} title="Энэ model-д тохирох community inspiration" />
             <section id="generations" className="generationSection">
               <div className="historyHead">
                 <div><small>GENERATIONS</small><h2>Миний бүтээлүүд</h2></div>

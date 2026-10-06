@@ -13,6 +13,7 @@ import {
   Image,
   CirclePlay,
   TrendingUp,
+  UsersRound,
   LayoutGrid,
   Megaphone,
   ScanFace,
@@ -31,6 +32,7 @@ const groups = [
       ["/explore", "Explore", Compass],
       ["/video-guide", "Видео гарын авлага", CirclePlay],
       ["/trends", "Trend Video", TrendingUp],
+      ["/community", "Community", UsersRound],
     ],
   },
   {
