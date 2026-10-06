@@ -8,7 +8,7 @@ import { videoShowcases, type VideoShowcaseItem } from "@/lib/video-showcase";
 function Preview({ item }: { item: VideoShowcaseItem }) {
   const [remoteVideo, setRemoteVideo] = useState<string | null>(item.previewSrc || null);
   const [poster, setPoster] = useState<string | null>(null);
-  const [playing, setPlaying] = useState(Boolean(item.previewSrc));
+  const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
   const [failed, setFailed] = useState(false);
   const ref = useRef<HTMLVideoElement>(null);
