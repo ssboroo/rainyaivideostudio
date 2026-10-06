@@ -11,6 +11,7 @@ import {
   Film,
   Home,
   Image,
+  CirclePlay,
   LayoutGrid,
   Megaphone,
   ScanFace,
@@ -27,6 +28,7 @@ const groups = [
       ["/", "Нүүр", Home],
       ["/studio", "Studio", Clapperboard],
       ["/explore", "Explore", Compass],
+      ["/video-guide", "Видео гарын авлага", CirclePlay],
     ],
   },
   {
