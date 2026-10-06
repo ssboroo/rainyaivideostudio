@@ -1,23 +1,2 @@
-import Link from "next/link";
-import { Sidebar } from "@/components/sidebar";
-import { Generator } from "@/components/generator";
-import { models } from "@/lib/models";
-import { ArrowRight, Play, Sparkles } from "lucide-react";
-
-const presets = ["Монгол cinematic", "Product Ad", "Fashion Reel", "Ulaanbaatar Night", "Наадам", "AI Influencer"];
-
-export default function Home() {
-  return <main className="shell"><Sidebar/><section className="content">
-    <header className="topbar"><div><b>RAVS</b><span>Rainy AI Video Studio</span></div><div className="topActions"><button className="ghost">Explore</button><Link className="primary" href="/studio">Studio нээх</Link></div></header>
-    <section className="hero">
-      <div className="eyebrow"><Sparkles size={15}/> Монгол хэл дээрх AI Creative Studio</div>
-      <h1>Санаагаа <em>дүрс</em> болго.</h1>
-      <p>Higgsfield API-ийн хүчирхэг video, image, motion, cinema, marketing workflow-уудыг нэг Монгол интерфэйсээс ашигла.</p>
-      <Generator/>
-      <div className="presetRow">{presets.map(x=><button key={x}>{x}</button>)}</div>
-    </section>
-    <section className="section"><div className="sectionHead"><div><small>MODELS</small><h2>Бүх хүчирхэг модель нэг дор</h2></div><Link href="/studio">Бүгдийг харах <ArrowRight size={16}/></Link></div>
-      <div className="modelGrid">{models.map((m,i)=><article className={`modelCard m${i%4}`} key={m.id}><div className="cardGlow"/><div className="badge">{m.badge}</div><div className="play"><Play size={18} fill="currentColor"/></div><div className="cardText"><small>{m.provider}</small><h3>{m.name}</h3><p>{m.description}</p></div></article>)}</div>
-    </section>
-  </section></main>
-}
+import Link from "next/link";import { Sidebar } from "@/components/sidebar";import { Generator } from "@/components/generator";import { models } from "@/lib/models";import { ArrowRight,Play,Sparkles,Film,WandSparkles,Image as ImageIcon } from "lucide-react";
+export default function Home(){const showcase=models.slice(0,8);return <main className="shell"><Sidebar/><section className="content"><header className="topbar"><div><b>RAVS</b><span>Rainy AI Video Studio</span></div><div className="topActions"><Link className="ghost" href="/login">Нэвтрэх</Link><Link className="primary" href="/studio">Studio нээх</Link></div></header><section className="hero"><div className="eyebrow"><Sparkles size={15}/> Монголын AI Creative Studio</div><h1>Санаагаа <em>кино</em> болго.</h1><p>Higgsfield-ийн video, image, cinema, motion, Genjutsu, marketing workflow-уудыг Монгол интерфэйс, QPay credit-тэй нэг дор ашигла.</p><Generator/><div className="heroFeatureRow"><span><Film/>Cinema Studio</span><span><WandSparkles/>Genjutsu</span><span><ImageIcon/>Marketing Ads</span></div></section><section className="section"><div className="sectionHead"><div><small>POWERED BY HIGGSFIELD API</small><h2>Нэг Studio. Олон шилдэг model.</h2></div><Link href="/studio">Бүгдийг нээх <ArrowRight size={16}/></Link></div><div className="modelGrid">{showcase.map((m,i)=><Link href="/studio" className={`modelCard m${i%4}`} key={m.slug}><div className="cardGlow"/><div className="badge">{m.badge}</div><div className="play"><Play size={18} fill="currentColor"/></div><div className="cardText"><small>{m.group}</small><h3>{m.name}</h3><p>{m.description}</p></div></Link>)}</div></section></section></main>}

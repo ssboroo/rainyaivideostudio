@@ -1,0 +1,2 @@
+import { NextResponse } from "next/server";import { requireUser,jsonError } from "@/lib/http";import { fetchPresetCatalog } from "@/lib/higgsfield";
+export async function GET(req:Request){if(!await requireUser())return jsonError("Нэвтэрнэ үү.",401);try{const kind=new URL(req.url).searchParams.get("kind");if(kind!=="restyle"&&kind!=="marketing")return jsonError("kind буруу.");return NextResponse.json(await fetchPresetCatalog(kind))}catch(e){return jsonError(e instanceof Error?e.message:"Preset татаж чадсангүй.",502)}}

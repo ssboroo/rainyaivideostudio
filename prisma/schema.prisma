@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum GenerationStatus {
+  PENDING
+  SUBMITTED
+  PROCESSING
+  COMPLETED
+  FAILED
+  NSFW
+  CANCELED
+}
+
+enum LedgerType {
+  WELCOME
+  GENERATION
+  REFUND
+  PURCHASE
+  ADMIN
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELED
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  name         String?
+  role         Role           @default(USER)
+  credits      Int            @default(0)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  generations  Generation[]
+  ledger       CreditLedger[]
+  payments     Payment[]
+}
+
+model Generation {
+  id                String           @id @default(cuid())
+  userId            String
+  providerRequestId String?          @unique
+  providerStatusUrl String?
+  providerCancelUrl String?
+  modelSlug         String
+  modelId           String
+  kind              String
+  prompt            String
+  input             Json
+  output            Json?
+  error             Json?
+  status            GenerationStatus @default(PENDING)
+  costCredits       Int
+  refunded          Boolean          @default(false)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  completedAt       DateTime?
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status, updatedAt])
+}
+
+model CreditLedger {
+  id             String     @id @default(cuid())
+  userId         String
+  amount         Int
+  type           LedgerType
+  idempotencyKey String     @unique
+  referenceId    String?
+  metadata       Json?
+  createdAt      DateTime   @default(now())
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Payment {
+  id           String        @id @default(cuid())
+  userId       String
+  provider     String        @default("qpay")
+  packageId    String
+  amountMnt    Int
+  credits      Int
+  invoiceId    String?       @unique
+  paymentId    String?       @unique
+  status       PaymentStatus @default(PENDING)
+  providerData Json?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  paidAt       DateTime?
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
