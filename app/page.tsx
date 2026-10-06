@@ -10,6 +10,7 @@ import {
   WandSparkles,
 } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
+import { VideoShowcase } from "@/components/video-showcase";
 import { promptPresets, workflows } from "@/lib/product";
 import { models } from "@/lib/models";
 
@@ -90,6 +91,8 @@ export default function Home() {
             ))}
           </div>
         </section>
+
+        <VideoShowcase compact />
 
         <section className="productSection splitSection">
           <div>
