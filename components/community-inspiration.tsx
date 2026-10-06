@@ -10,7 +10,7 @@ import {
   type CommunitySurface,
 } from "@/lib/community-inspiration";
 
-type Meta = { video?: string | null; image?: string | null };
+type Meta = { image?: string | null };
 
 function CommunityMedia({ item }: { item: CommunityItem }) {
   const [meta, setMeta] = useState<Meta>({});
@@ -21,7 +21,7 @@ function CommunityMedia({ item }: { item: CommunityItem }) {
     fetch("/api/community/meta?url=" + encodeURIComponent(item.sourceHref))
       .then((response) => (response.ok ? response.json() : null))
       .then((value) => {
-        if (alive && value) setMeta({ video: value.video, image: value.image });
+        if (alive && value) setMeta({ image: value.image });
       })
       .catch(() => null);
     return () => { alive = false; };
