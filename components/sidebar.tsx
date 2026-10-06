@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { RavsLogo } from "@/components/ravs-logo";
 import {
   BadgeDollarSign,
   Boxes,
@@ -65,12 +66,8 @@ export function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <Link href="/" className="brand" aria-label="RAVS home">
-        <span className="brandMark" aria-hidden><span className="brandMonogram">R</span></span>
-        <span className="brandCopy">
-          <b className="brandWordmark">RAVS</b>
-          <small>Rainy AI Video Studio</small>
-        </span>
+      <Link href="/" className="brand ravsSidebarBrand" aria-label="RAVS home">
+        <RavsLogo showSubtitle />
       </Link>
 
       <nav className="sideNav">
