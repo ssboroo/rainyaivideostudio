@@ -12,6 +12,7 @@ import {
   Home,
   Image,
   CirclePlay,
+  TrendingUp,
   LayoutGrid,
   Megaphone,
   ScanFace,
@@ -29,6 +30,7 @@ const groups = [
       ["/studio", "Studio", Clapperboard],
       ["/explore", "Explore", Compass],
       ["/video-guide", "Видео гарын авлага", CirclePlay],
+      ["/trends", "Trend Video", TrendingUp],
     ],
   },
   {

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
 import { VideoShowcase } from "@/components/video-showcase";
+import { TrendShowcase } from "@/components/trend-showcase";
 import { promptPresets, workflows } from "@/lib/product";
 import { models } from "@/lib/models";
 
@@ -91,6 +92,8 @@ export default function Home() {
             ))}
           </div>
         </section>
+
+        <TrendShowcase compact />
 
         <VideoShowcase compact />
 
