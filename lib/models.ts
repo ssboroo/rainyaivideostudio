@@ -90,8 +90,8 @@ export const models: RavsModel[] = [
     modelId: "higgsfield/cinema-studio/4.0", kind: "workflow", group: "Cinema", badge: "CINEMA",
     description: "Long-form cinematic scene direction.", pricingType: "second", creditRate: 84,
     minDuration: 4, maxDuration: 30, resolutions: ["480p","720p"], aspectRatios: ["16:9","9:16","1:1"],
-    supportsAudio: true, supportsMultipleReferences: true, maxReferences: 50,
-    capabilities: ["30 sec","50 refs","Scene direction"], featured: true, tone: "amber",
+    supportsAudio: true, supportsMultipleReferences: true, maxReferences: 30,
+    capabilities: ["30 sec","30 API refs","Scene direction"], featured: true, tone: "amber",
   },
   {
     slug: "kling-motion", name: "Kling 3 Motion Control", provider: "Higgsfield API", maker: "Kling",

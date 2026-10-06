@@ -41,7 +41,7 @@ export const workflows: ProductWorkflow[] = [
     href: "/cinema",
     badge: "PRO",
     accent: "amber",
-    tags: ["Up to 30s", "50 refs", "Cinematic controls"],
+    tags: ["Up to 30s", "30 API refs", "Cinematic controls"],
     status: "api",
   },
   {
