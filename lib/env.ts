@@ -5,11 +5,10 @@ function intEnv(name: string, fallback: number) {
 export const env = {
   appUrl: () => (process.env.APP_URL || "http://localhost:3000").replace(/\/$/, ""),
   sessionSecret: () => process.env.SESSION_SECRET || "",
-  adminEmails: () => (process.env.ADMIN_EMAILS || "").split(",").map(v => v.trim().toLowerCase()).filter(Boolean),
   welcomeCredits: () => intEnv("WELCOME_CREDITS", 100),
   generationRateLimit: () => intEnv("GENERATION_RATE_LIMIT_PER_MINUTE", 6),
   higgsfieldBaseUrl: () => (process.env.HIGGSFIELD_BASE_URL || "https://api.higgsfield.ai").replace(/\/$/, ""),
-  higgsfieldCredentials: () => process.env.HF_CREDENTIALS || "",
+  higgsfieldCredentials: () => process.env.HF_CREDENTIALS?.trim() || (process.env.HF_API_KEY_ID && process.env.HF_API_KEY_SECRET ? `${process.env.HF_API_KEY_ID.trim()}:${process.env.HF_API_KEY_SECRET.trim()}` : ""),
   wireApiUrl: () => (process.env.WIRE_MN_API_URL || "https://api.wire.mn/v1").replace(/\/$/, ""),
   wireApiKey: () => (process.env.WIRE_MN_API_KEY || "").trim(),
   wireWebhookSecret: () => (process.env.WIRE_MN_WEBHOOK_SECRET || "").trim(),

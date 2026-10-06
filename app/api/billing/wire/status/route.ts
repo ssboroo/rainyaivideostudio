@@ -19,5 +19,5 @@ export async function GET(req:Request){
     else if(mapped==="FAILED"||mapped==="CANCELED")await markWirePaymentState(payment.id,mapped);
     const fresh=await db.user.findUnique({where:{id:user.id},select:{credits:true}});
     return NextResponse.json({status:mapped,credits:fresh?.credits??user.credits,payUrl:checkoutUrlFromProviderData(payment.providerData)});
-  }catch(e){return jsonError(e instanceof Error?e.message:"Wire.mn төлөв шалгаж чадсангүй.",503)}
+  }catch(e){return jsonError("Төлбөрийн төлөв шалгаж чадсангүй. Түр хүлээгээд дахин шалгана уу.",503)}
 }

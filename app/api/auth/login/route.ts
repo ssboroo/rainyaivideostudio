@@ -1,2 +1,24 @@
-import { NextResponse } from "next/server";import { db } from "@/lib/db";import { createSession,verifyPassword } from "@/lib/session";import { jsonError } from "@/lib/http";
-export async function POST(req:Request){try{const b=await req.json();const email=String(b.email||"").trim().toLowerCase(),password=String(b.password||"");const u=await db.user.findUnique({where:{email}});if(!u||!verifyPassword(password,u.passwordHash))return jsonError("Имэйл эсвэл нууц үг буруу.",401);await createSession(u.id);return NextResponse.json({user:{id:u.id,email:u.email,name:u.name,role:u.role,credits:u.credits}})}catch(e){return jsonError(e instanceof Error?e.message:"Нэвтрэхэд алдаа гарлаа.",500)}}
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { createSession, verifyPassword, hashPassword } from "@/lib/session";
+import { jsonError } from "@/lib/http";
+import { validateAuthInput, consumeAuthLimit } from "@/lib/auth-security";
+const dummyHash = hashPassword("unusable-dummy-password");
+export async function POST(req: Request) {
+ let input;
+ try { input = validateAuthInput(await req.json(), false); } catch { return jsonError("Имэйл, нууц үгээ зөв оруулна уу."); }
+ const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+ const ipLimit = consumeAuthLimit(`login-ip:${ip}`, 30, 15*60000);
+ const accountLimit = consumeAuthLimit(`login-account:${input.email}`, 10, 15*60000);
+ if(!ipLimit.allowed || !accountLimit.allowed) return NextResponse.json({error:"Хэт олон оролдлого. 15 минутын дараа дахин оролдоно уу."},{status:429,headers:{"Retry-After":String(Math.max(ipLimit.retryAfter,accountLimit.retryAfter))}});
+ try {
+  const user = await db.user.findUnique({where:{email:input.email}});
+  const valid = verifyPassword(input.password,user?.passwordHash || dummyHash);
+  if(!user || !valid) return jsonError("Имэйл эсвэл нууц үг буруу.",401);
+  await createSession(user.id);
+  return NextResponse.json({user:{id:user.id,email:user.email,name:user.name,role:user.role,credits:user.credits}});
+ } catch(e) {
+  console.error("Login failed",e instanceof Error?e.name:"UnknownError");
+  return jsonError("Нэвтрэх үйлчилгээ түр боломжгүй байна. Дахин оролдоно уу.",503);
+ }
+}

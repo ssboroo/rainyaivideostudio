@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import {communityItems} from "@/lib/community-inspiration";
+import {communityFeed} from "@/lib/community-feed";
+const sources=new Set([...communityItems,...communityFeed].map(item=>item.sourceHref));
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +62,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "invalid url" }, { status: 400 });
   }
 
+  if (!sources.has(source)) return NextResponse.json({error:"source not allowed"},{status:403});
   if (
     parsed.protocol !== "https:" ||
     (parsed.hostname !== "higgsfield.ai" && !parsed.hostname.endsWith(".higgsfield.ai"))
@@ -70,6 +74,8 @@ export async function GET(req: Request) {
     const response = await fetch(parsed.toString(), {
       headers: { "user-agent": "Mozilla/5.0 (compatible; RAVS-CommunityPreview/2.0)" },
       cache: "force-cache",
+      next: {revalidate:1800},
+      redirect: "error",
       signal: AbortSignal.timeout(6000),
     });
     if (!response.ok) return NextResponse.json({ source: parsed.toString() });

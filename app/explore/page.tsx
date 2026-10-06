@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Compass, Sparkles } from "lucide-react";
+import { WorkflowIcon } from "@/components/workflow-icon";
 import { Sidebar } from "@/components/sidebar";
 import { CommunityInspiration } from "@/components/community-inspiration";
 import { promptPresets, workflows } from "@/lib/product";
@@ -19,7 +20,7 @@ export default function ExplorePage() {
           <div className="catalogHero">
             <div className="eyebrow"><Compass size={14} /> RAVS Explore</div>
             <h1>Юу хийхээ сонго. <em>Яаж хийхийг RAVS шийднэ.</em></h1>
-            <p>Workflow, prompt preset болон verified API model-уудаас өөрийн ажлын хамгийн хурдан замыг сонго.</p>
+            <p>Workflow, prompt preset болон AI загваруудаас өөрийн ажлын хамгийн хурдан замыг сонго.</p>
           </div>
 
           <CommunityInspiration surface="explore" title="Explore community projects" />
@@ -29,7 +30,7 @@ export default function ExplorePage() {
               {workflows.map((item) => (
                 <Link className={"workflowCard compactCard accent-" + item.accent} href={item.href} key={item.id}>
                   <div className="workflowTop"><span>{item.eyebrow}</span><b>{item.badge}</b></div>
-                  <h3>{item.title}</h3><p>{item.description}</p>
+                  <div className="workflowIconStage"><WorkflowIcon id={item.id}/></div><h3>{item.title}</h3><p>{item.description}</p>
                   <div className="tagRow">{item.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
                 </Link>
               ))}
@@ -55,11 +56,11 @@ export default function ExplorePage() {
           </div>
 
           <div className="catalogSection">
-            <div className="sectionTitleRow compact"><div><small>VERIFIED API CATALOG</small><h2>Model-ууд</h2></div></div>
+            <div className="sectionTitleRow compact"><div><small>AI ЗАГВАРУУД</small><h2>Model-ууд</h2></div></div>
             <div className="catalogModelGrid">
               {models.map((model) => (
                 <Link href={"/studio?model=" + model.slug} className="catalogModel" key={model.slug}>
-                  <div className={"modelGlyph large tone-" + (model.tone || "violet")}>{model.name.slice(0, 1)}</div>
+                  <div className={"modelGlyph large tone-" + (model.tone || "violet")}><WorkflowIcon id={model.slug} size={26}/></div>
                   <div><small>{model.maker || model.provider}</small><h3>{model.name}</h3><p>{model.description}</p></div>
                   <div className="catalogModelMeta"><span>{model.badge}</span><span>{model.creditRate}{model.pricingType === "second" ? "/сек" : ""} cr</span></div>
                 </Link>

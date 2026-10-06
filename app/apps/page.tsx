@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { WorkflowIcon } from "@/components/workflow-icon";
 import { Sidebar } from "@/components/sidebar";
 import { CommunityInspiration } from "@/components/community-inspiration";
-import { appTools, suiteOnly } from "@/lib/product";
+import { appTools } from "@/lib/product";
 
 export default function AppsPage() {
   return (
@@ -10,19 +11,19 @@ export default function AppsPage() {
       <Sidebar />
       <section className="content">
         <header className="topbar">
-          <div><b>Effects & Apps</b><span>One-click creative workflows</span></div>
+          <div><b>Эффект ба хэрэгсэл</b><span>Санаанаас үр дүн хүртэл</span></div>
           <Link href="/studio" className="primary">Studio нээх</Link>
         </header>
         <section className="catalogPage">
           <div className="catalogHero compactHero">
-            <div className="eyebrow"><Sparkles size={14} /> QUICK TOOLS</div>
+            <div className="eyebrow"><Sparkles size={14} /> ХУРДАН ХЭРЭГСЛҮҮД</div>
             <h1>Нэг үйлдэл. <em>Шууд үр дүн.</em></h1>
-            <p>Higgsfield Apps-ийн task-first логикийг RAVS-ийн API-connected workflow-уудтай нэгтгэсэн.</p>
+            <p>Видеогоо өөрчлөх, дүрийн хөдөлгөөн шилжүүлэх, бүтээгдэхүүний зураг болон постер бүтээх хэрэгслээ сонго.</p>
           </div>
           <div className="appsGrid">
             {appTools.map((tool) => (
               <Link href={tool.href} className={"appTool accent-" + tool.accent} key={tool.title}>
-                <div className="appToolVisual"><Sparkles size={20} /></div>
+                <div className="appToolVisual"><WorkflowIcon id={tool.href} size={28} /></div>
                 <small>{tool.category}</small>
                 <h3>{tool.title}</h3>
                 <p>{tool.description}</p>
@@ -32,12 +33,7 @@ export default function AppsPage() {
           </div>
 
           <CommunityInspiration surface="apps" title="Effects ашигласан community санаанууд" />
-          <div className="suiteNotice">
-            <div><small>PROVIDER SUITE</small><h2>API contract баталгаажаагүй хэсгүүд</h2><p>RAVS ажиллахгүй fake товч харуулахгүй. Public API contract ил болсон үед эдгээрийг server-side adapter-аар холбоно.</p></div>
-            <div className="suiteOnlyList">
-              {suiteOnly.map((item) => <div key={item.title}><b>{item.title}</b><span>{item.detail}</span><small>{item.status}</small></div>)}
-            </div>
-          </div>
+          <div className="featureCallout"><div><small>АЛХАМЧИЛСАН ЗААВАР</small><h2>Эхний бүтээлээ хамтдаа эхлүүлье</h2><p>Хэрэгсэл бүрийн оролт, тохиргоо, үр дүнг тайлбарласан Монгол заавартай танилцаарай.</p></div><Link className="primary" href="/video-guide">Заавар үзэх <ArrowRight size={15}/></Link></div>
         </section>
       </section>
     </main>

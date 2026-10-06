@@ -22,7 +22,7 @@ export default function CinemaPage() {
             <h1>Prompt биш. <em>Scene-ээ найруул.</em></h1>
             <p>Long-form cinematic generation-д зориулсан RAVS workspace. Reference, хугацаа, харьцаа, audio болон cinematic prompt-оо нэг дор удирдана.</p>
             <div className="featureActions"><Link className="primary large" href="/studio?model=cinema-studio-4">Cinema Studio нээх <ArrowRight size={17}/></Link><Link className="ghost large" href="/explore">Preset харах</Link></div>
-            <div className="cinemaFrames" aria-hidden><div/><div/><div/></div>
+            <div className="cinemaFrames"><Link href="/video-guide#cinema"><Film/><b>1. Кадраа төлөвлө</b><small>Камер, орчин, үйл явдлын заавар</small></Link><Link href="/studio?model=cinema-studio-4"><Layers3/><b>2. Жишиг материалаа оруул</b><small>Дүр, бүтээгдэхүүн, орчны зураг</small></Link><Link href="/trends"><Aperture/><b>3. Санаа авах видео үз</b><small>Кино ба эффектүүдийн жишээ</small></Link></div>
           </div>
           <div className="featureGrid">{features.map(([Icon,title,desc])=><div className="featureCell" key={title}><Icon/><b>{title}</b><p>{desc}</p></div>)}</div>
           <CommunityInspiration surface="cinema" title="Community film inspiration" />

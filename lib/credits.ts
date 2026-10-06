@@ -20,6 +20,6 @@ export async function refundGeneration(id:string,reason:string){
 }
 export async function markTerminalAndRefund(id:string,status:GenerationStatus,output?:unknown,error?:unknown){
   const g=await db.generation.update({where:{id},data:{status,output:output===undefined?undefined:(output as Prisma.InputJsonValue),error:error===undefined?undefined:(error as Prisma.InputJsonValue),completedAt:new Date()}});
-  if(status!=="COMPLETED")await refundGeneration(id,status.toLowerCase()).catch(()=>null);
+  if(status!=="COMPLETED")return (await refundGeneration(id,status.toLowerCase())) || g;
   return g;
 }

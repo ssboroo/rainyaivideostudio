@@ -34,7 +34,7 @@ APP_URL=https://your-domain
 DATABASE_URL=...
 SESSION_SECRET=<32+ random chars>
 HF_CREDENTIALS=KEY_ID:KEY_SECRET
-ADMIN_EMAILS=admin@example.com
+# Provision an existing verified owner with scripts/grant-admin.mjs
 
 WIRE_MN_API_URL=https://api.wire.mn/v1
 WIRE_MN_API_KEY=sk_live_...
@@ -82,3 +82,7 @@ For a live key, do **not** leave `sandbox` in the operator list. Use the exact a
 ## Notes
 
 RAVS is an independent product and is not an official Higgsfield product.
+
+## Монгол холболтын заавар
+
+[Higgsfield API холбох, Railway variables, админ эрх, тест болон хязгаарлалтууд](docs/HIGGSFIELD_SETUP_MN.md). Public registration always creates USER; ADMIN_EMAILS no longer elevates signups.

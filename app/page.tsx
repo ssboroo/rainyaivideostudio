@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UserActions } from "@/components/user-actions";
 import { WorkflowIcon } from "@/components/workflow-icon";
 import { WorkflowTutorials } from "@/components/workflow-tutorials";
 import {
@@ -31,11 +32,7 @@ export default function Home() {
             <RavsWordmark className="ravsTopWordmark" />
             <span>AI бүтээлч студи</span>
           </div>
-          <div className="topActions">
-            <Link className="ghost" href="/login">Нэвтрэх</Link>
-            <Link className="creditPill" href="/billing">Credit авах</Link>
-            <Link className="primary" href="/studio">Studio нээх</Link>
-          </div>
+          <UserActions />
         </header>
 
         <section className="dashboardHero ravsCinematicHero">

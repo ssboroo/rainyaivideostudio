@@ -22,9 +22,9 @@ export default function InfluencerPage() {
             </div>
           </div>
           <div className="featureGrid three">
-            <div className="featureCell"><b>Average</b><p>UGC, lifestyle, presenter төрлийн natural character.</p></div>
-            <div className="featureCell"><b>Bold</b><p>Feed дээр ялгарах ч approachable character direction.</p></div>
-            <div className="featureCell"><b>Extreme</b><p>Meme, comedy, sketch, highly distinctive character direction.</p></div>
+            <div className="featureCell"><ScanFace/><b>Бодит төрх</b><p>UGC, lifestyle, presenter төрлийн natural character.</p></div>
+            <div className="featureCell"><Sparkles/><b>Онцгой төрх</b><p>Feed дээр ялгарах ч approachable character direction.</p></div>
+            <div className="featureCell"><WandSparkles/><b>Уран зөгнөлт төрх</b><p>Meme, comedy, sketch, highly distinctive character direction.</p></div>
           </div>
           <CommunityInspiration surface="influencer" title="Creator & character inspiration" />
         </section>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { RavsLogo } from "@/components/ravs-logo";
 import {
@@ -56,17 +57,24 @@ const groups = [
 ] as const;
 
 function isActive(pathname: string, href: string) {
-  const path = href.split("?")[0].split("#")[0];
+  if(href.includes("?") || href.includes("#")) return false;
+  const path = href;
   if (path === "/") return pathname === "/";
   return pathname === path || pathname.startsWith(path + "/");
 }
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    let alive = true; setIsAdmin(false);
+    fetch("/api/auth/me", {cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{if(alive)setIsAdmin(d?.user?.role === "ADMIN");}).catch(()=>null);
+    return ()=>{alive=false;};
+  }, [pathname]);
 
   return (
     <aside className="sidebar">
-      <Link href="/" className="brand ravsSidebarBrand" aria-label="RAVS home">
+      <Link href="/" className="brand ravsSidebarBrand" aria-label="RAVS нүүр хуудас">
         <RavsLogo showSubtitle />
       </Link>
 
@@ -74,7 +82,7 @@ export function Sidebar() {
         {groups.map((group) => (
           <div className="sideGroup" key={group.label}>
             <div className="sideLabel">{group.label}</div>
-            {group.items.map(([href, label, Icon]) => (
+            {group.items.filter(([href]) => href !== "/admin" || isAdmin).map(([href, label, Icon]) => (
               <Link
                 key={label}
                 href={href}

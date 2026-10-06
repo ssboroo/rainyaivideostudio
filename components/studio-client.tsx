@@ -22,9 +22,13 @@ import {
   WandSparkles,
   X,
 } from "lucide-react";
+import Link from "next/link";
+import { GenerationResult } from "@/components/generation-result";
+import { WorkflowIcon } from "@/components/workflow-icon";
+import { mediaFrom } from "@/lib/generation-media";
 import { Sidebar } from "@/components/sidebar";
 import { CommunityInspiration } from "@/components/community-inspiration";
-import { estimateCredits, getModel, models, type ModelKind, type RavsModel } from "@/lib/models";
+import { buildProviderInput, estimateCredits, getModel, models, type ModelKind, type RavsModel } from "@/lib/models";
 
 type User = {
   id: string;
@@ -48,21 +52,6 @@ type Generation = {
 };
 
 type ProviderHealth = "checking" | "ready" | "missing";
-
-function mediaFrom(output: unknown) {
-  if (!output || typeof output !== "object") return null;
-  const value = output as Record<string, unknown>;
-  const video = value.video;
-  if (video && typeof video === "object" && typeof (video as Record<string, unknown>).url === "string") {
-    return { type: "video" as const, url: (video as Record<string, string>).url };
-  }
-  const images = value.images;
-  if (Array.isArray(images) && images[0] && typeof images[0] === "object" && typeof (images[0] as Record<string, unknown>).url === "string") {
-    return { type: "image" as const, url: (images[0] as Record<string, string>).url };
-  }
-  if (typeof value.url === "string") return { type: "video" as const, url: value.url };
-  return null;
-}
 
 function surfaceLabel(kind: ModelKind | "all") {
   if (kind === "video") return "Видео";
@@ -103,7 +92,7 @@ function statusText(status: string) {
 export function StudioClient() {
   const router = useRouter();
   const params = useSearchParams();
-  const initialApplied = useRef(false);
+
 
   const [surface, setSurface] = useState<ModelKind | "all">("all");
   const [search, setSearch] = useState("");
@@ -121,6 +110,10 @@ export function StudioClient() {
   const [user, setUser] = useState<User | null>(null);
   const [history, setHistory] = useState<Generation[]>([]);
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [presetError, setPresetError] = useState("");
   const [message, setMessage] = useState("");
   const [providerHealth, setProviderHealth] = useState<ProviderHealth>("checking");
 
@@ -143,19 +136,18 @@ export function StudioClient() {
   }, [group, search, surface]);
 
   useEffect(() => {
-    if (initialApplied.current) return;
-    initialApplied.current = true;
+
     const queryModel = params.get("model");
     const querySurface = params.get("surface");
-    const queryPrompt = params.get("prompt");
     if (queryModel && getModel(queryModel)) setSelected(queryModel);
     else if (group) {
       const first = models.find((item) => item.group === group);
       if (first) setSelected(first.slug);
     }
     if (querySurface === "video" || querySurface === "image" || querySurface === "workflow") setSurface(querySurface);
-    if (queryPrompt) setPrompt(queryPrompt);
-  }, [group, params]);
+  }, [group, params.get("model"), params.get("surface")]);
+
+  useEffect(()=>{const queryPrompt=params.get("prompt");if(queryPrompt)setPrompt(queryPrompt);},[params.get("prompt")]);
 
   useEffect(() => {
     const requestedDuration = Number(params.get("duration"));
@@ -171,30 +163,30 @@ export function StudioClient() {
     setRefs([]);
     setPresetId("");
     setPresets([]);
+    setPresetError("");
     setMessage("");
     if (model.slug === "genjutsu-restyle") {
       fetch("/api/catalog/presets?kind=restyle")
         .then((response) => (response.ok ? response.json() : null))
-        .then((data) => setPresets(Array.isArray(data?.items) ? data.items : []))
-        .catch(() => null);
+        .then((data) => { const items=Array.isArray(data?.items)?data.items:[];setPresets(items);if(!items.length)setPresetError("Хэв маягийн жагсаалт түр боломжгүй байна. Өөр хэрэгсэл сонгоорой."); })
+        .catch(() => setPresetError("Хэв маяг ачаалж чадсангүй."));
     }
-  }, [selected, params]);
+  }, [selected, params.get("duration"), params.get("aspect")]);
 
   async function load() {
-    const me = await fetch("/api/auth/me", { cache: "no-store" });
-    const meData = await me.json();
-    if (!meData.user) {
-      router.push("/login");
-      return;
-    }
-    setUser(meData.user);
-
-    const response = await fetch("/api/generations", { cache: "no-store" });
-    if (response.ok) {
-      const data = await response.json();
-      setHistory(data.generations || []);
-      setUser((current) => (current ? { ...current, credits: data.user?.credits ?? current.credits } : current));
-    }
+    setHistoryLoading(true); setLoadError("");
+    try {
+      const me = await fetch("/api/auth/me", {cache:"no-store"});
+      if(!me.ok) throw new Error("Бүртгэлийн мэдээлэл ачаалж чадсангүй.");
+      const meData = await me.json();
+      if(!meData.user){router.replace("/login");return;}
+      setUser(meData.user);
+      const response = await fetch("/api/generations", {cache:"no-store"});
+      if(!response.ok)throw new Error("Бүтээлийн түүх ачаалж чадсангүй. Дахин оролдоно уу.");
+      const data = await response.json();setHistory(data.generations || []);
+      setUser(current=>current?{...current,credits:data.user?.credits??current.credits}:current);
+    } catch(e) {setLoadError(e instanceof Error?e.message:"Сүлжээний холболтоо шалгана уу.");}
+    finally {setHistoryLoading(false);}
   }
 
   useEffect(() => {
@@ -208,22 +200,34 @@ export function StudioClient() {
   useEffect(() => {
     const active = history.filter((item) => !["COMPLETED", "FAILED", "NSFW", "CANCELED"].includes(item.status));
     if (!active.length) return;
+    let polling=false;
     const timer = window.setInterval(async () => {
+      if(polling)return;polling=true;
+      try {
       for (const item of active) {
         const response = await fetch("/api/generations/" + item.id, { cache: "no-store" });
         if (!response.ok) continue;
         const data = await response.json();
         setHistory((current) => current.map((entry) => (entry.id === item.id ? data.generation : entry)));
+        if(data.providerError)setMessage("Үүсгэлтийн төлөв түр шинэчлэгдсэнгүй. Дахин шалгаж байна.");
         if (data.credits !== undefined) {
           setUser((current) => (current ? { ...current, credits: data.credits } : current));
         }
       }
+      } catch { setMessage("Холболт тасарлаа. Бүтээлээ дахин шалгана уу."); } finally {polling=false;}
     }, 4500);
     return () => window.clearInterval(timer);
   }, [history.map((item) => item.id + item.status).join("|")]);
 
   async function upload(file: File, kind: "image" | "video" | "ref") {
-    setMessage("Reference байршуулж байна…");
+    if(uploading)return;
+    const allowed=["image/png","image/jpeg","image/webp","video/mp4"];
+    if(!allowed.includes(file.type))throw new Error("PNG, JPG, WebP зураг эсвэл MP4 видео оруулна уу.");
+    if(kind!=="video"&&!file.type.startsWith("image/"))throw new Error("Зураг оруулна уу.");
+    if(kind==="video"&&file.type!=="video/mp4")throw new Error("MP4 видео оруулна уу.");
+    setUploading(true);
+    try {
+    setMessage("Жишиг файл байршуулж байна…");
     if (file.size > 200 * 1024 * 1024) throw new Error("Файл 200MB-аас бага байна.");
     const signed = await fetch("/api/uploads/sign", {
       method: "POST",
@@ -242,17 +246,21 @@ export function StudioClient() {
     if (!uploaded.ok) throw new Error("Reference upload амжилтгүй.");
 
     const publicUrl = signedData.public_url;
+    if(typeof publicUrl!=="string"||!publicUrl.startsWith("https://"))throw new Error("Файлын холбоос буруу байна.");
     if (kind === "image") setImageUrl(publicUrl);
     else if (kind === "video") setVideoUrl(publicUrl);
     else {
       const max = model.maxReferences || 16;
       setRefs((current) => [...current, publicUrl].slice(0, max));
     }
-    setMessage("Reference бэлэн.");
+    setMessage("Жишиг файл бэлэн.");
+    } finally {setUploading(false);}
   }
 
   const hasInput = Boolean(prompt.trim() || imageUrl || videoUrl || refs.length);
-  const canSubmit = !busy && hasInput;
+  let inputError="";
+  try {buildProviderInput(model,{prompt,imageUrl,videoUrl,referenceUrls:refs,presetId});}catch(e){inputError=e instanceof Error?e.message:"Оролтоо шалгана уу.";}
+  const canSubmit = !busy && !uploading && hasInput && !inputError && !!user && user.credits>=cost && providerHealth==="ready";
 
   async function submit() {
     if (!user || !canSubmit) return;
@@ -294,13 +302,12 @@ export function StudioClient() {
   }
 
   async function cancel(id: string) {
-    await fetch("/api/generations/" + id, { method: "DELETE" });
-    await load();
+    try {const r=await fetch("/api/generations/"+id,{method:"DELETE"});const d=await r.json();if(!r.ok)throw new Error(d.error||"Цуцалж чадсангүй.");await load();}catch(e){setMessage(e instanceof Error?e.message:"Цуцалж чадсангүй.");}
   }
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
+    router.replace("/login");router.refresh();
   }
 
   function chooseModel(slug: string) {
@@ -323,7 +330,7 @@ export function StudioClient() {
           <div className="topActions">
             <span className={"providerDot " + providerHealth}>
               <i />
-              {providerHealth === "ready" ? "Higgsfield API" : providerHealth === "checking" ? "API шалгаж байна" : "API key дутуу"}
+              {providerHealth === "ready" ? "Үйлчилгээ бэлэн" : providerHealth === "checking" ? "Үйлчилгээ шалгаж байна" : "Үйлчилгээ бэлтгэгдэж байна"}
             </span>
             <a href="/billing" className="creditPill"><WalletCards size={15} />{user?.credits ?? 0} credit</a>
             <button className="ghost" onClick={logout}>Гарах</button>
@@ -354,7 +361,7 @@ export function StudioClient() {
                   onClick={() => chooseModel(item.slug)}
                   className={"modelItem " + (selected === item.slug ? "active" : "")}
                 >
-                  <div className={"modelGlyph tone-" + (item.tone || "violet")}>{item.name.slice(0, 1)}</div>
+                  <div className={"modelGlyph tone-" + (item.tone || "violet")}><WorkflowIcon id={item.slug} size={20}/></div>
                   <div>
                     <b>{item.name}</b>
                     <small>{item.maker || item.provider} · {item.badge}</small>
@@ -378,9 +385,9 @@ export function StudioClient() {
 
             <div className="composerPanel">
               <div className="composerMode">
-                <span className={"modelGlyph tiny tone-" + (model.tone || "violet")}>{model.name.slice(0, 1)}</span>
+                <span className={"modelGlyph tiny tone-" + (model.tone || "violet")}><WorkflowIcon id={model.slug} size={20}/></span>
                 <div><b>{model.name}</b><small>{model.capabilities?.join(" · ")}</small></div>
-                <button className="outlineIcon"><SlidersHorizontal size={15} /></button>
+                <a className="outlineIcon" href="#studio-settings" aria-label="Үүсгэлтийн тохиргоо"><SlidersHorizontal size={15}/></a>
               </div>
 
               <textarea
@@ -406,6 +413,7 @@ export function StudioClient() {
                     <span>{imageUrl ? "Primary image бэлэн" : "Primary image"}</span>
                     <input
                       type="file"
+                      disabled={uploading || providerHealth!=="ready"}
                       accept="image/png,image/jpeg,image/webp"
                       onChange={(event) => event.target.files?.[0] && upload(event.target.files[0], "image").catch((error) => setMessage(error.message))}
                     />
@@ -417,7 +425,8 @@ export function StudioClient() {
                     <span>{videoUrl ? "Source video бэлэн" : "Source video"}</span>
                     <input
                       type="file"
-                      accept="video/mp4,video/quicktime"
+                      disabled={uploading || providerHealth!=="ready"}
+                      accept="video/mp4"
                       onChange={(event) => event.target.files?.[0] && upload(event.target.files[0], "video").catch((error) => setMessage(error.message))}
                     />
                   </label>
@@ -428,6 +437,7 @@ export function StudioClient() {
                     <span>References {refs.length}/{model.maxReferences || 16}</span>
                     <input
                       type="file"
+                      disabled={uploading || providerHealth!=="ready"}
                       accept="image/png,image/jpeg,image/webp"
                       onChange={(event) => event.target.files?.[0] && upload(event.target.files[0], "ref").catch((error) => setMessage(error.message))}
                     />
@@ -438,6 +448,8 @@ export function StudioClient() {
                 )}
               </div>
 
+              {presetError&&<p className="serviceState" role="status">{presetError}</p>}
+              <div className="inputPreview">{[imageUrl,...refs].filter(Boolean).map((url,index)=><div key={url+index}><img src={url} alt={`Жишиг зураг ${index+1}`}/><button aria-label="Жишиг зураг хасах" onClick={()=>imageUrl===url?setImageUrl(""):setRefs(current=>current.filter(value=>value!==url))}><X size={12}/></button></div>)}{videoUrl&&<button className="ghost" onClick={()=>setVideoUrl("")}><Video size={14}/> Жишиг видео хасах</button>}</div>
               {presets.length > 0 && (
                 <select className="fullSelect" value={presetId} onChange={(event) => setPresetId(event.target.value)}>
                   <option value="">Restyle preset сонгох</option>
@@ -446,7 +458,7 @@ export function StudioClient() {
               )}
 
               <div className="composerBottom">
-                <div className="inlineSettings">
+                <div className="inlineSettings" id="studio-settings">
                   {model.minDuration && model.maxDuration && (
                     <label>
                       <span>Хугацаа</span>
@@ -483,6 +495,9 @@ export function StudioClient() {
                 </button>
               </div>
 
+              {inputError&&hasInput&&<p className="serviceState">{inputError}</p>}
+              {providerHealth==="missing"&&<div className="accountNotice"><Sparkles size={20}/><div>Үүсгэх үйлчилгээ бэлтгэгдэж байна. Одоогоор жишээ үзэж, санаа болон тохиргоогоо бэлдээрэй. <Link href="/video-guide">Гарын авлага үзэх →</Link></div></div>}
+              {user&&user.credits<cost&&<p className="serviceState">Энэ бүтээлд {cost} кредит хэрэгтэй. Таны үлдэгдэл {user.credits}. <Link href="/billing">Кредитийн багц үзэх →</Link></p>}
               {message && <div className={"studioMessage " + (message.includes("алдаа") || message.includes("дутуу") ? "error" : "")}>{message}</div>}
             </div>
 
@@ -490,7 +505,7 @@ export function StudioClient() {
               <div><small>INPUT</small><b>{model.supportsVideo ? "Video + " : ""}{model.supportsImage || model.supportsMultipleReferences ? "Reference + " : ""}Prompt</b></div>
               <div><small>OUTPUT</small><b>{model.kind === "image" ? "Image" : "Video"}</b></div>
               <div><small>RESOLUTION</small><b>{model.resolutions.join(" · ")}</b></div>
-              <div><small>API</small><b>Server-side</b></div>
+              <div><small>БҮТЭЭЛҮҮД</small><b>Хувийн түүх</b></div>
             </section>
 
             <CommunityInspiration surface={model.kind === "video" ? "video" : model.group === "Genjutsu" ? "apps" : model.group === "Cinema" ? "cinema" : model.group === "Ads" ? "marketing" : model.group === "Influencer" ? "influencer" : "explore"} limit={4} title="Энэ model-д тохирох community inspiration" />
@@ -509,9 +524,9 @@ export function StudioClient() {
                     <article className="generationCard" key={item.id}>
                       <div className="generationMedia">
                         {media?.type === "video" ? (
-                          <video src={media.url} controls preload="metadata" playsInline />
+                          <GenerationResult type="video" url={media.url}/>
                         ) : media?.type === "image" ? (
-                          <img src={media.url} alt="RAVS generated result" />
+                          <GenerationResult type="image" url={media.url}/>
                         ) : (
                           <div className="generationPlaceholder">
                             {active ? <LoaderCircle className="spin" /> : <Square />}
@@ -528,22 +543,26 @@ export function StudioClient() {
                       </div>
                       <div className="generationMeta">
                         <div><b>{itemModel?.name || item.modelSlug}</b><span>{item.costCredits} cr</span></div>
-                        <p>{item.prompt || "Reference workflow"}</p>
+                        <p>{item.prompt || "Жишиг файлаар бүтээсэн"}</p>
+                        {item.status==="FAILED"&&<p className="generationError">Үүсгэлт амжилтгүй боллоо. Оролтоо шалгаад дахин оролдоно уу.</p>}
+                        {item.status==="COMPLETED"&&!media&&<p className="generationError">Үр дүнгийн холбоос олдсонгүй. Дахин шинэчилж шалгана уу.</p>}
                         <small>{new Date(item.createdAt).toLocaleString("mn-MN")}</small>
                         <div className="generationFooter">
-                          {active && <button onClick={() => cancel(item.id)}><X size={12} /> Цуцлах</button>}
+                          {["PENDING","SUBMITTED"].includes(item.status) && <button onClick={() => cancel(item.id)}><X size={12} /> Цуцлах</button>}
                           {item.refunded && <span className="refund"><CheckCircle2 size={12} /> Credit буцаасан</span>}
                         </div>
                       </div>
                     </article>
                   );
                 })}
-                {!history.length && (
+                {loadError&&<div className="formError" role="alert">{loadError} <button className="ghost" onClick={load}>Дахин оролдох</button></div>}
+                {historyLoading&&<div className="screenEmpty" role="status"><LoaderCircle className="spin"/><p>Бүтээлийн түүхийг ачаалж байна…</p></div>}
+                {!historyLoading&&!loadError&&!history.length && (
                   <div className="screenEmpty">
-                    <div className="emptyVisual"><div /><div /><div /></div>
+
                     <Sparkles size={20} />
                     <h3>Эхний бүтээлээ үүсгээрэй</h3>
-                    <p>Дээр prompt эсвэл reference оруулаад Generate дарна. Бүх result энд хадгалагдана.</p>
+                    <p>Эхний бүтээл хүртэл дараах алхмыг дагаарай.</p><div className="guideSteps"><div><Clapperboard/><h3>1. Хэрэгсэл сонго</h3><p>Видео, зураг эсвэл хөдөлгөөн хувиргах хэрэгслээс сонго.</p></div><div><ImagePlus/><h3>2. Санаагаа оруул</h3><p>Санаагаа тайлбарлах эсвэл жишиг файл оруулж, хэмжээ ба хугацаагаа тохируул.</p></div><div><ArrowDownToLine/><h3>3. Үүсгээд тат</h3><p>Бэлэн бүтээлээ эндээс тоглуулж, нээж, татаж авна. Гадаад файлын хадгалалтын хугацаа хязгаартай тул татаж хадгалаарай.</p></div></div><Link className="ghost" href="/video-guide">Видео гарын авлага →</Link>
                   </div>
                 )}
               </div>
@@ -553,7 +572,7 @@ export function StudioClient() {
           <aside className="contextRail">
             <div className="contextCard">
               <small>MODEL</small>
-              <div className={"contextModel tone-" + (model.tone || "violet")}>{model.name.slice(0, 1)}</div>
+              <div className={"contextModel tone-" + (model.tone || "violet")}><WorkflowIcon id={model.slug} size={20}/></div>
               <h3>{model.name}</h3>
               <p>{model.description}</p>
               <div className="contextTags">{model.capabilities?.map((item) => <span key={item}>{item}</span>)}</div>
@@ -563,7 +582,7 @@ export function StudioClient() {
               <ul className="checkList">
                 <li className={hasInput ? "done" : ""}><i /> Prompt эсвэл reference</li>
                 <li className={user && user.credits >= cost ? "done" : ""}><i /> {cost} credit</li>
-                <li className={providerHealth === "ready" ? "done" : ""}><i /> Higgsfield API</li>
+                <li className={providerHealth === "ready" ? "done" : ""}><i /> Үүсгэх үйлчилгээ</li>
               </ul>
             </div>
             <div className="contextCard helperCard">

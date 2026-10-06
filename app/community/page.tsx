@@ -9,14 +9,14 @@ export default function CommunityPage() {
       <Sidebar />
       <section className="content communityPage">
         <header className="topbar">
-          <div><b>Community</b><span>Playable demos · Recreate in RAVS</span></div>
+          <div><b>Бүтээлчдийн сан</b><span>Жишээ үзээд өөрийн хувилбарыг бүтээ</span></div>
           <Link href="/studio?surface=video" className="primary">Видео үүсгэх <ArrowRight size={13} /></Link>
         </header>
 
         <section className="communityWallHero">
-          <div className="eyebrow"><UsersRound size={14} /> COMMUNITY WALL</div>
+          <div className="eyebrow"><UsersRound size={14} /> БҮТЭЭЛЧДИЙН САН</div>
           <h1>Үзээд шууд <em>өөрийн хувилбарыг</em> бүтээ.</h1>
-          <p>Higgsfield-ийн public demo media-г дахин upload хийхгүйгээр шууд stream хийнэ. Official page руу үсрэхгүй; play, mute, pause бүгд энэ хуудсан дээр.</p>
+          <p>Бүтээлчдийн жишээ видеог үзэж, таалагдсан санаагаа өөрийн тайлбар, жишиг зургаар шинээр бүтээ.</p>
         </section>
 
         <CommunityFeed />

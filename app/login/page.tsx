@@ -1,1 +1,1 @@
-import { AuthForm } from "@/components/auth-form";export const metadata={title:"Нэвтрэх"};export default function Page(){return <main className="authPage"><AuthForm mode="login"/></main>}
+import { redirect } from "next/navigation";import { getSessionUser } from "@/lib/session";import { AuthForm } from "@/components/auth-form";export const metadata={title:"Нэвтрэх"};export default async function Page(){if(await getSessionUser())redirect("/studio");return <div className="authPage"><AuthForm mode="login"/></div>}

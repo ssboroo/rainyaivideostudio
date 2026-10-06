@@ -9,6 +9,7 @@ import { checkoutUrlFromProviderData,confirmWirePayment,markWirePaymentState,pay
 
 export async function POST(req:Request){
   const user=await requireUser();if(!user)return jsonError("Нэвтэрнэ үү.",401);
+  if(!env.wireApiKey()||!env.wireWebhookSecret())return jsonError("Төлбөрийн үйлчилгээ бэлтгэгдэж байна.",503);
   try{
     const body=await req.json();const pack=getCreditPackage(String(body.packageId||""));
     if(!pack)return jsonError("Багц олдсонгүй.",404);
@@ -62,6 +63,6 @@ export async function POST(req:Request){
       return NextResponse.json({error:message,code:e.code,requestId:e.requestId},{status:e.status===409?409:e.status===429?429:503});
     }
     if(e instanceof Error&&["TimeoutError","AbortError"].includes(e.name))return jsonError("Wire.mn хариу удаж байна. Түр хүлээгээд дахин оролдоно уу.",504);
-    return jsonError(e instanceof Error?e.message:"Wire.mn төлбөр үүсгэж чадсангүй.",500);
+    return jsonError("Төлбөр үүсгэж чадсангүй. Дахин оролдоно уу.",500);
   }
 }

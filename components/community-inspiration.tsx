@@ -17,6 +17,7 @@ function Card({ item }: { item: CommunityItem }) {
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [imageFailed,setImageFailed]=useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -64,21 +65,21 @@ function Card({ item }: { item: CommunityItem }) {
             onPause={() => setPlaying(false)}
             onError={() => setFailed(true)}
           />
-        ) : meta.image ? (
-          <img className="communityPoster" src={meta.image} alt={item.title + " preview"} loading="lazy" />
+        ) : meta.image && !imageFailed ? (
+          <img className="communityPoster" src={meta.image} alt={item.title + " preview"} loading="lazy" onError={()=>setImageFailed(true)} />
         ) : (
           <div className={"communityFallback tone-" + item.tone}>
             <Film size={24} />
-            <span>Preview</span>
+            <span>{item.title}</span><small>Өөрийн хувилбарын санаа</small>
           </div>
         )}
         <div className="communityShade" />
         <span className="communityBadge">{item.badge}</span>
-        <button className={"communityPlay " + (!playable ? "disabled" : "")} type="button" disabled={!playable} onClick={togglePlay}>
+        {playable && <button aria-label={playing?"Видео зогсоох":"Видео тоглуулах"} className={"communityPlay " + (!playable ? "disabled" : "")} type="button" disabled={!playable} onClick={togglePlay}>
           {playing ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
-        </button>
+        </button>}
         {playable && (
-          <button className="communityInlineMute" type="button" onClick={toggleMute}>
+          <button aria-label={muted?"Дуу нээх":"Дуу хаах"} className="communityInlineMute" type="button" onClick={toggleMute}>
             {muted ? <VolumeX size={11} /> : <Volume2 size={11} />}
           </button>
         )}
@@ -91,12 +92,12 @@ function Card({ item }: { item: CommunityItem }) {
         <div className="communityActions">
           {item.recreate ? (
             <Link className="primary" href={recreateHref(item)}>
-              <RotateCcw size={11} /> Recreate in RAVS
+              <RotateCcw size={11} /> Өөрийн хувилбарыг бүтээ
             </Link>
           ) : (
-            <span className="studyOnly">Study only</span>
+            <span className="studyOnly">Санаа авах</span>
           )}
-          {!playable && <span className="demoUnavailable">Demo unavailable</span>}
+          {!playable && <a className="demoUnavailable" href={item.sourceHref} target="_blank" rel="noreferrer">Эх сурвалж үзэх ↗</a>}
         </div>
       </div>
     </article>
@@ -120,7 +121,7 @@ export function CommunityInspiration({
         <div>
           <small>COMMUNITY · TREND · ORIGINALS</small>
           <h2>{title}</h2>
-          <p>Demo-г энэ хуудсан дээр тоглуулаад Recreate дарж өөрийн шинэ хувилбарыг Studio-д нээ.</p>
+          <p>Жишээг үзээд өөрийн дүр, орчин, тайлбартай шинэ бүтээлээ эхлүүлээрэй.</p>
         </div>
         <Link href="/community" className="ghost">Community бүгд <ArrowRight size={13} /></Link>
       </div>

@@ -7,8 +7,9 @@ type Pack={id:string;name:string;priceMnt:number;credits:number;popular?:boolean
 export function BillingClient(){
   const router=useRouter(),params=useSearchParams();
   const[packs,setPacks]=useState<Pack[]>([]),[busy,setBusy]=useState(""),[error,setError]=useState(""),[notice,setNotice]=useState(""),[checking,setChecking]=useState(false);
+  const [loading,setLoading]=useState(true),[available,setAvailable]=useState(false);
   const returnedPaymentId=params.get("paymentId");
-  useEffect(()=>{fetch("/api/billing/packages").then(r=>r.json()).then(d=>setPacks(d.packages||[]))},[]);
+  useEffect(()=>{let alive=true;Promise.all([fetch("/api/billing/packages").then(async r=>{if(!r.ok)throw new Error("Багц ачаалж чадсангүй.");return r.json();}),fetch("/api/health").then(r=>r.json())]).then(([d,h])=>{if(alive){setPacks(d.packages||[]);setAvailable(Boolean(h?.configuration?.wire));}}).catch(()=>{if(alive)setError("Кредитийн багцыг ачаалж чадсангүй. Хуудсаа дахин нээнэ үү.");}).finally(()=>{if(alive)setLoading(false);});return()=>{alive=false;};},[]);
   useEffect(()=>{if(params.get("payment")==="success"&&returnedPaymentId)check(returnedPaymentId,true)},[returnedPaymentId]);
   async function buy(id:string){
     setBusy(id);setError("");setNotice("");
@@ -34,6 +35,8 @@ export function BillingClient(){
     <div className="sectionHead"><div><small>RAVS WALLET</small><h1>Бүтээлээ зогсолтгүй үргэлжлүүл</h1><p>₮-өөр Wire.mn hosted checkout ашиглан төлөөд credit wallet-д автоматаар нэмэгдэнэ.</p></div></div>
     {notice&&<div className="statusMsg center">{notice}</div>}{error&&<div className="formError center">{error}</div>}
     {returnedPaymentId&&<div style={{display:"flex",justifyContent:"center",margin:"12px 0 22px"}}><button className="ghost" disabled={checking} onClick={()=>check()}>{checking?<LoaderCircle className="spin" size={15}/>:<RefreshCw size={15}/>} Төлбөрийн төлөв шалгах</button></div>}
-    <div className="pricingGrid">{packs.map(p=><article className={p.popular?"priceCard popular":"priceCard"} key={p.id}>{p.popular&&<span className="popularBadge">Хамгийн их сонголт</span>}<h3>{p.name}</h3><div className="bigPrice">{p.priceMnt.toLocaleString()}₮</div><strong>{p.credits.toLocaleString()} credit</strong><ul><li><Check size={14}/>Бүх AI model</li><li><Check size={14}/>Video / Image / Workflow</li><li><Check size={14}/>Хугацаагүй credit</li><li><Check size={14}/>Wire.mn баталгаатай checkout</li></ul><button className="primary wide" disabled={!!busy} onClick={()=>buy(p.id)}>{busy===p.id?<LoaderCircle className="spin"/>:<><ExternalLink size={15}/> Wire.mn-аар төлөх</>}</button></article>)}</div>
+    {loading&&<div className="screenEmpty" role="status"><LoaderCircle className="spin"/><p>Кредитийн багц ачаалж байна…</p></div>}
+    {!loading&&!available&&<div className="accountNotice"><RefreshCw size={20}/><div>Кредит худалдан авах үйлчилгээ бэлтгэгдэж байна. Төлбөр нээгдэх хүртэл жишээ, гарын авлага үзэж танилцаарай. <a href="/video-guide">Заавар үзэх →</a></div></div>}
+    <div className="pricingGrid">{packs.map(p=><article className={p.popular?"priceCard popular":"priceCard"} key={p.id}>{p.popular&&<span className="popularBadge">Хамгийн их сонголт</span>}<h3>{p.name}</h3><div className="bigPrice">{p.priceMnt.toLocaleString()}₮</div><strong>{p.credits.toLocaleString()} credit</strong><ul><li><Check size={14}/>Бүх AI model</li><li><Check size={14}/>Video / Image / Workflow</li><li><Check size={14}/>Хугацаагүй credit</li><li><Check size={14}/>Хамгаалагдсан төлбөрийн хуудас</li></ul><button className="primary wide" disabled={!!busy||!available} onClick={()=>buy(p.id)}>{busy===p.id?<LoaderCircle className="spin"/>:<><ExternalLink size={15}/> {available?"Wire.mn-аар төлөх":"Төлбөр удахгүй нээгдэнэ"}</>}</button></article>)}</div>
   </section></section></main>
 }

@@ -8,9 +8,9 @@ import { communityFeed, communityFeedHref, type CommunityFeedItem, type Communit
 type MediaMeta = { video?: string | null; image?: string | null };
 
 const tabs: Array<{ id: CommunityFeedTab; label: string }> = [
-  { id: "higgsfield", label: "By Higgsfield" },
-  { id: "trending", label: "Community Trending" },
-  { id: "new", label: "Community New" },
+  { id: "higgsfield", label: "Higgsfield жишээ" },
+  { id: "trending", label: "Олны сонирхсон" },
+  { id: "new", label: "Шинэ санаанууд" },
 ];
 
 function FeedCard({ item }: { item: CommunityFeedItem }) {
@@ -19,6 +19,7 @@ function FeedCard({ item }: { item: CommunityFeedItem }) {
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [imageFailed,setImageFailed]=useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -69,12 +70,12 @@ function FeedCard({ item }: { item: CommunityFeedItem }) {
             onPause={() => setPlaying(false)}
             onError={() => setFailed(true)}
           />
-        ) : meta.image ? (
-          <img src={meta.image} alt={item.title} loading="lazy" />
+        ) : meta.image && !imageFailed ? (
+          <img src={meta.image} alt={item.title} loading="lazy" onError={()=>setImageFailed(true)} />
         ) : (
           <div className="communityMasonryFallback">
             {loading ? <LoaderCircle size={20} className="spin" /> : <Play size={20} />}
-            <span>{loading ? "Demo уншиж байна" : "Playable demo олдсонгүй"}</span>
+            <span>{loading ? "Demo уншиж байна" : item.title}</span>
           </div>
         )}
 
@@ -84,7 +85,7 @@ function FeedCard({ item }: { item: CommunityFeedItem }) {
           {item.views && <span><Eye size={10} /> {item.views}</span>}
         </div>
 
-        <button
+        {playable && <button
           className={"communityCenterPlay " + (!playable ? "disabled" : "")}
           type="button"
           onClick={togglePlay}
@@ -92,7 +93,7 @@ function FeedCard({ item }: { item: CommunityFeedItem }) {
           aria-label={playable ? (playing ? "Pause video" : "Play video") : "Demo unavailable"}
         >
           {playing ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
-        </button>
+        </button>}
 
         {playable && (
           <button className="communityMute" type="button" onClick={toggleMute} aria-label={muted ? "Unmute video" : "Mute video"}>
@@ -105,9 +106,9 @@ function FeedCard({ item }: { item: CommunityFeedItem }) {
           <h3>{item.title}</h3>
           <div className="communityMasonryActions">
             <Link href={communityFeedHref(item)} className="communityRecreate">
-              <RotateCcw size={11} /> Recreate
+              <RotateCcw size={11} /> Шинээр бүтээх
             </Link>
-            {!playable && !loading && <span className="demoUnavailable">Demo unavailable</span>}
+            {!playable && !loading && <a className="demoUnavailable" href={item.sourceHref} target="_blank" rel="noreferrer">Эх сурвалж ↗</a>}
           </div>
         </div>
       </div>
@@ -141,7 +142,7 @@ export function CommunityFeed() {
           <small>PLAY · EXPLORE · RECREATE</small>
           <h2>{tabs.find((tab) => tab.id === active)?.label}</h2>
         </div>
-        <p>Official page руу шилжихгүй. Demo боломжтой card-уудыг эндээс шууд тоглуулаад Recreate дарж Studio-д үргэлжлүүл.</p>
+        <p>Official page руу шилжихгүй. Demo боломжтой card-уудыг эндээс шууд тоглуулаад Шинээр бүтээх дарж Studio-д үргэлжлүүл.</p>
       </div>
 
       <div className="communityMasonry">
