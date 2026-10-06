@@ -28,6 +28,8 @@ import { parameterLabel, parameterHelp, optionLabel, modelGuide, resolutionLabel
 import { GenerationResult } from "@/components/generation-result";
 import { mediaFrom } from "@/lib/generation-media";
 import { Sidebar } from "@/components/sidebar";
+import { ModelFamilies } from "@/components/model-families";
+import { modelFamilyName, modelVariantLabel } from "@/lib/model-families";
 import { ModelExamples } from "@/components/model-examples";
 import { buildProviderInput, estimateCredits, getModel, models, type ModelKind, type RavsModel } from "@/lib/models";
 
@@ -117,7 +119,7 @@ export function StudioClient() {
       if (group && item.group !== group) return false;
       if (surface !== "all" && item.kind !== surface) return false;
       if (!needle) return true;
-      return [item.name, item.maker, item.group, item.badge, item.description]
+      return [item.name, modelFamilyName(item), modelVariantLabel(item), item.maker, item.group, item.badge, item.description]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
@@ -347,19 +349,19 @@ export function StudioClient() {
               ))}
             </div>
             <div className="modelList">
-              {visibleModels.map((item) => (
+              <ModelFamilies items={visibleModels} selected={selected} expand={Boolean(search.trim())} renderModel={(item) => (
                 <button
                   key={item.slug}
                   onClick={() => chooseModel(item.slug)}
                   className={"modelItem " + (selected === item.slug ? "active" : "")}
                 >
                   <div>
-                    <b>{item.name}</b>
-                    <small>{item.maker || item.provider} · {item.badge}</small>
+                    <b>{modelVariantLabel(item)}</b>
+                    <small>{item.apiVerified ? resolutionLabel(item) : "Параметр нягталж байна"}</small>
                   </div>
                   <span>{item.creditRate}{item.pricingType === "second" ? "/s" : ""}</span>
                 </button>
-              ))}
+              )}/>
               {!visibleModels.length && <div className="browserEmpty">Тохирох загвар олдсонгүй.</div>}
             </div>
           </aside>
