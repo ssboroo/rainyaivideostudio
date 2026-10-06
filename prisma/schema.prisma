@@ -1,14 +1,41 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-enum Role { USER ADMIN }
-enum GenerationStatus { PENDING SUBMITTED PROCESSING COMPLETED FAILED NSFW CANCELED }
-enum LedgerType { WELCOME GENERATION REFUND PURCHASE ADMIN }
-enum PaymentStatus { PENDING PAID FAILED CANCELED }
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum GenerationStatus {
+  PENDING
+  SUBMITTED
+  PROCESSING
+  COMPLETED
+  FAILED
+  NSFW
+  CANCELED
+}
+
+enum LedgerType {
+  WELCOME
+  GENERATION
+  REFUND
+  PURCHASE
+  ADMIN
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELED
+}
 
 model User {
   id           String         @id @default(cuid())
@@ -23,6 +50,7 @@ model User {
   ledger       CreditLedger[]
   payments     Payment[]
 }
+
 model Generation {
   id                String           @id @default(cuid())
   userId            String
@@ -43,9 +71,11 @@ model Generation {
   updatedAt         DateTime         @updatedAt
   completedAt       DateTime?
   user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, createdAt])
   @@index([status, updatedAt])
 }
+
 model CreditLedger {
   id             String     @id @default(cuid())
   userId         String
@@ -56,8 +86,10 @@ model CreditLedger {
   metadata       Json?
   createdAt      DateTime   @default(now())
   user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, createdAt])
 }
+
 model Payment {
   id           String        @id @default(cuid())
   userId       String
@@ -73,6 +105,7 @@ model Payment {
   updatedAt    DateTime      @updatedAt
   paidAt       DateTime?
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, createdAt])
   @@index([status, createdAt])
 }
