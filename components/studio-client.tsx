@@ -105,6 +105,7 @@ export function StudioClient() {
   const [imageUrl, setImageUrl] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [refs, setRefs] = useState<string[]>([]);
+  const [modelOptions,setModelOptions]=useState<Record<string,unknown>>({});
   const [presetId, setPresetId] = useState("");
   const [presets, setPresets] = useState<Array<{ id: string; name: string }>>([]);
   const [user, setUser] = useState<User | null>(null);
@@ -158,6 +159,7 @@ export function StudioClient() {
     setDuration(safeDuration);
     setResolution(model.resolutions[0]);
     setAspect(requestedAspect && model.aspectRatios.includes(requestedAspect) ? requestedAspect : model.aspectRatios[0]);
+    setModelOptions({});
     setImageUrl("");
     setVideoUrl("");
     setRefs([]);
@@ -259,7 +261,7 @@ export function StudioClient() {
 
   const hasInput = Boolean(prompt.trim() || imageUrl || videoUrl || refs.length);
   let inputError="";
-  try {buildProviderInput(model,{prompt,imageUrl,videoUrl,referenceUrls:refs,presetId});}catch(e){inputError=e instanceof Error?e.message:"Оролтоо шалгана уу.";}
+  try {buildProviderInput(model,{prompt,imageUrl,videoUrl,referenceUrls:refs,presetId,duration,resolution,aspectRatio:aspect,generateAudio:audio,modelOptions});}catch(e){inputError=e instanceof Error?e.message:"Оролтоо шалгана уу.";}
   const canSubmit = !busy && !uploading && hasInput && !inputError && !!user && user.credits>=cost && providerHealth==="ready";
 
   async function submit() {
@@ -281,8 +283,7 @@ export function StudioClient() {
           videoUrl,
           referenceUrls: refs,
           presetId,
-          enhancePrompt: true,
-          quality: "high",
+          modelOptions,
         }),
       });
       const data = await response.json();
@@ -457,13 +458,16 @@ export function StudioClient() {
                 </select>
               )}
 
+              {!model.apiVerified&&<p className="serviceState" role="status">{model.apiReason}</p>}
+              <details className="modelExtraSettings"><summary>Нэмэлт тохиргоо</summary><div className="modelApiFields">{(model.parameters||[]).filter(f=>!["prompt","duration","resolution","aspect_ratio","image_url","video_url","image_urls","video_urls","reference_urls","first_frame_url","start_image_url","generate_audio","sound","keep_original_sound","preset_id"].includes(f.name)).map(f=><label key={f.name}><span>{({fps:"Кадрын хурд",end_image_url:"Төгсгөлийн зураг URL",last_image_url:"Сүүлийн зураг URL",negative_prompt:"Харагдах ёсгүй зүйл",camera_movement:"Камерын хөдөлгөөн",enhance_prompt:"Тайлбар сайжруулах",prompt_extend:"Тайлбар баяжуулах",enable_thinking:"Сэтгэх горим",seed:"Санамсаргүй үр",quality:"Чанарын түвшин",batch_size:"Зургийн тоо",output_format:"Файлын төрөл",rendering_speed:"Үүсгэх хурд",multi_shots:"Олон кадр",aigc_watermark:"AI тэмдэглэгээ",audio_url:"Жишиг дуу URL",audio_urls:"Жишиг дууны холбоосууд",image_weight:"Зургийг хадгалах хүч",cfg_scale:"Тайлбар дагах хүч"} as Record<string,string>)[f.name]||f.name}{f.required?" *":""}</span>{f.options?<select value={String(modelOptions[f.name]??f.default??f.options[0])} onChange={e=>setModelOptions(o=>({...o,[f.name]:/integer|number/.test(f.type)?Number(e.target.value):e.target.value}))}>{f.options.map(v=><option key={v}>{v}</option>)}</select>:f.type.includes("boolean")?<input type="checkbox" checked={Boolean(modelOptions[f.name]??f.default)} onChange={e=>setModelOptions(o=>({...o,[f.name]:e.target.checked}))}/>:f.type.includes("array")||f.type.includes("object")?<textarea placeholder={f.type.includes("object")?"{}":"[]"} aria-label={f.name} onChange={e=>{try{const value=JSON.parse(e.target.value||"null");setModelOptions(o=>({...o,[f.name]:value}));}catch{setModelOptions(o=>({...o,[f.name]:e.target.value}));}}}/>:<input type={/integer|number/.test(f.type)?"number":"text"} min={f.minimum} max={f.maximum} maxLength={f.maxLength} value={String(modelOptions[f.name]??f.default??"")} onChange={e=>setModelOptions(o=>({...o,[f.name]:e.target.value===""?undefined:/integer|number/.test(f.type)?Number(e.target.value):e.target.value}))}/>}</label> )}</div></details>
+              {model.apiSource&&<a className="modelApiSource" href={model.apiSource} target="_blank" rel="noopener noreferrer">Загварын албан заавар ↗</a>}
               <div className="composerBottom">
                 <div className="inlineSettings" id="studio-settings">
                   {model.minDuration && model.maxDuration && (
                     <label>
                       <span>Хугацаа</span>
                       <select value={duration} onChange={(event) => setDuration(Number(event.target.value))}>
-                        {Array.from({ length: model.maxDuration - model.minDuration + 1 }, (_, index) => model.minDuration! + index)
+                        {(model.durationOptions||Array.from({ length: model.maxDuration - model.minDuration + 1 }, (_, index) => model.minDuration! + index))
                           .map((value) => <option value={value} key={value}>{value} сек</option>)}
                       </select>
                     </label>

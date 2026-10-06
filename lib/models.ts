@@ -1,3 +1,4 @@
+import { hfModelSpecs, type HfParameter } from "./hf-model-specs.ts";
 export type ModelKind = "video" | "image" | "workflow";
 
 export type RavsModel = {
@@ -24,10 +25,15 @@ export type RavsModel = {
   requiresPrompt?: boolean;
   capabilities?: string[];
   featured?: boolean;
+  apiVerified?: boolean;
+  apiReason?: string;
+  apiSource?: string;
+  parameters?: HfParameter[];
+  durationOptions?: number[];
   tone?: string;
 };
 
-export const models: RavsModel[] = [
+const existingModels: RavsModel[] = [
   {
     slug: "seedance-2-5", name: "Seedance 2.5", provider: "Higgsfield API", maker: "ByteDance",
     modelId: "bytedance/seedance-2.5/text-to-video", kind: "video", group: "Видео", badge: "SOTA",
@@ -195,6 +201,30 @@ export const models: RavsModel[] = [
   },
 ];
 
+function enrichModel(model:RavsModel):RavsModel {
+ const spec=hfModelSpecs.find(s=>s.id===model.modelId);
+ const fields=spec?.parameters||[];
+ const field=(name:string)=>fields.find(f=>f.name===name);
+ const duration=field("duration");
+ const ordered=(f:HfParameter|undefined,fallback:string[])=>f?.options?[(String(f.default)),...f.options].filter((x,i,a)=>f.options!.includes(x)&&a.indexOf(x)===i):typeof f?.default==="string"?[f.default]:fallback;
+ return {...model,apiVerified:!!spec?.verified,badge:spec?.verified?model.badge:"API ШАЛГАЖ БАЙНА",apiReason:spec?.reason||"API баримтыг баталгаажуулж байна.",apiSource:spec?.source,parameters:fields,
+  resolutions:ordered(field("resolution"),["auto"]),aspectRatios:ordered(field("aspect_ratio"),["auto"]),
+  minDuration:duration?(duration.minimum||Math.min(...(duration.options?.map(Number)||[Number(duration.default)||5]))):undefined,
+  maxDuration:duration?(duration.maximum||Math.max(...(duration.options?.map(Number)||[Number(duration.default)||5]))):undefined,
+  durationOptions:duration?.options?.map(Number),
+  supportsImage:fields.some(f=>["image_url","image_urls","first_frame_url","start_image_url"].includes(f.name)),
+  supportsVideo:fields.some(f=>["video_url","video_urls"].includes(f.name)),
+  supportsMultipleReferences:fields.some(f=>["image_urls","video_urls","reference_urls"].includes(f.name)),
+  supportsAudio:fields.some(f=>["generate_audio","sound","keep_original_sound"].includes(f.name)),
+  requiresPrompt:field("prompt")?.required||false};
+}
+// Keep stable website slugs; canonical endpoint IDs come from model-specific docs.
+export const models:RavsModel[]=[...existingModels.map(m=>({...m,modelId:m.slug==="genjutsu-motion"?"higgsfield/genjutsu/motion-transfer/v1.0":m.modelId})),
+ ...hfModelSpecs.filter(s=>!existingModels.some(m=>(m.slug==="genjutsu-motion"?"higgsfield/genjutsu/motion-transfer/v1.0":m.modelId)===s.id)).map((s):RavsModel=>{
+ const image=/text-to-image|image-to-image|soul|qwen|z-image|ideogram|recraft|grok-imagine-image|marketing-studio|ai-influencer/.test(s.id);
+ return {slug:s.id.replace(/[^a-z0-9]+/gi,"-"),name:s.name,provider:"Higgsfield API",maker:s.id.split('/')[0],modelId:s.id,kind:image?"image":"video",group:image?"Зураг":"Видео",badge:s.verified?"API":"БАТАЛГААЖУУЛАХ",description:image?"Тайлбар, жишиг материалаар зураг бүтээх загвар.":"Тайлбар, жишиг материалаар видео бүтээх загвар.",pricingType:"flat",creditRate:image?120:3600,resolutions:["auto"],aspectRatios:["auto"],maxReferences:8};
+ })].map(enrichModel);
+
 export const getModel = (slug: string) => models.find((model) => model.slug === slug);
 
 export function estimateCredits(model: RavsModel, duration?: number) {
@@ -228,114 +258,55 @@ function objectValue(value: unknown): Record<string, unknown> {
     : {};
 }
 
-export function buildProviderInput(model: RavsModel, raw: Record<string, unknown>) {
-  const prompt = typeof raw.prompt === "string" ? raw.prompt.trim().slice(0, 10000) : "";
-  const duration = Math.max(
-    model.minDuration || 1,
-    Math.min(Number(raw.duration) || model.minDuration || 5, model.maxDuration || 30),
-  );
-  const resolution = model.resolutions.includes(String(raw.resolution))
-    ? String(raw.resolution)
-    : model.resolutions[0];
-  const aspect = model.aspectRatios.includes(String(raw.aspectRatio))
-    ? String(raw.aspectRatio)
-    : model.aspectRatios[0];
-  const imageUrl = url(raw.imageUrl);
-  const videoUrl = url(raw.videoUrl);
-  const refs = urls(raw.referenceUrls, model.maxReferences || 30);
-  const requirePrompt = model.requiresPrompt !== false;
-  if (requirePrompt && !prompt && !imageUrl && !videoUrl && refs.length === 0) {
-    throw new Error("Prompt эсвэл reference шаардлагатай.");
+function validateParameter(field:HfParameter,value:unknown):unknown {
+ if(value===undefined||value===null||value===""){
+  if(field.required)throw new Error(`${field.name}: шаардлагатай мэдээллийг оруулна уу.`);
+  if(value===null&&field.default!==null&&!field.type.includes("null"))throw new Error(`${field.name}: null утга зөвшөөрөгдөхгүй.`);
+  return value===null?null:undefined;
+ }
+ if(field.type.includes("array")){
+  if(!Array.isArray(value)||value.length>50)throw new Error(`${field.name}: жагсаалт буруу байна.`);
+  if(field.required&&!value.length)throw new Error(`${field.name}: жишиг материал шаардлагатай.`);
+  if(field.type.includes("string")||field.type.includes("URL")){
+   if(!value.every(v=>typeof v==="string"))throw new Error(`${field.name}: утга буруу байна.`);
+   if(/urls/.test(field.name)&&!value.every(v=>url(v)))throw new Error(`${field.name}: зөв URL оруулна уу.`);
   }
-
-  switch (model.slug) {
-    case "kling-3-standard":
-      return { prompt, duration, aspect_ratio: aspect, sound: raw.generateAudio === false ? "off" : "on", cfg_scale: Math.max(0, Math.min(Number(raw.cfgScale) || 0.5, 1)), multi_shots: Boolean(raw.multiShots) };
-    case "kling-3-turbo":
-      return { prompt, duration, resolution, aspect_ratio: aspect };
-    case "kling-3-image":
-      if (!imageUrl) throw new Error("Reference зураг шаардлагатай.");
-      return { prompt, image_url: imageUrl, duration, aspect_ratio: aspect, sound: raw.generateAudio === false ? "off" : "on" };
-    case "seedance-2-5":
-      return { prompt, duration, resolution, aspect_ratio: aspect, output_format: "mp4", generate_audio: raw.generateAudio !== false };
-    case "seedance-2-5-image":
-      if (!imageUrl) throw new Error("Reference зураг шаардлагатай.");
-      return { prompt, image_url: imageUrl, duration, resolution, bitrate_mode: "high", generate_audio: raw.generateAudio !== false };
-    case "seedance-reference":
-      return {
-        prompt: prompt || undefined,
-        duration,
-        resolution,
-        aspect_ratio: aspect,
-        output_format: "mp4",
-        generate_audio: raw.generateAudio !== false,
-        image_urls: urls(raw.imageUrls, 8).length ? urls(raw.imageUrls, 8) : [imageUrl, ...refs].filter((item): item is string => Boolean(item)).slice(0, 8),
-        video_urls: urls(raw.videoUrls, 4).length ? urls(raw.videoUrls, 4) : [videoUrl].filter((item): item is string => Boolean(item)),
-        audio_urls: urls(raw.audioUrls, 4),
-      };
-    case "seedance-edit":
-      if (!videoUrl) throw new Error("Source video шаардлагатай.");
-      return { prompt, video_url: videoUrl, resolution, bitrate_mode: "high", generate_audio: raw.generateAudio !== false };
-    case "wan-3-prime":
-      return { prompt, duration, resolution, aspect_ratio: aspect, generate_audio: raw.generateAudio !== false };
-    case "wan-3-prime-image":
-      if (!imageUrl) throw new Error("Эхний зураг шаардлагатай.");
-      return { prompt, duration, image_url: imageUrl, resolution, aspect_ratio: aspect, generate_audio: raw.generateAudio !== false, enable_thinking: false };
-    case "kling-motion":
-      if (!imageUrl || !videoUrl) throw new Error("Image болон motion video шаардлагатай.");
-      return { prompt, image_url: imageUrl, video_url: videoUrl, keep_original_sound: raw.generateAudio === false ? "no" : "yes", character_orientation: raw.characterOrientation === "image" ? "image" : "video" };
-    case "cinema-studio-4":
-      return { prompt, duration, resolution, aspect_ratio: aspect, reference_urls: refs.slice(0, 50), sound: raw.generateAudio === false ? "off" : "on" };
-    case "genjutsu-motion":
-    case "genjutsu-object":
-      if (!videoUrl || !refs.length) throw new Error("Жишиг видео болон хамгийн багадаа нэг жишиг зураг шаардлагатай.");
-      return { prompt, video_url: videoUrl, image_urls: refs.slice(0, 8), resolution };
-    case "genjutsu-restyle":
-      if (!videoUrl || typeof raw.presetId !== "string" || !raw.presetId) {
-        throw new Error("Source video болон style preset шаардлагатай.");
-      }
-      return { prompt, preset_id: raw.presetId, video_url: videoUrl, image_urls: refs.slice(0, 5), resolution };
-    case "marketing-studio":
-      return {
-        prompt,
-        image_urls: [imageUrl, ...refs].filter((item): item is string => Boolean(item)).slice(0, 16),
-        preset_id: typeof raw.presetId === "string" && raw.presetId ? raw.presetId : undefined,
-        resolution,
-        aspect_ratio: aspect,
-        quality: typeof raw.quality === "string" ? raw.quality : "high",
-        moderation: "auto",
-        enhance_prompt: Boolean(raw.enhancePrompt),
-      };
-    case "ai-influencer":
-      return {
-        seed: null,
-        tier: typeof raw.tier === "string" ? raw.tier : "normal",
-        brief: prompt,
-        image_url: imageUrl || null,
-        selection: objectValue(raw.selection),
-        trait_variants: raw.traitVariants ?? null,
-        item_image_urls: refs.slice(0, 8),
-        variation_index: Number.isFinite(Number(raw.variationIndex)) ? Number(raw.variationIndex) : 0,
-      };
-    case "soul-2":
-      return { prompt, batch_size: raw.batchSize === 4 ? 4 : 1, resolution, aspect_ratio: aspect, enhance_prompt: raw.enhancePrompt !== false, custom_reference_id: typeof raw.customReferenceId === "string" ? raw.customReferenceId : undefined };
-    case "soul-2-image":
-      if (!imageUrl) throw new Error("Reference зураг шаардлагатай.");
-      return { prompt, image_url: imageUrl, batch_size: raw.batchSize === 4 ? 4 : 1, resolution, aspect_ratio: aspect };
-    case "ideogram-4":
-      return { prompt, aspect_ratio: aspect, image_url: imageUrl, rendering_speed: typeof raw.renderingSpeed === "string" ? raw.renderingSpeed : "DEFAULT" };
-    case "recraft-4-1":
-      return { prompt, resolution, aspect_ratio: aspect, output_format: typeof raw.outputFormat === "string" ? raw.outputFormat : "jpg" };
-    case "qwen-image-3":
-      return { prompt, resolution, aspect_ratio: aspect, prompt_extend: raw.enhancePrompt !== false, enable_thinking: true, prompt_extend_mode: "direct" };
-    case "qwen-image-3-edit": {
-      const imageUrls = [imageUrl, ...refs].filter((item): item is string => Boolean(item)).slice(0, 3);
-      if (!imageUrls.length) throw new Error("1–3 reference зураг шаардлагатай.");
-      return { prompt, image_urls: imageUrls, resolution, aspect_ratio: aspect, prompt_extend: raw.enhancePrompt !== false, enable_thinking: true, prompt_extend_mode: "direct" };
-    }
-    case "grok-image-2":
-      return { prompt, quality: typeof raw.quality === "string" ? raw.quality : "medium", resolution, aspect_ratio: aspect, image_url: imageUrl };
-    default:
-      throw new Error("Дэмжигдээгүй model.");
-  }
+ }else if(/integer|number/.test(field.type)){
+  if(typeof value!=="number"||!Number.isFinite(value)||field.type.includes("integer")&&!Number.isInteger(value))throw new Error(`${field.name}: тоон утга буруу байна.`);
+  if(field.minimum!==undefined&&value<field.minimum||field.maximum!==undefined&&value>field.maximum)throw new Error(`${field.name}: зөвшөөрсөн хязгаарт оруулна уу.`);
+ }else if(field.type.includes("boolean")){
+  if(typeof value!=="boolean")throw new Error(`${field.name}: сонголт буруу байна.`);
+ }else if(field.type.includes("string")){
+  if(typeof value!=="string")throw new Error(`${field.name}: текст оруулна уу.`);
+  if(field.minLength!==undefined&&value.length<field.minLength||value.length>(field.maxLength||10000))throw new Error(`${field.name}: текстийн уртыг шалгана уу.`);
+  if(field.type.includes("UUID")&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value))throw new Error(`${field.name}: зөв ID сонгоно уу.`);
+  if(/_url$/.test(field.name)&&!url(value))throw new Error(`${field.name}: зөв URL оруулна уу.`);
+ }else if(field.type.includes("object")&&(!value||typeof value!=="object"||Array.isArray(value)))throw new Error(`${field.name}: мэдээллийн бүтэц буруу байна.`);
+ if(field.options&&!field.options.includes(String(value)))throw new Error(`${field.name}: зөвшөөрөөгүй сонголт байна.`);
+ return value;
+}
+export function buildProviderInput(model:RavsModel,raw:Record<string,unknown>){
+ if(!model.apiVerified)throw new Error(model.apiReason||"Энэ загварын API холболтыг баталгаажуулж байна.");
+ const extra=objectValue(raw.modelOptions);
+ if(Array.isArray(raw.referenceUrls)&&raw.referenceUrls.length>(model.maxReferences||8))throw new Error("Жишиг материалын тоо хэтэрсэн байна.");
+ const image=url(raw.imageUrl),video=url(raw.videoUrl),refs=urls(raw.referenceUrls,model.maxReferences||8);
+ const candidates:Record<string,unknown>={
+  prompt:typeof raw.prompt==="string"?raw.prompt.trim():undefined,
+  duration:raw.duration===undefined?undefined:Number(raw.duration),resolution:raw.resolution,aspect_ratio:raw.aspectRatio,
+  image_url:image,video_url:video,image_urls:[image,...refs].filter(Boolean),video_urls:video?[video]:[],reference_urls:[image,video,...refs].filter(Boolean),
+  first_frame_url:image,start_image_url:image,
+  generate_audio:raw.generateAudio,sound:raw.generateAudio===undefined?undefined:raw.generateAudio?"on":"off",keep_original_sound:raw.generateAudio===undefined?undefined:raw.generateAudio?"yes":"no",
+  preset_id:raw.presetId||undefined,
+ };
+ const input:Record<string,unknown>={};
+ for(const field of model.parameters||[]){
+  let value=Object.hasOwn(candidates,field.name)?candidates[field.name]:extra[field.name];
+  if(value===undefined||value===""&&!field.required)value=field.default;
+  value=validateParameter(field,value);if(value!==undefined)input[field.name]=value;
+ }
+ if(model.slug==="marketing-studio"&&input.enhance_prompt&&(!input.preset_id||!(input.image_urls as unknown[])?.length))throw new Error("Зарын хэв маяг болон бүтээгдэхүүний зураг сонгоно уу.");
+ if(model.slug==="qwen-image-3"||model.slug==="qwen-image-3-edit")if(input.enable_thinking===true&&input.prompt_extend===false)throw new Error("Сэтгэх горимд тайлбар сайжруулалтыг идэвхжүүлнэ үү.");
+ if(["genjutsu-motion","genjutsu-object"].includes(model.slug)&&Array.isArray(input.image_urls)&&input.image_urls.length>8)throw new Error("Хамгийн ихдээ 8 жишиг зураг оруулна уу.");
+ if(model.slug==="qwen-image-3-edit"&&Array.isArray(input.image_urls)&&input.image_urls.length>3)throw new Error("Хамгийн ихдээ 3 жишиг зураг оруулна уу.");
+ return input;
 }

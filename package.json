@@ -14,9 +14,12 @@
     "db:studio": "prisma studio",
     "check": "prisma validate && tsc --noEmit",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "hf:example": "node --import tsx index.ts"
   },
   "dependencies": {
+    "@higgsfield/client": "0.2.6",
+    "@next/env": "^16.3.8",
     "@prisma/client": "6.19.3",
     "lucide-react": "0.468.0",
     "next": "16.3.8",
@@ -28,6 +31,7 @@
     "@types/node": "22.18.6",
     "@types/react": "19.2.0",
     "@types/react-dom": "19.2.0",
+    "tsx": "^4.23.15",
     "typescript": "5.9.3"
   },
   "overrides": {

@@ -1,3 +1,4 @@
+import { createHiggsfieldClient } from "@higgsfield/client/v2";
 import { env } from "./env.ts";
 type HfJson = Record<string, unknown>;
 function headers() {
@@ -18,7 +19,14 @@ async function hfFetch(path: string, init?: RequestInit) {
  }
  return payload;
 }
-export const submitGeneration=(modelId:string,input:Record<string,unknown>,idempotencyKey?:string)=>hfFetch(`/${modelId}`,{method:"POST",headers:idempotencyKey?{"Idempotency-Key":idempotencyKey}:{},body:JSON.stringify(input)});
+export async function submitGeneration(modelId:string,input:Record<string,unknown>,idempotencyKey?:string):Promise<HfJson>{
+ if(!/^[a-zA-Z0-9][a-zA-Z0-9/_.-]*$/.test(modelId)||modelId.includes(".."))throw new Error("Model endpoint буруу байна.");
+ const credentials=env.higgsfieldCredentials();
+ if(!/^[^:\s]+:[^:\s]+$/.test(credentials))throw new Error("Үүсгэх үйлчилгээ түр бэлтгэгдэж байна.");
+ const client=createHiggsfieldClient({credentials,baseURL:env.higgsfieldBaseUrl(),timeout:45000,maxRetries:0,headers:idempotencyKey?{"Idempotency-Key":idempotencyKey}:{}});
+ try{return await client.subscribe(modelId,{input,withPolling:false}) as unknown as HfJson;}
+ catch(e){const status=typeof e==="object"&&e&&"statusCode" in e?Number(e.statusCode):502;const safe=new Error(status===401?"Үйлчилгээний түлхүүрийг шалгана уу.":status===402||status===403?"Үйлчилгээний үлдэгдэл хүрэлцэхгүй байна.":status===400||status===422?"Загварын оролт, тохиргоог шалгана уу.":"Үүсгэх үйлчилгээний хүсэлт амжилтгүй боллоо.") as Error&{status:number};safe.status=status;throw safe;}
+}
 export const getGenerationStatus=(id:string,statusUrl?:string|null)=>hfFetch(statusUrl||`/requests/${encodeURIComponent(id)}/status`,{method:"GET"});
 export const cancelGeneration=(id:string,cancelUrl?:string|null)=>hfFetch(cancelUrl||`/requests/${encodeURIComponent(id)}/cancel`,{method:"POST"});
 export const createSignedUpload=(contentType:string)=>hfFetch("/files/generate-upload-url",{method:"POST",body:JSON.stringify({content_type:contentType})});
@@ -27,7 +35,7 @@ export function mapProviderStatus(value: unknown) {
  const status=String(value||"").toLowerCase();
  if(status==="completed")return "COMPLETED";
  if(status==="failed")return "FAILED";
- if(status==="nsfw")return "NSFW";
+ if(status==="nsfw"||status==="moderated")return "NSFW";
  if(status==="canceled"||status==="cancelled")return "CANCELED";
  if(["in_progress","processing","running"].includes(status))return "PROCESSING";
  return "SUBMITTED";

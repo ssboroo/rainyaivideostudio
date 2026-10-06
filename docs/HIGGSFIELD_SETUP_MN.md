@@ -70,3 +70,26 @@ ADMIN_USER_EMAIL=verified-owner@example.com node scripts/grant-admin.mjs
 - Олон replica ажиллуулахын өмнө auth limiter-ийг shared Redis/DB дээр шилжүүлэх. Одоогийн auth limiter нэг process-д хамаарна, restart үед шинэчлэгдэнэ.
 - Signed session 30 хоног хүчинтэй. Logout browser cookie-г устгана; хулгайлагдсан token-ийг бүх төхөөрөмжөөс revoke хийх session registry одоогоор байхгүй.
 - Provider submit timeout үед upstream хүсэлт хүлээн авсан эсэх тодорхойгүй байж болно. Idempotency key хадгалагдсан боловч автомат reconciliation worker одоогоор байхгүй; provider analytics болон RAVS ledger-ээр тулган шалгах.
+
+## Албан SDK — Seedance 2.5 жишээ
+
+Төсөл TypeScript + npm ашиглана. `@higgsfield/client@0.2.6`, `@next/env`, TypeScript ажиллуулах `tsx` суулгасан.
+
+1. Өөрийн компьютер дээр төслийн `.env.local` файлыг редактороор нээнэ. `HF_CREDENTIALS=` талбарт `key-id:key-secret` утгыг зөвхөн локал оруулна. Түлхүүрийг чат, screenshot, git эсвэл log руу оруулахгүй.
+2. `npm ci`, дараа нь `npm run hf:example` ажиллуулна. Энэ команд нэг төлбөртэй видео үүсгэлт илгээнэ.
+3. `index.ts` нь `higgsfield.subscribe("bytedance/seedance-2.5/text-to-video", {input: ..., withPolling: true})` ашиглана. Prompt: `A cinematic scene at sunset`; 5 секунд; 720p; 16:9.
+4. Зөвхөн `completed` бөгөөд хүчинтэй HTTPS `video.url` ирсэн үед URL хэвлэнэ. Алдаа, цуцлалт, moderation болон timeout-ыг амжилт гэж тайлагнахгүй; raw SDK exception, header, credential хэвлэхгүй.
+5. Live веб дээр түлхүүрээ Railway Variables-д `HF_CREDENTIALS` нэрээр өөрөө нэмнэ. Энэ нь зөвхөн серверт ашиглагдана. `.env.local` git болон Docker build context-оос хасагдсан.
+
+2026-10-06 шалгалт: жишээ командыг ажиллуулсан боловч түлхүүр тохируулаагүй учир `BLOCKED` гэж зогссон. Provider-д төлбөртэй хүсэлт илгээгээгүй, generated video URL аваагүй. SDK тохиргоо бодит үүсгэлтээр батлагдсан гэсэн дүгнэлт хийгээгүй.
+
+### Вебийн хүсэлтийн урсгал
+
+SDK `subscribe`-ийг `withPolling:false`-тай ашиглан request ID-г шууд database-д хадгална. Удаан generation дуусахыг HTTP route дээр хүлээхгүй. Түүхээс status URL-ыг poll хийж, үр дүнг хадгалан тоглуулж/татаж авна. Idempotency-Key нь generation ID; automatic submission retry унтраасан. Failed, moderated, canceled хүсэлтэд кредит буцаах одоогийн урсгал ажиллана.
+
+`lib/hf-model-specs.ts` дахь параметрийн сан нь model-specific official API references-ээс бэлтгэсэн snapshot. Баримт уншигдсан нь тухайн API account бүх model-д эрхтэй гэсэн баталгаа биш. API баримт нээгдэхгүй эсвэл auth заавар зөрүүтэй model-уудыг хүсэлт илгээхээс өмнө блоклоно. `modelOptions` нийтлэг duration/prompt/reference тохиргоог дарж солихгүй. Кредитийг баталгаажсан duration-аас тооцно.
+
+Албан эх сурвалжууд:
+- https://docs.higgsfield.ai/docs/how-to/sdk
+- https://console.higgsfield.ai/models/bytedance/seedance-2.5/text-to-video/api-reference
+- https://open.higgsfield.ai/explore

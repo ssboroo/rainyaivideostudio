@@ -7,7 +7,7 @@ export async function POST(req:Request){
   if(!env.higgsfieldCredentials())return jsonError("Үүсгэх үйлчилгээ бэлтгэгдэж байна. Жишээ, гарын авлагатай танилцаарай.",503);
   const raw=await req.json();const model=getModel(String(raw.modelSlug||""));if(!model)return jsonError("Model олдсонгүй.",404);
   const since=new Date(Date.now()-60000);const recent=await db.generation.count({where:{userId:user.id,createdAt:{gte:since}}});if(recent>=env.generationRateLimit())return jsonError("Хэт олон хүсэлт. 1 минутын дараа дахин оролдоно уу.",429);
-  let input;try{input=buildProviderInput(model,raw);}catch(e){return jsonError(e instanceof Error?e.message:"Оролтын мэдээлэл буруу байна.",400);}const cost=estimateCredits(model,Number(raw.duration));
+  let input;try{input=buildProviderInput(model,raw);}catch(e){return jsonError(e instanceof Error?e.message:"Оролтын мэдээлэл буруу байна.",400);}const cost=estimateCredits(model,Number(input.duration));
   const prompt=typeof raw.prompt==="string"?raw.prompt.trim().slice(0,6000):"";
   const generation=await reserveCredits(user.id,cost,{modelSlug:model.slug,modelId:model.modelId,kind:model.kind,prompt,input:input as Prisma.InputJsonValue,status:"PENDING",costCredits:cost});
   try{
