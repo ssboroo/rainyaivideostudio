@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 function readAttr(tag: string, name: string) {
-  const expression = new RegExp(name + '=["\\']([^"\\']+)["\\']', "i");
+  const expression = new RegExp(name + "=[\\\"']([^\\\"']+)[\\\"']", "i");
   return tag.match(expression)?.[1] || null;
 }
 
