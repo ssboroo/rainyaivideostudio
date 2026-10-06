@@ -1,0 +1,22 @@
+name: CI
+on:
+  push:
+    branches: [main, production-v1]
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ravs?schema=public
+      SESSION_SECRET: ci-only-session-secret-at-least-32-characters
+      APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install
+      - run: npm run check
+      - run: npm run build

@@ -1,0 +1,22 @@
+CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN');
+CREATE TYPE "GenerationStatus" AS ENUM ('PENDING', 'SUBMITTED', 'PROCESSING', 'COMPLETED', 'FAILED', 'NSFW', 'CANCELED');
+CREATE TYPE "LedgerType" AS ENUM ('WELCOME', 'GENERATION', 'REFUND', 'PURCHASE', 'ADMIN');
+CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'PAID', 'FAILED', 'CANCELED');
+
+CREATE TABLE "User" ("id" TEXT NOT NULL,"email" TEXT NOT NULL,"passwordHash" TEXT NOT NULL,"name" TEXT,"role" "Role" NOT NULL DEFAULT 'USER',"credits" INTEGER NOT NULL DEFAULT 0,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" TIMESTAMP(3) NOT NULL,CONSTRAINT "User_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "Generation" ("id" TEXT NOT NULL,"userId" TEXT NOT NULL,"providerRequestId" TEXT,"providerStatusUrl" TEXT,"providerCancelUrl" TEXT,"modelSlug" TEXT NOT NULL,"modelId" TEXT NOT NULL,"kind" TEXT NOT NULL,"prompt" TEXT NOT NULL,"input" JSONB NOT NULL,"output" JSONB,"error" JSONB,"status" "GenerationStatus" NOT NULL DEFAULT 'PENDING',"costCredits" INTEGER NOT NULL,"refunded" BOOLEAN NOT NULL DEFAULT false,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" TIMESTAMP(3) NOT NULL,"completedAt" TIMESTAMP(3),CONSTRAINT "Generation_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "CreditLedger" ("id" TEXT NOT NULL,"userId" TEXT NOT NULL,"amount" INTEGER NOT NULL,"type" "LedgerType" NOT NULL,"idempotencyKey" TEXT NOT NULL,"referenceId" TEXT,"metadata" JSONB,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "CreditLedger_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "Payment" ("id" TEXT NOT NULL,"userId" TEXT NOT NULL,"provider" TEXT NOT NULL DEFAULT 'qpay',"packageId" TEXT NOT NULL,"amountMnt" INTEGER NOT NULL,"credits" INTEGER NOT NULL,"invoiceId" TEXT,"paymentId" TEXT,"status" "PaymentStatus" NOT NULL DEFAULT 'PENDING',"providerData" JSONB,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" TIMESTAMP(3) NOT NULL,"paidAt" TIMESTAMP(3),CONSTRAINT "Payment_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+CREATE UNIQUE INDEX "Generation_providerRequestId_key" ON "Generation"("providerRequestId");
+CREATE INDEX "Generation_userId_createdAt_idx" ON "Generation"("userId","createdAt");
+CREATE INDEX "Generation_status_updatedAt_idx" ON "Generation"("status","updatedAt");
+CREATE UNIQUE INDEX "CreditLedger_idempotencyKey_key" ON "CreditLedger"("idempotencyKey");
+CREATE INDEX "CreditLedger_userId_createdAt_idx" ON "CreditLedger"("userId","createdAt");
+CREATE UNIQUE INDEX "Payment_invoiceId_key" ON "Payment"("invoiceId");
+CREATE UNIQUE INDEX "Payment_paymentId_key" ON "Payment"("paymentId");
+CREATE INDEX "Payment_userId_createdAt_idx" ON "Payment"("userId","createdAt");
+CREATE INDEX "Payment_status_createdAt_idx" ON "Payment"("status","createdAt");
+ALTER TABLE "Generation" ADD CONSTRAINT "Generation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "CreditLedger" ADD CONSTRAINT "CreditLedger_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
