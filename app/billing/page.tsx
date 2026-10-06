@@ -1,0 +1,1 @@
+import { BillingClient } from "@/components/billing-client";export const metadata={title:"Credit"};export default function Page(){return <BillingClient/>}

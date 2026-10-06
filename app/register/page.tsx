@@ -1,0 +1,1 @@
+import { AuthForm } from "@/components/auth-form";export const metadata={title:"Бүртгүүлэх"};export default function Page(){return <main className="authPage"><AuthForm mode="register"/></main>}

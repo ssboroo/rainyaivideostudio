@@ -1,0 +1,1 @@
+"use client";export default function ErrorPage({reset}:{error:Error&{digest?:string};reset:()=>void}){return <main className="authPage"><div className="authCard"><div className="authBrand">RAVS</div><h1>Алдаа гарлаа</h1><p>Хүсэлтийг дахин оролдоно уу.</p><button className="primary wide" onClick={reset}>Дахин оролдох</button></div></main>}

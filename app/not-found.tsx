@@ -1,0 +1,1 @@
+import Link from "next/link";export default function NotFound(){return <main className="authPage"><div className="authCard"><div className="authBrand">RAVS</div><h1>404</h1><p>Энэ хуудас олдсонгүй.</p><Link className="primary wide" href="/">Нүүр хуудас</Link></div></main>}
