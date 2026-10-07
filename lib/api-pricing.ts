@@ -1,0 +1,68 @@
+// Official model playground prices inspected 2026-10-07. Use list rates,
+// never assume account-specific or temporary promotional discounts.
+export const pricingPolicy = { usdMnt: 3700, markup: 1.2, minCreditMnt: 100000 / 12000, reviewedAt: '2026-10-07' };
+export class PricingUnavailableError extends Error {}
+const unavailable = () => { throw new PricingUnavailableError('Энэ тохиргооны API өртгийг баталгаажуулж байна. Өөр загвар сонгоно уу.'); };
+export function providerCostUsd(id: string, input: Record<string, unknown>): number {
+  const resolution = String(input.resolution || '720p').toLowerCase();
+  const seconds = Number(input.duration || 5);
+  const batch = Number(input.batch_size || input.num_images || 1);
+  if (!Number.isFinite(seconds) || seconds <= 0 || !Number.isSafeInteger(batch) || batch < 1) return unavailable();
+  // Source-video duration must be established by a server-owned media probe.
+  // Do not trust a user-supplied duration or substitute a flat workflow price.
+  if (input.video_url || (Array.isArray(input.video_urls) && input.video_urls.length)) return unavailable();
+  const perSecond = (rates: Record<string, number>) => {
+    const rate = rates[resolution]; if (rate === undefined) return unavailable();
+    return rate * seconds;
+  };
+  const perImage = (rates: Record<string, number>) => {
+    const rate = rates[resolution]; if (rate === undefined) return unavailable();
+    return rate * batch;
+  };
+  if (/^bytedance\/seedance-2\.[05]\//.test(id) || id === 'higgsfield/cinema-studio/4.0') {
+    if (/video-edit|video-extend/.test(id)) return unavailable();
+    const shortEdge = ({'480p':480,'720p':720,'1080p':1080,'4k':2160} as Record<string, number>)[resolution];
+    if (!shortEdge || resolution === '4k' && !id.includes('2.0')) return unavailable();
+    // Conservative bound for provider padding and auto aspect ratios. Explicit
+    // ratios use a 64-pixel aligned frame, rounded upwards on both dimensions.
+    const match = /^(\d+):(\d+)$/.exec(String(input.aspect_ratio));
+    const ratio = match ? Math.max(Number(match[1])/Number(match[2]), Number(match[2])/Number(match[1])) : 21/9;
+    if (!Number.isFinite(ratio) || ratio < 1 || ratio > 21/9) return unavailable();
+    const align = (n:number) => Math.ceil(n/64)*64;
+    const pixels = align(shortEdge)*align(shortEdge*ratio);
+    const tokens = Math.ceil(pixels * seconds * 24 / 1024);
+    const rate = id.includes('2.0') ? (resolution === '4k' ? 0.008 : 0.014) : (resolution === '1080p' ? 0.0234 : 0.0214);
+    return tokens / 1000 * rate;
+  }
+  if (id.startsWith('alibaba/wan-3.0-prime/')) return perSecond({'480p':.068,'720p':.14,'1080p':.28});
+  if (id.startsWith('alibaba/wan-3.0/')) return perSecond({'480p':.05,'720p':.10,'1080p':.20});
+  if (/^wan\/v2\.[67]\//.test(id)) return perSecond({'720p':.10,'1080p':.15});
+  if (id.startsWith('alibaba/happy-horse/') && !id.includes('/v1.1/')) return perSecond({'720p':.14,'1080p':.28});
+  if (id.startsWith('minimax/h3/')) return perSecond({'2k':.13});
+  if (id.startsWith('minimax/hailuo-2.3/standard/')) return seconds * (seconds <= 6 ? .0467 : .056);
+  if (id.startsWith('alibaba/happy-horse/v1.1/')) return perSecond({'720p':.14,'1080p':.18});
+  if (id.startsWith('xai/grok-imagine-video/v1.5/')) return perSecond({'480p':.08,'720p':.14,'1080p':.25});
+  if (id.startsWith('lightricks/ltx-2.5/')) return perSecond(id.endsWith('/fast') ? {'720p':.09,'1080p':.13,'2k':.19,'4k':.30} : {'720p':.12,'1080p':.17});
+  if (id.startsWith('kling-video/v3.0/4k/')) return .42 * seconds;
+  // Upper rate covers sound-on/off variants; discounts are deliberately ignored.
+  if (id.startsWith('kling-video/v3.0/pro/')) return .168 * seconds;
+  if (id.startsWith('kling-video/v3.0/std/')) return (id.endsWith('image-to-video') ? .126 : .084) * seconds;
+  if (id.startsWith('kling-video/v3.0-turbo/')) return perSecond({'720p':.112,'1080p':.14});
+  if (id === 'higgsfield/ai-influencer') return .05 * batch;
+  if (id.startsWith('higgsfield-ai/soul/v2/')) return perImage({'720p':.0032,'1080p':.0057});
+  if (id === 'higgsfield-ai/soul/standard') return perImage({'720p':.0938,'1080p':.1875});
+  if (id.startsWith('alibaba/qwen-image-3/')) return perImage({'1k':.04,'2k':.075});
+  if (id === 'z-image/turbo') return perImage({'1k':.015,'2k':.015});
+  if (id === 'ideogram/v4.0') return .03 * batch;
+  if (id === 'recraft/v4.1/text-to-image') return perImage({'1k':.035});
+  if (id === 'xai/grok-imagine-image-2.0') return perImage({'1k':.04,'2k':.08});
+  // Token-metered Marketing Studio, unverified families, and source-duration
+  // workflows remain unavailable until their complete metering is supported.
+  return unavailable();
+}
+export function quoteApiCredits(id:string, input:Record<string,unknown>) {
+  const usd = providerCostUsd(id,input);
+  const credits = Math.ceil(usd * pricingPolicy.usdMnt * (1 + pricingPolicy.markup) / pricingPolicy.minCreditMnt);
+  if (!Number.isSafeInteger(credits) || credits <= 0) return unavailable();
+  return credits;
+}

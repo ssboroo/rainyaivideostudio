@@ -1,3 +1,4 @@
+import { quoteApiCredits } from "./api-pricing.ts";
 import { hfModelSpecs, type HfParameter } from "./hf-model-specs.ts";
 export type ModelKind = "video" | "image" | "workflow";
 
@@ -228,13 +229,9 @@ export const models:RavsModel[]=[...existingModels.map(m=>({...m,modelId:m.slug=
 
 export const getModel = (slug: string) => models.find((model) => model.slug === slug);
 
-export function estimateCredits(model: RavsModel, duration?: number) {
-  if (model.pricingType === "flat") return model.creditRate;
-  const safeDuration = Math.max(
-    model.minDuration || 1,
-    Math.min(duration || model.minDuration || 5, model.maxDuration || 30),
-  );
-  return Math.max(model.creditRate, Math.ceil(model.creditRate * safeDuration));
+export function estimateCredits(model: RavsModel, duration?: number, options: Record<string, unknown> = {}) {
+  const defaults = Object.fromEntries((model.parameters || []).filter(p => p.default !== undefined).map(p => [p.name,p.default]));
+  return quoteApiCredits(model.modelId, { ...defaults, ...options, duration: duration || defaults.duration || model.minDuration || 5 });
 }
 
 function url(value: unknown) {

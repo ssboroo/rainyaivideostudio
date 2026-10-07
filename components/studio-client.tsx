@@ -110,7 +110,10 @@ export function StudioClient() {
   const [providerHealth, setProviderHealth] = useState<ProviderHealth>("checking");
 
   const model = getModel(selected) || models[0];
-  const cost = estimateCredits(model, duration);
+  let cost = 0;
+  let pricingError = "";
+  try { cost = estimateCredits(model, duration, { ...modelOptions, resolution, aspect_ratio: aspect, sound: audio ? "on" : "off", generate_audio: audio, video_url: videoUrl || undefined }); }
+  catch (error) { pricingError = error instanceof Error ? error.message : "Үнэ баталгаажуулж байна."; }
   const group = params.get("group");
 
   const visibleModels = useMemo(() => {
@@ -255,7 +258,7 @@ export function StudioClient() {
   const hasInput = Boolean(prompt.trim() || imageUrl || videoUrl || refs.length || Object.values(modelOptions).some(value=>value!==undefined&&value!==null&&value!==""));
   let inputError="";
   try {buildProviderInput(model,{prompt,imageUrl,videoUrl,referenceUrls:refs,presetId,duration,resolution,aspectRatio:aspect,generateAudio:audio,modelOptions});}catch(e){inputError=e instanceof Error?e.message:"Оролтоо шалгана уу.";}
-  const canSubmit = !busy && !uploading && hasInput && !inputError && !!user && user.credits>=cost && providerHealth==="ready";
+  const canSubmit = !busy && !uploading && hasInput && !inputError && !pricingError && !!user && user.credits>=cost && providerHealth==="ready";
 
   async function submit() {
     if (!user || !canSubmit) return;
@@ -359,7 +362,7 @@ export function StudioClient() {
                     <b>{modelVariantLabel(item)}</b>
                     <small>{item.apiVerified ? resolutionLabel(item) : "Параметр нягталж байна"}</small>
                   </div>
-                  <span>{item.creditRate}{item.pricingType === "second" ? "/s" : ""}</span>
+                  <span>Тохиргоогоор тооцно</span>
                 </button>
               )}/>
               {!visibleModels.length && <div className="browserEmpty">Тохирох загвар олдсонгүй.</div>}
@@ -373,7 +376,7 @@ export function StudioClient() {
                 <h1>{model.name}</h1>
                 <p>{model.description}</p>
               </div>
-              <div className="estimateBadge"><span>Кредитийн тооцоо</span><b>{cost} кредит</b></div>
+              <div className="estimateBadge"><span>Кредитийн тооцоо</span><b>{pricingError ? "Үнэ баталгаажуулж байна" : `${cost} кредит`}</b></div>
             </div>
 
             <div className="composerPanel">
@@ -485,12 +488,13 @@ export function StudioClient() {
                 <button className="generateButton" disabled={!canSubmit} onClick={submit}>
                   {busy ? <LoaderCircle className="spin" size={17} /> : <ArrowUp size={17} />}
                   <span>{busy ? "Илгээж байна" : "Үүсгэх"}</span>
-                  <b>{cost} кредит</b>
+                  <b>{pricingError ? "Түр боломжгүй" : `${cost} кредит`}</b>
                 </button>
               </div>
 
               {inputError&&hasInput&&<p className="serviceState">{inputError}</p>}
               {providerHealth==="missing"&&<div className="accountNotice"><Sparkles size={20}/><div>Үүсгэх үйлчилгээ бэлтгэгдэж байна. Одоогоор жишээ үзэж, санаа болон тохиргоогоо бэлдээрэй. <Link href="/video-guide">Гарын авлага үзэх →</Link></div></div>}
+              {pricingError&&<p className="serviceState">{pricingError}</p>}
               {user&&user.credits<cost&&<p className="serviceState">Энэ бүтээлд {cost} кредит хэрэгтэй. Таны үлдэгдэл {user.credits}. <Link href="/billing">Кредитийн багц үзэх →</Link></p>}
               {message && <div className={"studioMessage " + (message.includes("алдаа") || message.includes("дутуу") ? "error" : "")}>{message}</div>}
             </div>

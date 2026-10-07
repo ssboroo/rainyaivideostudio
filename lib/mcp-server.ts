@@ -18,7 +18,7 @@ const generationInput = z.record(z.string().max(100), z.unknown()).describe('Stu
 function result(value: unknown) { return { content: [{ type: 'text' as const, text: JSON.stringify(value) }] }; }
 function error(message: string) { return { isError: true, content: [{ type: 'text' as const, text: message }] }; }
 function describeModel(m: typeof models[number]) {
-  return { slug: m.slug, name: m.name, maker: m.maker, kind: m.kind, mode: modelGuide(m).mode, description: m.description, ready: !!m.apiVerified, duration: durationLabel(m), resolution: resolutionLabel(m), aspectRatio: aspectLabel(m), pricing: { type: m.pricingType, creditRate: m.creditRate }, guidePath: `/models/${m.slug}` };
+  return { slug: m.slug, name: m.name, maker: m.maker, kind: m.kind, mode: modelGuide(m).mode, description: m.description, ready: !!m.apiVerified, duration: durationLabel(m), resolution: resolutionLabel(m), aspectRatio: aspectLabel(m), pricing: { type: "configuration", quoteRequired: true }, guidePath: `/models/${m.slug}` };
 }
 
 /** Each request gets an independent server and a validated account identity. */
@@ -45,7 +45,7 @@ export function createRavsMcpServer(identity: McpIdentity, services: McpServices
   }));
   server.registerTool('ravs_estimate', { title: 'Кредит ба тохиргоо шалгах', description: 'Бодит үүсгэлт хийхгүйгээр оролтыг шалгаж RAVS кредитийг тооцоолно. Файлын MB хэмжээг нягтаршилаас таамаглахгүй.', inputSchema: { modelSlug, input: generationInput }, annotations: readAnnotations }, async ({ modelSlug, input }) => guarded('ravs:read', async () => {
     const m = getModel(modelSlug); if (!m) return { error: 'Загвар олдсонгүй.' };
-    try { const payload = buildProviderInput(m, input); return { model: m.name, validatedInput: payload, credits: estimateCredits(m, Number(payload.duration)), billable: true, next: 'Хэрэглэгчид тохиргоо, кредитийг харуул. Зөвшөөрсөн бол шинэ idempotencyKey ба maxCredits-тай ravs_create_generation дууд.' }; }
+    try { const payload = buildProviderInput(m, input); return { model: m.name, validatedInput: payload, credits: estimateCredits(m, Number(payload.duration), payload), billable: true, next: 'Хэрэглэгчид тохиргоо, кредитийг харуул. Зөвшөөрсөн бол шинэ idempotencyKey ба maxCredits-тай ravs_create_generation дууд.' }; }
     catch (e) { return { error: e instanceof Error ? e.message : 'Оролт буруу байна.' }; }
   }));
   server.registerTool('ravs_account', { title: 'Миний кредит', description: 'Холболтыг зөвшөөрсөн хэрэглэгчийн кредитийг харуулна.', inputSchema: {}, annotations: readAnnotations }, async () => guarded('ravs:read', () => services.getUserAccount(identity.userId)));
