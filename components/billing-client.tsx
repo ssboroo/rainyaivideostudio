@@ -3,6 +3,8 @@ import { useEffect,useState } from "react";
 import { useRouter,useSearchParams } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
 import { Check,LoaderCircle,ExternalLink,RefreshCw } from "lucide-react";
+import { quoteApiCredits } from "@/lib/api-pricing";
+const economyVideoCredits=quoteApiCredits("minimax/hailuo-2.3/standard/text-to-video",{duration:6});
 type Pack={id:string;name:string;priceMnt:number;credits:number;popular?:boolean};
 export function BillingClient(){
   const router=useRouter(),params=useSearchParams();
@@ -40,6 +42,6 @@ export function BillingClient(){
     {returnedPaymentId&&<div style={{display:"flex",justifyContent:"center",margin:"12px 0 22px"}}><button className="ghost" disabled={checking} onClick={()=>check()}>{checking?<LoaderCircle className="spin" size={15}/>:<RefreshCw size={15}/>} Төлбөрийн төлөв шалгах</button></div>}
     {loading&&<div className="screenEmpty" role="status"><LoaderCircle className="spin"/><p>Кредитийн багц ачаалж байна…</p></div>}
     {!loading&&!available&&<div className="accountNotice"><RefreshCw size={20}/><div>Кредит худалдан авах үйлчилгээ бэлтгэгдэж байна. Төлбөр нээгдэх хүртэл жишээ, гарын авлага үзэж танилцаарай. <a href="/video-guide">Заавар үзэх →</a></div></div>}
-    <div className="pricingGrid">{packs.map(p=><article className={p.popular?"priceCard popular":"priceCard"} key={p.id}>{p.popular&&<span className="popularBadge">Хамгийн их сонголт</span>}<h3>{p.name}</h3><div className="bigPrice">{p.priceMnt.toLocaleString()}₮ <small>/ 1 сар</small></div><strong>{p.credits.toLocaleString()} credit</strong><ul><li><Check size={14}/>Үнэ баталгаажсан AI загварууд</li><li><Check size={14}/>Video / Image / Workflow</li><li><Check size={14}/>Төлбөрөөс хойш 1 сарын эрх</li><li><Check size={14}/>Үлдэгдэл дараагийн сар руу шилжихгүй</li></ul><button className="primary wide" disabled={!!busy||!available} onClick={()=>buy(p.id)}>{busy===p.id?<LoaderCircle className="spin"/>:<><ExternalLink size={15}/> {available?"Wire.mn-аар төлөх":"Төлбөр удахгүй нээгдэнэ"}</>}</button></article>)}</div>
+    <div className="pricingGrid">{packs.map(p=><article className={p.popular?"priceCard popular":"priceCard"} key={p.id}>{p.popular&&<span className="popularBadge">Хамгийн их сонголт</span>}<h3>{p.name}</h3><div className="bigPrice">{p.priceMnt.toLocaleString()}₮ <small>/ 1 сар</small></div><strong>{p.credits.toLocaleString()} credit</strong><p>Hailuo 2.3 · 6 секундийн {Math.floor(p.credits/economyVideoCredits)} бичлэг хүртэл</p><small>Нэг бичлэг {economyVideoCredits} кредит. Бусад загвар, уртаас үнэ өөрчлөгдөнө.</small><ul><li><Check size={14}/>Үнэ баталгаажсан AI загварууд</li><li><Check size={14}/>Video / Image / Workflow</li><li><Check size={14}/>Төлбөрөөс хойш 1 сарын эрх</li><li><Check size={14}/>Үлдэгдэл дараагийн сар руу шилжихгүй</li></ul><button className="primary wide" disabled={!!busy||!available} onClick={()=>buy(p.id)}>{busy===p.id?<LoaderCircle className="spin"/>:<><ExternalLink size={15}/> {available?"Wire.mn-аар төлөх":"Төлбөр удахгүй нээгдэнэ"}</>}</button></article>)}</div>
   </section></section></main>
 }

@@ -87,7 +87,7 @@ export function StudioClient() {
 
   const [surface, setSurface] = useState<ModelKind | "all">("all");
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState(models[0].slug);
+  const [selected, setSelected] = useState((models.find(m=>m.modelId==="minimax/hailuo-2.3/standard/text-to-video") || models[0]).slug);
   const [prompt, setPrompt] = useState("");
   const [duration, setDuration] = useState(5);
   const [resolution, setResolution] = useState("720p");
@@ -136,7 +136,7 @@ export function StudioClient() {
     const querySurface = params.get("surface");
     if (queryModel && getModel(queryModel)) setSelected(queryModel);
     else if (group) {
-      const first = models.find((item) => item.group === group);
+      const first = models.find((item) => item.group === group && item.modelId === "minimax/hailuo-2.3/standard/text-to-video") || models.find((item) => item.group === group);
       if (first) setSelected(first.slug);
     }
     if (querySurface === "video" || querySurface === "image" || querySurface === "workflow") setSurface(querySurface);
@@ -492,6 +492,8 @@ export function StudioClient() {
                 </button>
               </div>
 
+              {!pricingError && cost>0 && <p className="serviceState">{model.kind === "video" ? (cost<=300 ? "Хэмнэлттэй" : cost<=800 ? "Стандарт" : "Премиум") : "Зураг / Workflow"} · Нэг бүтээл {cost.toLocaleString()} кредит{user ? ` · Үлдэгдлээр ${Math.floor(user.credits/cost)} бүтээл` : ""}. Үнэ сонгосон тохиргооноос хамаарна.</p>}
+              {model.kind === "video" && cost>800 && <p className="serviceState">Хэмнэх бол <Link href={`/studio?model=${models.find(m=>m.modelId==="minimax/hailuo-2.3/standard/text-to-video")?.slug || ""}`}>Hailuo 2.3 · 6 секунд →</Link></p>}
               {inputError&&hasInput&&<p className="serviceState">{inputError}</p>}
               {providerHealth==="missing"&&<div className="accountNotice"><Sparkles size={20}/><div>Үүсгэх үйлчилгээ бэлтгэгдэж байна. Одоогоор жишээ үзэж, санаа болон тохиргоогоо бэлдээрэй. <Link href="/video-guide">Гарын авлага үзэх →</Link></div></div>}
               {pricingError&&<p className="serviceState">{pricingError}</p>}
