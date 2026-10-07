@@ -2,10 +2,10 @@
 
 RAVS resells generations using its own Higgsfield API balance. Web subscription credits are unrelated to API dollar billing.
 
-- Target markup: 120% of API list cost; multiplier 2.2. This is not a 120% net margin.
+- Target markup: 100% of API list cost; multiplier 2.0. This is not a 100% net margin.
 - Budget conversion: 3,700 MNT/USD, a conservative operational rate, not a live exchange-rate feed.
 - Credit floor: 100,000 / 12,000 = 8.333333 MNT. Monthly packages: Starter 20,000 MNT/2,000 credits; Creator 90,000/10,000; Pro 180,000/21,000; Studio 450,000/54,000. More expensive credits yield a larger markup.
-- Credits = ceil(API USD estimate × 3,700 × 2.2 / credit floor).
+- Credits = ceil(API USD estimate × 3,700 × 2.0 / credit floor).
 - Promotional discounts are not assumed. Taxes, hosting and payment fees reduce net profit.
 - Configuration-aware charging includes duration, resolution and image batch. Kling audio variants use the higher list rate.
 - Seedance and Cinema tokens use upward-rounded 64-pixel aligned dimensions as a conservative estimate. Actual provider rounding may differ; compare completed-job invoices before enabling production.

@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {quoteApiCredits, providerCostUsd, pricingPolicy} from '../lib/api-pricing.ts';
 import {getCreditPackages} from '../lib/billing.ts';
-test('all sold packages cover 120% markup even at the cheapest credit price',()=>{
+test('all sold packages cover 100% markup even at the cheapest credit price',()=>{
  for(const input of [{resolution:'480p',duration:5,aspect_ratio:'16:9'},{resolution:'720p',duration:10,aspect_ratio:'9:16'},{resolution:'1080p',duration:30,aspect_ratio:'21:9'}]) {
   const usd=providerCostUsd('bytedance/seedance-2.5/text-to-video',input);
   const credits=quoteApiCredits('bytedance/seedance-2.5/text-to-video',input);
-  for(const p of getCreditPackages()) assert.ok(credits*p.priceMnt/p.credits >= usd*pricingPolicy.usdMnt*2.2);
+  for(const p of getCreditPackages()) assert.ok(credits*p.priceMnt/p.credits >= usd*pricingPolicy.usdMnt*2);
  }
 });
 test('resolution and image batch affect price',()=>{

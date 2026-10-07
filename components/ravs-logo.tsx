@@ -11,7 +11,7 @@ function Mark({ className = "" }: { className?: string }) {
 }
 
 function Wordmark({ className = "" }: { className?: string }) {
-  return <img className={className} src="/brand/logo-primary.svg" width={1600} height={450} alt="RAVS" />;
+  return <img className={className} src="/brand/logo-refined.webp" width={1898} height={829} alt="RAVS" />;
 }
 
 export function RavsLogo({
@@ -33,7 +33,7 @@ export function RavsLogo({
     <span className={"ravsLogo " + className} title={title}>
       <span className="ravsLogoDesktop">
         <Wordmark className="ravsLogoWordmark" />
-        {showSubtitle && <span className="ravsLogoSubtitle">RAINY AI VIDEO STUDIO</span>}
+        
         {showTagline && <span className="ravsLogoTagline">CREATE IN MOTION.</span>}
       </span>
       <Mark className="ravsLogoMobileMark" />

@@ -1,6 +1,6 @@
 // Official model playground prices inspected 2026-10-07. Use list rates,
 // never assume account-specific or temporary promotional discounts.
-export const pricingPolicy = { usdMnt: 3700, markup: 1.2, minCreditMnt: 100000 / 12000, reviewedAt: '2026-10-07' };
+export const pricingPolicy = { usdMnt: 3700, markup: 1, minCreditMnt: 100000 / 12000, reviewedAt: '2026-10-07' };
 export class PricingUnavailableError extends Error {}
 const unavailable = () => { throw new PricingUnavailableError('Энэ тохиргооны API өртгийг баталгаажуулж байна. Өөр загвар сонгоно уу.'); };
 export function providerCostUsd(id: string, input: Record<string, unknown>): number {
