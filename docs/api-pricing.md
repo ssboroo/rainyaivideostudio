@@ -4,13 +4,13 @@ RAVS resells generations using its own Higgsfield API balance. Web subscription 
 
 - Target markup: 120% of API list cost; multiplier 2.2. This is not a 120% net margin.
 - Budget conversion: 3,700 MNT/USD, a conservative operational rate, not a live exchange-rate feed.
-- Credit floor: 100,000 / 12,000 = 8.333333 MNT. Existing Starter/Creator/Pro package amounts stay unchanged. More expensive credits yield a larger markup.
+- Credit floor: 100,000 / 12,000 = 8.333333 MNT. Monthly packages: Starter 20,000 MNT/2,000 credits; Creator 90,000/10,000; Pro 180,000/21,000; Studio 450,000/54,000. More expensive credits yield a larger markup.
 - Credits = ceil(API USD estimate × 3,700 × 2.2 / credit floor).
 - Promotional discounts are not assumed. Taxes, hosting and payment fees reduce net profit.
 - Configuration-aware charging includes duration, resolution and image batch. Kling audio variants use the higher list rate.
 - Seedance and Cinema tokens use upward-rounded 64-pixel aligned dimensions as a conservative estimate. Actual provider rounding may differ; compare completed-job invoices before enabling production.
 - Source-video workflows are blocked until server-verified source duration is available. Marketing Studio token-metered images and unsupported price families are blocked rather than charged guessed flat costs.
-- No subscription system is added by this change. Any later subscription allowance must obey the same minimum paid MNT/credit floor.
+- Each confirmed new monthly package creates its own credit grant, valid for one calendar month (month-end clamped). No rollover or automatic recurring debit. Multiple purchases do not extend previous grants. Expired grants are removed atomically when the account is read or used. Refunds restore only unexpired original grants; legacy permanent credits remain permanent.
 - Existing free/admin credits are promotional expenses and are outside paid-package margin guarantees.
 - Review provider pricing and USD funding conversion regularly. This snapshot cannot guarantee profit after provider price or FX changes.
 
@@ -29,3 +29,7 @@ Prices were read from https://open.higgsfield.ai/pricing and model playground pa
 ## Release
 
 Run npm test, npm run check (with DATABASE_URL), and npm run build. Review CREDIT_PACKAGES_JSON: invalid, duplicate or below-floor packages now fail closed. Deploying this change affects credit deductions and temporarily disables unmetered workflows. No live database or Railway settings were changed while preparing the patch.
+
+## API balance and expiry
+
+RAVS credits are local entitlements. Expiring unused RAVS credits does not call a provider refund or transfer endpoint: money never spent on generation remains in the owner’s API balance. The admin expired-credit report shows local credits, not USD or provider balance. Pre-existing balances and pre-change invoices retain their existing permanent policy. New invoices snapshot validityMonths=1; month starts at verified payment settlement.

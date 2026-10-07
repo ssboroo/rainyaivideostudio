@@ -11,7 +11,7 @@ function fixture() {
   count: async()=>0, findMany:async({where})=>rows.filter(row=>row.userId===where.userId),
   update:async({where,data})=>{const row=rows.find(row=>row.id===where.id);Object.assign(row,data);return row;}
  }};
- const deps = { db, env: { higgsfieldCredentials:()=> 'test-id:test-secret', generationRateLimit:()=>6 },
+ const deps = { db, expireUserCredits:async()=>{}, env: { higgsfieldCredentials:()=> 'test-id:test-secret', generationRateLimit:()=>6 },
  reserveCredits:async(userId,cost,data)=>{calls.reserves++;credits-=cost;const row={...data,id:'g-'+rows.length,userId,createdAt:new Date(),completedAt:null,refunded:false,output:null};rows.push(row);return row;},
  refundGeneration:async(id)=>{calls.refunds++;const row=rows.find(row=>row.id===id);if(!row.refunded){credits+=row.costCredits;row.refunded=true;}return row;},
  markTerminalAndRefund:async(id,status,output)=>{const row=rows.find(row=>row.id===id);Object.assign(row,{status,output,completedAt:new Date()});if(status!=='COMPLETED')await deps.refundGeneration(id);return row;},

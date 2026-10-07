@@ -21,6 +21,6 @@ test('unsafe environment packages cannot undercut minimum credit value',()=>{
  try {
   process.env.CREDIT_PACKAGES_JSON=JSON.stringify([{id:'sale',name:'Sale',priceMnt:1000,credits:10000}]);assert.throws(()=>getCreditPackages());
   process.env.CREDIT_PACKAGES_JSON='[]';assert.throws(()=>getCreditPackages());
-  process.env.CREDIT_PACKAGES_JSON=JSON.stringify([{id:'ok',name:'OK',priceMnt:10000,credits:1000}]);assert.equal(getCreditPackages()[0].credits,1000);
+  process.env.CREDIT_PACKAGES_JSON=JSON.stringify([{id:'ok',name:'OK',priceMnt:10000,credits:1000,validityMonths:1}]);assert.equal(getCreditPackages()[0].credits,1000);
  } finally {if(previous===undefined)delete process.env.CREDIT_PACKAGES_JSON;else process.env.CREDIT_PACKAGES_JSON=previous;}
 });

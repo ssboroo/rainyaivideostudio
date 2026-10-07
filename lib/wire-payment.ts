@@ -1,3 +1,4 @@
+import { lockCreditUser, expireLocked, monthAfter } from "@/lib/credit-expiry";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { mapIntentStatus, WirePaymentIntent } from "@/lib/wire";
@@ -18,12 +19,16 @@ export async function confirmWirePayment(paymentId:string,intent:WirePaymentInte
     if(!payment)throw new Error("Payment олдсонгүй.");
     if(!paymentMatches(intent,payment))throw new Error("Төлбөрийн дүн эсвэл валют зөрж байна.");
     if(payment.status==="PAID")return false;
+    await lockCreditUser(tx,payment.userId);
+    const now = new Date();
+    await expireLocked(tx,payment.userId,now);
     const providerData=jsonSafe({...jsonObject(payment.providerData),verifiedIntent:intent});
     const changed=await tx.payment.updateMany({
       where:{id:payment.id,status:{not:"PAID"}},
       data:{status:"PAID",paidAt:new Date(),paymentId:transactionId||payment.paymentId,providerData}
     });
     if(changed.count!==1)return false;
+    if(payment.validityMonths===1) await tx.creditGrant.create({data:{userId:payment.userId,paymentId:payment.id,packageId:payment.packageId,remaining:payment.credits,expiresAt:monthAfter(now)}});
     await tx.user.update({where:{id:payment.userId},data:{credits:{increment:payment.credits}}});
     await tx.creditLedger.create({
       data:{

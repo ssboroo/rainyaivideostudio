@@ -1,3 +1,4 @@
+import { expireUserCredits } from "@/lib/credit-expiry";
 import { createHash } from "node:crypto";
 import { Generation, GenerationStatus, Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
@@ -24,7 +25,7 @@ export function publicGeneration(g: Generation) {
     warning: g.status === "PENDING" && !g.providerRequestId && (Date.now() - g.createdAt.getTime() > 120000 || !!g.error) ? "Хүсэлтийн хүлээн авалт тодорхойгүй байна. Давтан үүсгэхгүйгээр админаар төлөвийг нягтлуулна уу." : undefined,
     message: g.status === "FAILED" ? "Үүсгэлт амжилтгүй болсон." : g.status === "NSFW" ? "Агуулгын шалгалтаар хүсэлт зогссон." : g.status === "CANCELED" ? "Хүсэлт цуцлагдсан." : undefined };
 }
-const defaults = { db, env, reserveCredits, refundGeneration, markTerminalAndRefund, submitGeneration, getGenerationStatus, cancelGeneration };
+const defaults = { db, env, expireUserCredits, reserveCredits, refundGeneration, markTerminalAndRefund, submitGeneration, getGenerationStatus, cancelGeneration };
 export function createGenerationService(deps: typeof defaults = defaults) {
   async function retryLocal<T>(operation: () => Promise<T>): Promise<T> {
     let lastError: unknown;
@@ -34,6 +35,7 @@ export function createGenerationService(deps: typeof defaults = defaults) {
     throw lastError;
   }
   async function account(userId: string) {
+    await deps.expireUserCredits(userId);
     const user = await deps.db.user.findUnique({ where: { id: userId }, select: { id: true, name: true, credits: true } });
     if (!user) throw new GenerationServiceError("Бүртгэл олдсонгүй.", 401);
     return user;

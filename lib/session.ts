@@ -1,3 +1,4 @@
+import { expireUserCredits } from "@/lib/credit-expiry";
 import { cookies } from "next/headers";
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/db";
@@ -27,5 +28,6 @@ export async function getSessionUser() {
   if (!token) return null;
   const userId = readSessionToken(token, env.sessionSecret(), Math.floor(Date.now()/1000));
   if (!userId) return null;
+  await expireUserCredits(userId);
   return db.user.findUnique({ where:{id:userId}, select:{id:true,email:true,name:true,role:true,credits:true,createdAt:true} });
 }

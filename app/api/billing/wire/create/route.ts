@@ -18,10 +18,10 @@ export async function POST(req:Request){
       where:{userId:user.id,provider:"wire",packageId:pack.id,status:"PENDING",createdAt:{gte:recentSince}},
       orderBy:{createdAt:"desc"}
     });
-    if(!payment)payment=await db.payment.create({data:{userId:user.id,provider:"wire",packageId:pack.id,amountMnt:pack.priceMnt,credits:pack.credits}});
-    if(payment.amountMnt!==pack.priceMnt||payment.credits!==pack.credits){
+    if(!payment)payment=await db.payment.create({data:{userId:user.id,provider:"wire",packageId:pack.id,amountMnt:pack.priceMnt,credits:pack.credits,validityMonths:pack.validityMonths}});
+    if(payment.amountMnt!==pack.priceMnt||payment.credits!==pack.credits||payment.validityMonths!==pack.validityMonths){
       await markWirePaymentState(payment.id,"CANCELED");
-      payment=await db.payment.create({data:{userId:user.id,provider:"wire",packageId:pack.id,amountMnt:pack.priceMnt,credits:pack.credits}});
+      payment=await db.payment.create({data:{userId:user.id,provider:"wire",packageId:pack.id,amountMnt:pack.priceMnt,credits:pack.credits,validityMonths:pack.validityMonths}});
     }
 
     let intentId=payment.invoiceId;
@@ -35,7 +35,7 @@ export async function POST(req:Request){
       }
       if(mapped==="FAILED"||mapped==="CANCELED"){
         await markWirePaymentState(payment.id,mapped);
-        payment=await db.payment.create({data:{userId:user.id,provider:"wire",packageId:pack.id,amountMnt:pack.priceMnt,credits:pack.credits}});
+        payment=await db.payment.create({data:{userId:user.id,provider:"wire",packageId:pack.id,amountMnt:pack.priceMnt,credits:pack.credits,validityMonths:pack.validityMonths}});
         intentId=null;
       }else{
         const cached=checkoutUrlFromProviderData(payment.providerData);

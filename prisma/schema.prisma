@@ -23,6 +23,7 @@ enum GenerationStatus {
 }
 
 enum LedgerType {
+  EXPIRY
   WELCOME
   GENERATION
   REFUND
@@ -46,6 +47,7 @@ model User {
   credits      Int            @default(0)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+  creditGrants CreditGrant[]
   generations  Generation[]
   ledger       CreditLedger[]
   payments     Payment[]
@@ -68,6 +70,7 @@ model Generation {
   output            Json?
   error             Json?
   status            GenerationStatus @default(PENDING)
+  creditAllocation Json?
   costCredits       Int
   refunded          Boolean          @default(false)
   createdAt         DateTime         @default(now())
@@ -98,6 +101,7 @@ model Payment {
   userId       String
   provider     String        @default("wire")
   packageId    String
+  validityMonths Int?
   amountMnt    Int
   credits      Int
   invoiceId    String?       @unique
@@ -159,4 +163,16 @@ model OAuthToken {
   revokedAt DateTime?
   grant OAuthGrant @relation(fields: [grantId], references: [id], onDelete: Cascade)
   @@index([grantId])
+}
+
+model CreditGrant {
+  id String @id @default(cuid())
+  userId String
+  paymentId String @unique
+  packageId String
+  remaining Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, expiresAt])
 }
