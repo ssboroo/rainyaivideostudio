@@ -1,6 +1,6 @@
 export type CreditPackage={id:string;name:string;priceMnt:number;credits:number;popular?:boolean;validityMonths:1};
 const defaults:CreditPackage[]=[
-{id:"starter",name:"Starter",priceMnt:20000,credits:2000,validityMonths:1},
+{id:"starter",name:"Starter",priceMnt:60000,credits:7000,validityMonths:1},
 {id:"creator",name:"Creator",priceMnt:90000,credits:10000,validityMonths:1},
 {id:"pro",name:"Pro",priceMnt:180000,credits:21000,popular:true,validityMonths:1},
 {id:"studio",name:"Studio",priceMnt:450000,credits:54000,validityMonths:1}
