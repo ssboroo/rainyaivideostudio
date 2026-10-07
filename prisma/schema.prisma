@@ -176,3 +176,15 @@ model CreditGrant {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId, expiresAt])
 }
+
+model DemoVideo {
+  id String @id @default(cuid())
+  sourceMediaUrl String @unique
+  videoUrl String
+  sourceUrl String
+  title String
+  category String @default("effects")
+  published Boolean @default(true)
+  createdAt DateTime @default(now())
+  @@index([published, createdAt])
+}

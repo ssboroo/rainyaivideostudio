@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DemoPlayer } from "@/components/demo-player";
 import { ArrowRight, TrendingUp } from "lucide-react";
 import { trendDemos } from "@/lib/trend-demos";
@@ -11,10 +11,13 @@ function TrendMedia({item}:{item:(typeof trendDemos)[number]}) {
 }
 
 export function TrendShowcase({ compact = false }: { compact?: boolean }) {
+  const [imported,setImported]=useState<typeof trendDemos>([]);
+  useEffect(()=>{let alive=true;fetch('/api/demos',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{if(alive&&d)setImported(d.items.map((v:{id:string;title:string;videoUrl:string;sourceUrl:string;category:string})=>({id:v.id,title:v.title,previewSrc:v.videoUrl,official:v.sourceUrl,category:v.category,badge:'ШИНЭ',description:'Шинээр нэмэгдсэн видео жишээ',use:'Контент бүтээх санаа',poster:'',accent:'amber'})));}).catch(()=>{});return()=>{alive=false;};},[]);
+  const demos=[...imported,...trendDemos];
   const [category,setCategory]=useState("all");
   const [search,setSearch]=useState("");
-  const matching=trendDemos.filter(item=>(category==="all"||(item.category||"effects")===category)&&[item.title,item.description,item.use].join(" ").toLowerCase().includes(search.toLowerCase().trim()));
-  const items = compact ? trendDemos.slice(0, 8) : matching;
+  const matching=demos.filter(item=>(category==="all"||(item.category||"effects")===category)&&[item.title,item.description,item.use].join(" ").toLowerCase().includes(search.toLowerCase().trim()));
+  const items = compact ? demos.slice(0, 8) : matching;
 
   return (
     <section className={compact ? "productSection trendSection" : "catalogPage trendPage"}>
@@ -27,7 +30,7 @@ export function TrendShowcase({ compact = false }: { compact?: boolean }) {
         {compact && <Link href="/trends">Бүгдийг харах <ArrowRight size={15} /></Link>}
       </div>
 
-      {!compact && <div className="videoLibraryToolbar"><div className="videoLibraryFilters">{[["all","Бүгд"],["effects","Эффект"],["genjutsu","Genjutsu"]].map(([value,label])=><button key={value} type="button" aria-pressed={category===value} onClick={()=>setCategory(value)}>{label} · {trendDemos.filter(item=>value==="all"||(item.category||"effects")===value).length}</button>)}</div><input aria-label="Видео жишээ хайх" placeholder="Видео жишээ хайх…" value={search} onChange={event=>setSearch(event.target.value)}/><span>{items.length} жишээ</span></div>}
+      {!compact && <div className="videoLibraryToolbar"><div className="videoLibraryFilters">{[["all","Бүгд"],["effects","Эффект"],["genjutsu","Genjutsu"]].map(([value,label])=><button key={value} type="button" aria-pressed={category===value} onClick={()=>setCategory(value)}>{label} · {demos.filter(item=>value==="all"||(item.category||"effects")===value).length}</button>)}</div><input aria-label="Видео жишээ хайх" placeholder="Видео жишээ хайх…" value={search} onChange={event=>setSearch(event.target.value)}/><span>{items.length} жишээ</span></div>}
       {!compact && items.length===0 && <p className="videoLibraryEmpty">Тохирох жишээ олдсонгүй. Өөр үгээр хайгаарай.</p>}
       <div className={compact ? "trendGrid compact" : "trendGrid"}>
         {items.map((item) => (

@@ -120,7 +120,10 @@ function FeedCard({ item }: { item: CommunityFeedItem }) {
 export function CommunityFeed() {
   const [active, setActive] = useState<CommunityFeedTab | "all">("all");
   const [search,setSearch]=useState("");
-  const items = useMemo(() => communityFeed.filter((item) => (active==="all"||item.tab === active)&&[item.title,item.creator,item.badge,item.prompt].join(" ").toLowerCase().includes(search.trim().toLowerCase())), [active,search]);
+  const [imported,setImported]=useState<CommunityFeedItem[]>([]);
+  useEffect(()=>{let alive=true;fetch('/api/demos',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{if(alive&&d)setImported(d.items.map((v:{id:string;title:string;videoUrl:string;sourceUrl:string;category:string})=>({id:v.id,title:v.title,previewSrc:v.videoUrl,sourceHref:v.sourceUrl,tab:'new',creator:'Higgsfield',model:v.category==='genjutsu'?'genjutsu-motion':'seedance-2-5',prompt:'',aspect:'9:16',duration:5,ratio:'9:16',badge:'ШИНЭ'})));}).catch(()=>{});return()=>{alive=false;};},[]);
+  const feed=[...imported,...communityFeed];
+  const items = useMemo(() => feed.filter((item) => (active==="all"||item.tab === active)&&[item.title,item.creator,item.badge,item.prompt].join(" ").toLowerCase().includes(search.trim().toLowerCase())), [active,search,imported]);
 
   return (
     <section className="communityFeed">
@@ -147,7 +150,7 @@ export function CommunityFeed() {
         <p>Эффект, дүр хувиргалт, киноны жишээг судлаарай. Жишгийн тайлбарыг Studio-д нээж өөрийн эх материалтай шинэ бүтээл эхлүүлнэ.</p>
       </div>
 
-      <div className="videoLibraryToolbar"><input aria-label="Бүтээл хайх" placeholder="Бүтээл, эффект, зохиогч хайх…" value={search} onChange={e=>setSearch(e.target.value)}/><span>{items.length} / {communityFeed.length} жишээ</span><Link href="/video-guide">Алхамчилсан заавар ↗</Link></div>{items.length===0&&<p className="videoLibraryEmpty">Тохирох бүтээл олдсонгүй. <button onClick={()=>{setSearch("");setActive("all");}}>Бүх бүтээлийг харах</button></p>}<div className="communityMasonry">
+      <div className="videoLibraryToolbar"><input aria-label="Бүтээл хайх" placeholder="Бүтээл, эффект, зохиогч хайх…" value={search} onChange={e=>setSearch(e.target.value)}/><span>{items.length} / {feed.length} жишээ</span><Link href="/video-guide">Алхамчилсан заавар ↗</Link></div>{items.length===0&&<p className="videoLibraryEmpty">Тохирох бүтээл олдсонгүй. <button onClick={()=>{setSearch("");setActive("all");}}>Бүх бүтээлийг харах</button></p>}<div className="communityMasonry">
         {items.map((item) => <FeedCard item={item} key={item.id} />)}
       </div>
     </section>
