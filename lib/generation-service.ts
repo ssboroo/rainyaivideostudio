@@ -50,7 +50,9 @@ export function createGenerationService(deps: typeof defaults = defaults) {
     if (!model) throw new GenerationServiceError("Загвар олдсонгүй.", 404);
     let input: Record<string, unknown>;
     try { input = buildProviderInput(model, raw); } catch (error) { throw new GenerationServiceError(error instanceof Error ? error.message : "Оролт буруу байна.", 400); }
-    const cost = estimateCredits(model, Number(input.duration));
+    let cost: number;
+    try { cost = estimateCredits(model, Number(input.duration), input); }
+    catch (error) { throw new GenerationServiceError(error instanceof Error ? error.message : "Үнэ баталгаажуулж байна.", 503); }
     if (cost > options.maxCredits) throw new GenerationServiceError(`Энэ үүсгэлт ${cost} кредит шаардлагатай. Дээд хэмжээг дахин зөвшөөрнө үү.`, 409);
     const externalRequestKey = createHash("sha256").update(JSON.stringify([userId, options.idempotencyKey])).digest("hex");
     async function existing() {
