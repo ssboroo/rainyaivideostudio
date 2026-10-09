@@ -19,7 +19,7 @@ function canonical(value: unknown): string {
 }
 export function publicGeneration(g: Generation) {
   const media = g.status === "COMPLETED" ? mediaFrom(g.output) : null;
-  return { id: g.id, modelSlug: g.modelSlug, kind: g.kind, status: g.status, costCredits: g.costCredits,
+  return { id: g.id, modelSlug: g.modelSlug, prompt: g.prompt, kind: g.kind, status: g.status, costCredits: g.costCredits,
     refunded: g.refunded, createdAt: g.createdAt.toISOString(), completedAt: g.completedAt?.toISOString() ?? null,
     media: media?.url.startsWith("https://") ? media : null,
     warning: g.status === "PENDING" && !g.providerRequestId && (Date.now() - g.createdAt.getTime() > 120000 || !!g.error) ? "Хүсэлтийн хүлээн авалт тодорхойгүй байна. Давтан үүсгэхгүйгээр админаар төлөвийг нягтлуулна уу." : undefined,
@@ -139,8 +139,9 @@ export function createGenerationService(deps: typeof defaults = defaults) {
     if (generation.status === "PROCESSING" || generation.status === "PENDING" || !generation.providerRequestId) throw new GenerationServiceError("Хүсэлт илгээгдэж эсвэл үүсгэгдэж байгаа тул цуцлах боломжгүй байна.", 409);
     try { await deps.cancelGeneration(generation.providerRequestId, generation.providerCancelUrl); }
     catch { throw new GenerationServiceError("Үйлчилгээ цуцлалтыг баталгаажуулсангүй. Төлөвийг дахин шалгана уу.", 502); }
-    generation = await deps.markTerminalAndRefund(generation.id, "CANCELED");
-    return { generation: publicGeneration(generation), credits: (await account(userId)).credits };
+    // A 202 acknowledges the cancellation request; a terminal status settles credits.
+    const result = await get(userId, id);
+    return { ...result, warning: terminal.has(result.generation.status) ? result.warning : "Цуцлах хүсэлт илгээгдсэн. Эцсийн төлөв баталгаажтал кредит нөөцлөгдсөн хэвээр байна." };
   }
   async function list(userId: string) { const rows = await deps.db.generation.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 50 }); return { generations: rows.map(publicGeneration), credits: (await account(userId)).credits }; }
   return { create, get, cancel, list, account };

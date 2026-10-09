@@ -5,7 +5,10 @@ function intEnv(name: string, fallback: number) {
 export const env = {
   appUrl: () => (process.env.APP_URL || "http://localhost:3000").replace(/\/$/, ""),
   sessionSecret: () => process.env.SESSION_SECRET || "",
-  welcomeCredits: () => intEnv("WELCOME_CREDITS", 100),
+  welcomeCredits: () => {
+    const value = Number(process.env.WELCOME_CREDITS);
+    return Number.isSafeInteger(value) && value >= 0 && value <= 2147483647 ? value : 0;
+  },
   generationRateLimit: () => intEnv("GENERATION_RATE_LIMIT_PER_MINUTE", 6),
   higgsfieldBaseUrl: () => (process.env.HIGGSFIELD_BASE_URL || "https://api.higgsfield.ai").replace(/\/$/, ""),
   higgsfieldCredentials: () => process.env.HF_CREDENTIALS?.trim() || (process.env.HF_API_KEY_ID && process.env.HF_API_KEY_SECRET ? `${process.env.HF_API_KEY_ID.trim()}:${process.env.HF_API_KEY_SECRET.trim()}` : ""),

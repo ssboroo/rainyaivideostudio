@@ -107,3 +107,18 @@ test('permanent refund failure reports pending settlement without claiming credi
  f.rows[0].status='FAILED';f.deps.refundGeneration=async()=>{throw new Error('offline');};
  const status=await f.service.get('user-a',result.generation.id);assert.equal(status.generation.refunded,false);assert.ok(status.warning);assert.equal(status.generation.media,null);
 });
+test('cancellation acknowledgement retains credits until provider cancellation is confirmed',async()=>{
+ const f=fixture();const created=await f.service.create('user-a',input,{idempotencyKey:'cancel-123',maxCredits:10000});
+ f.deps.getGenerationStatus=async()=>({status:'queued'});
+ const accepted=await f.service.cancel('user-a',created.generation.id);
+ assert.equal(accepted.generation.refunded,false);assert.equal(f.calls.refunds,0);assert.ok(accepted.warning);
+ f.deps.getGenerationStatus=async()=>({status:'canceled'});
+ const confirmed=await f.service.get('user-a',created.generation.id);
+ assert.equal(confirmed.generation.status,'CANCELED');assert.equal(confirmed.generation.refunded,true);assert.equal(f.calls.refunds,1);
+ await f.service.get('user-a',created.generation.id);assert.equal(f.calls.refunds,1);
+});
+test('completion racing cancellation keeps the delivered video charge',async()=>{
+ const f=fixture();const created=await f.service.create('user-a',input,{idempotencyKey:'cancel-123',maxCredits:10000});
+ const result=await f.service.cancel('user-a',created.generation.id);
+ assert.equal(result.generation.status,'COMPLETED');assert.ok(result.generation.media);assert.equal(f.calls.refunds,0);
+});

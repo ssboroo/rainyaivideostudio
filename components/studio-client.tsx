@@ -26,7 +26,7 @@ import Link from "next/link";
 import { ModelGuide } from "@/components/model-guide";
 import { parameterLabel, parameterHelp, optionLabel, modelGuide, resolutionLabel, aspectLabel } from "@/lib/model-guides";
 import { GenerationResult } from "@/components/generation-result";
-import { mediaFrom } from "@/lib/generation-media";
+import { generationAttempt, clearGenerationAttempt, type GenerationAttempt } from "@/lib/generation-attempt";
 import { Sidebar } from "@/components/sidebar";
 import { ModelFamilies } from "@/components/model-families";
 import { modelFamilyName, modelVariantLabel } from "@/lib/model-families";
@@ -44,12 +44,12 @@ type User = {
 type Generation = {
   id: string;
   modelSlug: string;
-  modelId: string;
   prompt: string;
   status: string;
   costCredits: number;
-  output: unknown;
-  error: unknown;
+  media: { type: "image" | "video"; url: string } | null;
+  warning?: string;
+  message?: string;
   createdAt: string;
   refunded: boolean;
 };
@@ -108,6 +108,8 @@ export function StudioClient() {
   const [presetError, setPresetError] = useState("");
   const [message, setMessage] = useState("");
   const [providerHealth, setProviderHealth] = useState<ProviderHealth>("checking");
+  const submitLock = useRef(false);
+  const attempt = useRef<GenerationAttempt | null>(null);
 
   const model = getModel(selected) || models[0];
   let cost = 0;
@@ -196,7 +198,7 @@ export function StudioClient() {
   }, []);
 
   useEffect(() => {
-    const active = history.filter((item) => !["COMPLETED", "FAILED", "NSFW", "CANCELED"].includes(item.status));
+    const active = history.filter((item) => !["COMPLETED", "FAILED", "NSFW", "CANCELED"].includes(item.status) || (["FAILED", "NSFW", "CANCELED"].includes(item.status) && !item.refunded));
     if (!active.length) return;
     let polling=false;
     const timer = window.setInterval(async () => {
@@ -207,7 +209,7 @@ export function StudioClient() {
         if (!response.ok) continue;
         const data = await response.json();
         setHistory((current) => current.map((entry) => (entry.id === item.id ? data.generation : entry)));
-        if(data.providerError)setMessage("Үүсгэлтийн төлөв түр шинэчлэгдсэнгүй. Дахин шалгаж байна.");
+        if(data.warning)setMessage(data.warning);
         if (data.credits !== undefined) {
           setUser((current) => (current ? { ...current, credits: data.credits } : current));
         }
@@ -215,7 +217,7 @@ export function StudioClient() {
       } catch { setMessage("Холболт тасарлаа. Бүтээлээ дахин шалгана уу."); } finally {polling=false;}
     }, 4500);
     return () => window.clearInterval(timer);
-  }, [history.map((item) => item.id + item.status).join("|")]);
+  }, [history.map((item) => item.id + item.status + item.refunded).join("|")]);
 
   async function upload(file: File, kind: "image" | "video" | "ref") {
     if(uploading)return;
@@ -261,26 +263,19 @@ export function StudioClient() {
   const canSubmit = !busy && !uploading && hasInput && !inputError && !pricingError && !!user && user.credits>=cost && providerHealth==="ready";
 
   async function submit() {
-    if (!user || !canSubmit) return;
+    if (!user || !canSubmit || submitLock.current) return;
+    submitLock.current = true;
     setBusy(true);
     setMessage("");
     try {
+      const input = { modelSlug: selected, prompt, duration, resolution, aspectRatio: aspect, generateAudio: audio, imageUrl, videoUrl, referenceUrls: refs, presetId, modelOptions };
+      let storage: Storage | undefined;
+      try { storage = window.sessionStorage; } catch { /* In-memory retry ID remains available. */ }
+      attempt.current = await generationAttempt(user.id, JSON.stringify(input), attempt.current, storage);
       const response = await fetch("/api/generations", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          modelSlug: selected,
-          prompt,
-          duration,
-          resolution,
-          aspectRatio: aspect,
-          generateAudio: audio,
-          imageUrl,
-          videoUrl,
-          referenceUrls: refs,
-          presetId,
-          modelOptions,
-        }),
+        body: JSON.stringify({ ...input, idempotencyKey: attempt.current.key, maxCredits: cost }),
       });
       const data = await response.json();
       if (response.status === 401) {
@@ -288,18 +283,21 @@ export function StudioClient() {
         return;
       }
       if (!response.ok) throw new Error(data.error || "Generation эхлүүлж чадсангүй.");
-      setHistory((current) => [data.generation, ...current]);
+      setHistory((current) => [data.generation, ...current.filter(item => item.id !== data.generation.id)]);
       setUser((current) => (current ? { ...current, credits: data.credits } : current));
-      setMessage("Generation queue-д орлоо. Result доорх feed дээр автоматаар шинэчлэгдэнэ.");
+      setMessage(data.generation.warning || data.generation.message || "Хүсэлт бүртгэгдлээ. Доорх бүтээлийн түүхээс төлөвөө шалгана уу.");
+      if (data.generation.status !== "PENDING") { clearGenerationAttempt(user.id, storage); attempt.current = null; }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Алдаа гарлаа.");
+      await load();
     } finally {
+      submitLock.current = false;
       setBusy(false);
     }
   }
 
   async function cancel(id: string) {
-    try {const r=await fetch("/api/generations/"+id,{method:"DELETE"});const d=await r.json();if(!r.ok)throw new Error(d.error||"Цуцалж чадсангүй.");await load();}catch(e){setMessage(e instanceof Error?e.message:"Цуцалж чадсангүй.");}
+    try {const r=await fetch("/api/generations/"+id,{method:"DELETE"});const d=await r.json();if(!r.ok)throw new Error(d.error||"Цуцалж чадсангүй.");setMessage(d.warning||d.generation?.message||"Хүсэлтийн төлөв шинэчлэгдлээ.");await load();}catch(e){setMessage(e instanceof Error?e.message:"Цуцалж чадсангүй.");}
   }
 
   async function logout() {
@@ -327,7 +325,7 @@ export function StudioClient() {
           <div className="topActions">
             <span className={"providerDot " + providerHealth}>
               <i />
-              {providerHealth === "ready" ? "Үйлчилгээ бэлэн" : providerHealth === "checking" ? "Үйлчилгээ шалгаж байна" : "Үйлчилгээ бэлтгэгдэж байна"}
+              {providerHealth === "ready" ? "Холболт тохируулсан" : providerHealth === "checking" ? "Үйлчилгээ шалгаж байна" : "Үйлчилгээ бэлтгэгдэж байна"}
             </span>
             <a href="/billing" className="creditPill"><WalletCards size={15} />{user?.credits ?? 0} кредит</a>
             <button className="ghost" onClick={logout}>Гарах</button>
@@ -518,7 +516,7 @@ export function StudioClient() {
 
               <div className="generationMasonry">
                 {history.map((item) => {
-                  const media = mediaFrom(item.output);
+                  const media = item.status === "COMPLETED" ? item.media : null;
                   const itemModel = getModel(item.modelSlug);
                   const active = !["COMPLETED", "FAILED", "NSFW", "CANCELED"].includes(item.status);
                   return (
@@ -545,12 +543,13 @@ export function StudioClient() {
                       <div className="generationMeta">
                         <div><b>{itemModel?.name || item.modelSlug}</b><span>{item.costCredits} кредит</span></div>
                         <p>{item.prompt || "Жишиг файлаар бүтээсэн"}</p>
-                        {item.status==="FAILED"&&<p className="generationError">Үүсгэлт амжилтгүй боллоо. Оролтоо шалгаад дахин оролдоно уу.</p>}
+                        {item.warning && <p className="formError" role="status">{item.warning}</p>}
+                        {item.status==="FAILED"&&<p className="generationError">Үүсгэлт амжилтгүй боллоо. {item.refunded ? "Кредитийн буцаалт бүртгэгдсэн." : "Кредитийн буцаалтыг шалгаж байна."}</p>}
                         {item.status==="COMPLETED"&&!media&&<p className="generationError">Үр дүнгийн холбоос олдсонгүй. Дахин шинэчилж шалгана уу.</p>}
                         <small>{new Date(item.createdAt).toLocaleString("mn-MN")}</small>
                         <div className="generationFooter">
-                          {["PENDING","SUBMITTED"].includes(item.status) && <button onClick={() => cancel(item.id)}><X size={12} /> Цуцлах</button>}
-                          {item.refunded && <span className="refund"><CheckCircle2 size={12} /> Кредит буцаасан</span>}
+                          {item.status === "SUBMITTED" && <button onClick={() => cancel(item.id)}><X size={12} /> Цуцлах</button>}
+                          {item.refunded && <span className="refund"><CheckCircle2 size={12} /> Кредитийн буцаалт бүртгэгдсэн</span>}
                         </div>
                       </div>
                     </article>

@@ -86,3 +86,11 @@ RAVS is an independent product and is not an official Higgsfield product.
 ## Монгол холболтын заавар
 
 [Higgsfield API холбох, Railway variables, админ эрх, тест болон хязгаарлалтууд](docs/HIGGSFIELD_SETUP_MN.md). Public registration always creates USER; ADMIN_EMAILS no longer elevates signups.
+
+## Generation safeguards
+
+The web Studio and MCP share the same generation service. Web requests require an idempotency key and an approved maximum credit cost. An ambiguous provider submission keeps its reservation and must be reconciled by an administrator; retrying the same request does not submit or charge again. Cancellation acknowledgement alone does not refund credits: the provider must report a terminal failure, moderation, or cancellation status. Only completed generations expose media, and provider internals stay server-side.
+
+`WELCOME_CREDITS` defaults to `0`. Enable a funded signup promotion explicitly; registration currently does not verify email ownership. Invalid or negative values grant no trial credits. Existing wallets are unaffected.
+
+Before paid launch, configure Wire credentials and the signed webhook, then verify one paid checkout and one failed-generation refund end to end. Configuration presence alone is not proof of provider availability.
