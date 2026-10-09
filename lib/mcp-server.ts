@@ -56,5 +56,43 @@ export function createRavsMcpServer(identity: McpIdentity, services: McpServices
     server.registerTool('ravs_cancel_generation', { title: 'Үүсгэлт цуцлах', description: 'Хэрэглэгч хүссэн үед өөрийн эхэлж амжаагүй үүсгэлтийг цуцална. Боловсруулж эхэлсэн хүсэлт цуцлагдахгүй.', inputSchema: { generationId, confirmCancel: z.literal(true) }, annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true } }, async ({ generationId }) => guarded('ravs:generate', () => services.cancelUserGeneration(identity.userId, generationId)));
   }
   server.registerPrompt('mongolian_campaign', { title: 'Монгол кампанит ажил', description: 'RAVS хэрэгслээр санаанаас нийтлэх контент хүртэл төлөвлөх', argsSchema: { brand: z.string().max(150), goal: z.string().max(1000), audience: z.string().max(500) } }, async ({ brand, goal, audience }) => ({ messages: [{ role: 'user', content: { type: 'text', text: `${brand} брэндэд Монгол хэлээр бүтэн контент бэлд. Зорилго: ${goal}. Үзэгчид: ${audience}. Эхлээд ravs_list_models, сонгосон ravs_model_guide ашигла. 3 санаа, storyboard, кадр бүрийн prompt/тохиргоо, caption, hook, CTA, нийтлэх төлөвлөгөө гарга. ravs_estimate ашиглаж кредитийг харуул. Миний тусдаа зөвшөөрөлгүйгээр төлбөртэй үүсгэлт бүү хий. Хүсэлт эхэлсэн бол ravs_generation_status-аар шалгаж, зөвхөн COMPLETED ба URL байвал бэлэн гэж хэл.` } }] }));
+  // This tool and prompt coordinate two independently authorized MCP servers.
+  // No Voice credentials, accounts, audio, or payment operations cross this boundary.
+  server.registerTool('ravs_voice_workflow_plan', {
+    title: 'RAINY Video + Voice ажлын урсгал',
+    description: 'Хоёр тусдаа сайт (RAVS Video болон RAINY Voice)-ын MCP хэрэгслээр видео, Монгол voice-over төлөвлөх үнэ төлбөргүй handoff. Voice сайтыг автоматаар дуудахгүй.',
+    inputSchema: {
+      project: z.string().min(1).max(1000),
+      channel: z.enum(['Reels','TikTok','YouTube','Facebook','Website']).default('Reels'),
+      scenes: z.number().int().min(1).max(20).default(3),
+    }, annotations: readAnnotations
+  }, async ({project,channel,scenes}) => guarded('ravs:read', async () => ({
+    project, channel, scenes, videoService: 'RAINY AI Video Studio',
+    voiceService: 'RAINY Voice Studio (independent account and credits)',
+    orchestration: [
+      'ravs_list_models + ravs_model_guide: загвар, reference, хугацааг сонгох',
+      'ravs_content_brief: Монгол зохиол, hook, CTA, storyboard, scene-by-scene prompt болон voice-over текст бэлтгэх',
+      'ravs_estimate: видео кредитийг төлбөргүй урьдчилан тооцох',
+      'Voice connector холбогдсон тохиолдолд rainy_voice_voices + rainy_voice_quote_tts: Монгол хоолой ба TTS кредитийг тусад нь тооцох',
+      'Хэрэглэгчээс хоёр үйлчилгээний кредитийг ТУС ТУСАД НЬ баталгаажуулсны дараа ravs_create_generation, rainy_voice_create_tts дууд',
+      'ravs_generation_status болон rainy_voice_job_status-аар гүйцэтгэлийг шалгах',
+      'Видео COMPLETED + медиа URL, Voice done + аудио болсон үед хоёр материалыг тусад нь гаргах',
+    ],
+    caution: 'Хоёр MCP нь нэг хэрэглэгчийн нэвтрэлтийг хуваалцдаггүй. Нэгтгэсэн media mux/редактор/нийтлэлт одоогоор суулгагдаагүй. Хоёул амжилттай болсон гэсэн баталгаа өгч болохгүй.',
+    requirements: ['ChatGPT эсвэл Claude-д RAVS Video болон RAINY Voice хоёр custom MCP connector-ийг хэрэглэгч тус тусад нь холбосон байх', 'Хэрэглэгч төлбөртэй generation бүрийг зөвшөөрөх'],
+  })));
+  server.registerPrompt('rainy_video_voice_campaign', {
+    title: 'RAINY хоёр студи: видео + Монгол дуу',
+    description: 'Тусдаа RAVS ба Voice MCP-ээр баталгаатай, хоёр талын кредиттэй бүтээл төлөвлөх',
+    argsSchema: {brand: z.string().min(1).max(150), goal: z.string().min(1).max(1000), channel: z.string().max(100)},
+  }, async ({brand,goal,channel}) => ({messages:[{role:'user',content:{type:'text',text:
+    'RAINY Video болон RAINY Voice хоёр өөр сайт, хоёр өөр MCP OAuth холболттой. '+
+    'Энэ хоёр MCP холбогдсон бол хамтад нь хэрэглэ. Брэнд: '+brand+'. Зорилго: '+goal+'. Суваг: '+channel+'. '+
+    'Эхлээд ravs_voice_workflow_plan, ravs_list_models, ravs_model_guide, ravs_content_brief ашиглан Монгол hook, кадр бүрийн storyboard, prompt, '+
+    'voice-over script, CTA боловсруул. Видео талд ravs_estimate; Voice талд rainy_voice_voices ба rainy_voice_quote_tts хэрэглэ. '+
+    'Хоёр кредитийг салгаж танилцуул; миний илэрхий зөвшөөрөлгүйгээр ravs_create_generation, rainy_voice_create_tts бүү дууд. '+
+    'Зөвшөөрсөн бол idempotencyKey-г давталтад хадгал; төлөвийг тус тусад нь шалга. '+
+    'RAVS COMPLETED ба видео URL, Voice done болсны дараа тус тусын материалыг үзүүл. '+
+    'Медиа автоматаар эвлүүлсэн, нийтэлсэн эсвэл сайтуудыг шууд интеграцчилсан гэж бүү хэл.'}}]}));
   return server;
 }
