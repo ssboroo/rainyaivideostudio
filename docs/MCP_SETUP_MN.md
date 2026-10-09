@@ -59,3 +59,14 @@ Timeout/5xx нь provider хүсэлтийг хүлээн аваагүйг ба�
 Mock тестүүд SDK initialize/list/call, read scope, explicit confirmation, own account, estimate, PKCE, code single-use, refresh rotation, revocation, audience болон credit lifecycle-ийг шалгана. Mock тест амжилттай байх нь бодит ChatGPT/Claude account installation эсвэл billable Higgsfield generation амжилтыг батлахгүй. Шинэ холболтыг хэрэглэгч өөрийн апп дотроос зөвшөөрч нэмнэ.
 
 Эх сурвалж: https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization
+
+## RAINY Voice-тай MCP workflow (2026-10-09)
+
+- RAVS Video, RAINY Voice нь **тусдаа сайт, OAuth бүртгэл, кредит, API credential, өгөгдөлтэй** хэвээр.
+- ChatGPT/Claude дээр хоёр MCP custom connector-ийг тус тусад нь нэмж зөвшөөр. Voice endpoint: `https://rainytts-production.up.railway.app/mcp` (Voice талд VOICE_MCP_ENABLED=true болж production deployment батлагдсаны дараа).
+- RAVS `ravs_voice_workflow_plan` (read-only) ба `rainy_video_voice_campaign` prompt-оос эхэл.
+- RAVS `ravs_estimate` ба Voice `rainy_voice_quote_tts` тус тусдаа тооцдог; зардлыг нийтлэг нэг wallet гэж үзэхгүй.
+- Зөвшөөрөл авсан үед `ravs_create_generation` ба `rainy_voice_create_tts`-ийг тус тусад нь дуудна.
+- Status-г тусдаа шалгаж, RAVS `COMPLETED`, Voice `done` болсны дараа л бэлэн гэж мэдээл.
+- **Анхаар:** Эхний MCP workflow нь медиа файл автоматаар mux хийхгүй. Voice download URL нь нэвтэрсэн хэрэглэгчийн session шаарддаг. Нэг MP4 болгон экспортолсон гэж мэдэгдэж болохгүй.
+
