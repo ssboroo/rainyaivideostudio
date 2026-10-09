@@ -23,7 +23,7 @@ test('cross-studio workflow is read-only, costs zero, and preserves independent 
   assert.equal(r.isError,undefined);
   const guide=JSON.parse(r.content[0].text);
   assert.equal(guide.scenes,3);
-  assert.ok(guide.caution.includes('тусдаа'));
+  assert.ok(guide.caution.includes('нэг хэрэглэгчийн'));
   assert.equal(f.calls.length,0);
  }finally{await f.close()}
 });
