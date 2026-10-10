@@ -43,7 +43,18 @@ export function createLongMoviePlan(input:LongMoviePlanInput) {
   let time=0,totalCredits=0;
   const scenes=Array.from({length:parts},(_,i)=>{
     const duration=base+(i<extra?1:0);
-    const inputPayload={prompt:input.prompt.trim(),duration,resolution:input.resolution,
+    const beat=beatFor((i+0.5)/parts);
+    const shotType=shotTypes[i%shotTypes.length];
+    // A fallback prompt stays scene-specific if a client cannot run an LLM.
+    // A creative assistant should still write an original scene-by-scene shot script.
+    const scenePrompt=[
+      input.prompt.trim(),
+      `Film shot ${i+1}/${parts}; narrative beat: ${beat}; shot: ${shotType}.`,
+      `Continuity reference: ${bible}.`,
+      `Show one distinct moment moving the story forward. Compose an intentional beginning and end that cut cleanly into adjacent shots; vary action, staging, camera and lighting while preserving required identity.`,
+      `Avoid reusing the previous shot action. Keep on-screen text and logos exactly as reference only where explicitly provided.`
+    ].join(" ").slice(0,5800);
+    const inputPayload={prompt:scenePrompt,duration,resolution:input.resolution,
       aspectRatio:input.aspectRatio,generateAudio:input.generateAudio};
     const provider=buildProviderInput(model,inputPayload);
     const credits=estimateCredits(model,duration,provider);
@@ -53,8 +64,8 @@ export function createLongMoviePlan(input:LongMoviePlanInput) {
     if(!Number.isSafeInteger(totalCredits)) throw new MoviePlanError("Нийт кредит буруу байна.");
     const scene={
       number:i+1,startSeconds:time,endSeconds:time+duration,duration,
-      beat:beatFor((i+0.5)/parts),
-      shotType:shotTypes[i%shotTypes.length],
+      beat,
+      shotType,
       transition:i===0?"fade-in":i===parts-1?"ending":i%5===0?"motivated-cut":"match-action",
       modelSlug:model.slug,templateInput:inputPayload,
       instructions:"AI Director: build an independent original cinematic scene prompt. Preserve the style bible, identity and physical continuity. Use different camera blocking, composition, visual rhythm and action per shot; do not repeat the base prompt verbatim. Read narrative beat and shot type. A text-only reference cannot guarantee face identity.",
