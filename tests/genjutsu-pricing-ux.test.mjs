@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {getModel,estimateCredits} from "../lib/models.ts";
+import {getModel,estimateCredits,buildProviderInput} from "../lib/models.ts";
 
 const studio=readFileSync(new URL("../components/studio-client.tsx",import.meta.url),"utf8");
 
@@ -32,4 +32,22 @@ test("Studio does not quote unsupported models or present a clipped-video prereq
  assert.match(studio,/Genjutsu Motion Transfer сонгох/);
  assert.match(studio,/model\.name\+" \("\+resolution/);
  assert.match(studio,/!clipPending && !!model\.apiVerified/);
+});
+
+test("Kling Turbo text and AI Influencer are selectable with official parameter mapping",()=>{
+ const turbo=getModel("kling-3-turbo"),influencer=getModel("ai-influencer");
+ assert.equal(turbo?.apiVerified,true);
+ assert.equal(influencer?.apiVerified,true);
+ const kling=buildProviderInput(turbo,{prompt:"Монгол уулын кадр",duration:5,resolution:"720p",aspectRatio:"16:9"});
+ assert.equal(kling.prompt,"Монгол уулын кадр");
+ assert.ok(estimateCredits(turbo,5,{resolution:"720p"})>0);
+ const sheet=buildProviderInput(influencer,{
+  prompt:"Монгол модель, студийн гэрэл",imageUrl:"https://cdn.example.com/person.jpg",
+  referenceUrls:["https://cdn.example.com/jacket.jpg"],modelOptions:{tier:"normal"}
+ });
+ assert.equal(sheet.brief,"Монгол модель, студийн гэрэл");
+ assert.equal(sheet.image_url,"https://cdn.example.com/person.jpg");
+ assert.deepEqual(sheet.item_image_urls,["https://cdn.example.com/jacket.jpg"]);
+ assert.equal(influencer.maxReferences,3);
+ assert.ok(estimateCredits(influencer,5,{})>0);
 });
