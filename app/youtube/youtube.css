@@ -1,0 +1,52 @@
+.ytDownloadPage{width:100%;padding:24px clamp(14px,2.4vw,28px) 60px}
+.ytDownload{max-width:1350px;margin:auto;color:#f6f4e8}
+.ytDownloadHero{border:1px solid #484537;background:radial-gradient(ellipse at 65% 15%,#413b174a,transparent 50%),linear-gradient(120deg,#21221c,#10110e 75%);padding:clamp(25px,4vw,54px);border-radius:20px;margin-bottom:25px;overflow:hidden}
+.ytDownloadLabel{display:inline-flex;align-items:center;gap:9px;letter-spacing:.13em;font-size:10px;color:#f2d955;font-weight:850}
+.ytDownloadHero h1{font-size:clamp(34px,4.6vw,62px);letter-spacing:-.055em;line-height:1.1;margin:17px 0}
+.ytDownloadHero h1 em{font-style:normal;color:#f6dc65}
+.ytDownloadHero p{max-width:750px;font-size:13px;line-height:1.85;color:#c1c0b3;margin:0}
+.ytDownloadSteps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;align-items:start}
+.ytDownloadCard{min-width:0;background:linear-gradient(145deg,#191b17,#0e100e);border:1px solid #393c34;border-radius:18px;padding:clamp(15px,2vw,24px);display:grid;gap:17px}
+.ytDownloadExport{grid-column:1/-1}
+.ytDownloadStepTitle{display:flex;align-items:center;gap:12px}
+.ytDownloadStepTitle>span{flex:none;display:grid;place-items:center;border:1px solid #9b873c;background:#51431940;color:#fce081;width:40px;height:40px;border-radius:11px;font:850 14px ui-monospace,Consolas,monospace}
+.ytDownloadStepTitle h2{font-size:18px;letter-spacing:-.03em;color:#f2f0e5;margin:0 0 3px}
+.ytDownloadStepTitle p{font-size:11px;color:#abad9f;margin:0;line-height:1.6}
+.ytDownloadField{display:grid;gap:7px;min-width:0}
+.ytDownloadField>span{font-size:11px;font-weight:800;color:#e4d6a5}
+.ytDownloadField input{min-height:46px;width:100%;min-width:0;background:#0b0d0c;border:1px solid #54564b;border-radius:9px;padding:11px 12px;color:#eee;font-size:13px;outline:0}
+.ytDownloadField input:focus{border-color:#f8db58;box-shadow:0 0 0 2px #f8db5820}
+.ytDownloadTwo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ytDownloadPlayer{padding:9px;border-radius:12px;background:#080a08;border:1px solid #2f332c;display:grid;gap:9px}
+.ytDownloadPlayer iframe{width:100%;aspect-ratio:16/9;min-height:185px;border:0;border-radius:7px;background:#0b0c09}
+.ytDownloadPlayCover{border:1px solid #5b5732;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;min-height:220px;border-radius:7px;background:radial-gradient(ellipse,#49402330,#11130f 70%);color:#ecd678;font-weight:850;font-size:12px;cursor:pointer}
+.ytDownloadGhost{display:inline-flex;align-items:center;justify-content:center;gap:7px;width:fit-content;min-height:42px;padding:10px 12px;border:1px solid #555746;border-radius:9px;color:#f0e3ba;background:#24251d;font-size:12px;font-weight:750}
+.ytDownloadGhost:disabled{opacity:.55;cursor:not-allowed}
+.ytDownloadOfficial{display:grid;gap:12px;border:1px solid #51543e;border-radius:13px;background:#1e2419;padding:18px}
+.ytDownloadOfficial>svg{color:#eed979}
+.ytDownloadOfficial p{margin:0;color:#c7cbbb;font-size:12px;line-height:1.8}
+.ytDownloadOfficial b{color:#f0e3ad}
+.ytDownloadOfficial a{display:inline-flex;align-items:center;justify-content:center;gap:9px;width:fit-content;min-height:44px;background:#f2dc69;color:#1a1a10;padding:10px 16px;border-radius:9px;font-size:12px;font-weight:850;text-decoration:none}
+.ytDownloadUpload{display:grid;gap:11px;padding:17px;border:1px dashed #727051;background:#1b1d16;border-radius:13px}
+.ytDownloadUpload>span{display:flex;align-items:center;gap:9px;color:#eddb95;font-size:12px;font-weight:850}
+.ytDownloadUpload input{display:block;max-width:100%;font-size:11px;color:#d2d1c5}
+.ytDownloadUpload input::file-selector-button{border:1px solid #817149;color:#f7e4a7;background:#2e2b1c;border-radius:8px;padding:10px;margin-right:12px;cursor:pointer}
+.ytDownloadUpload small{color:#aaa99c;font-size:11px;overflow-wrap:anywhere}
+.ytDownloadLocalPreview{display:grid;gap:9px}
+.ytDownloadLocalPreview video{width:100%;max-height:290px;object-fit:contain;border-radius:10px;background:#060706;border:1px solid #45473b}
+.ytDownloadConsent{display:flex;align-items:flex-start;gap:11px;color:#d2d4c5;font-size:12px;line-height:1.65;cursor:pointer}
+.ytDownloadConsent input{width:18px;height:18px;accent-color:#efd867;flex:none;margin-top:2px}
+.ytDownloadButton{display:inline-flex;justify-content:center;align-items:center;gap:10px;min-height:52px;width:100%;border:0;border-radius:10px;background:#f5dc65;color:#19190d;font-size:13px;font-weight:900;cursor:pointer}
+.ytDownloadButton:hover:not(:disabled){background:#ffea96}
+.ytDownloadButton:disabled{opacity:.47;cursor:not-allowed}
+.ytDownloadSummary{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:13px 16px;border:1px solid #514930;border-radius:11px;color:#c9c6b9;font-size:12px;background:#28241b}
+.ytDownloadSummary strong{font-size:16px;color:#ffe18a;font-variant-numeric:tabular-nums}
+.ytDownloadFoot{font-size:11px;line-height:1.75;color:#a8aa9e;margin:0}
+.ytDownloadError{font-size:11px;margin:0;color:#ffd08c}
+.ytDownloadFeedback{display:flex;align-items:flex-start;gap:10px;border:1px solid #666242;border-radius:10px;padding:13px;color:#e8ddb1;background:#29271b;font-size:12px;line-height:1.5;margin:0}
+.ytDownloadFeedback svg{flex:none}
+.ytDownload a:focus-visible,.ytDownload button:focus-visible,.ytDownload input:focus-visible{outline:3px solid #f7dc68;outline-offset:3px}
+@media(max-width:1120px){.ytDownloadSteps{grid-template-columns:minmax(0,1fr)}.ytDownloadExport{grid-column:auto}}
+@media(max-width:680px){.ytDownloadPage{padding:14px 12px 40px}.ytDownloadHero{padding:25px 20px}.ytDownloadHero h1{font-size:38px}.ytDownloadCard{padding:16px}.ytDownloadStepTitle h2{font-size:17px}.ytDownloadPlayCover{min-height:165px}.ytDownloadPlayer iframe{min-height:160px}.ytDownloadOfficial a{width:100%}}
+@media(max-width:380px){.ytDownloadTwo{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){.ytDownload *{scroll-behavior:auto}}
