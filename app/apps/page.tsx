@@ -20,6 +20,10 @@ export default function AppsPage() {
             <h1>Нэг үйлдэл. <em>Шууд үр дүн.</em></h1>
             <p>Видеогоо өөрчлөх, дүрийн хөдөлгөөн шилжүүлэх, бүтээгдэхүүний зураг болон постер бүтээх хэрэгслээ сонго.</p>
           </div>
+          <Link href="/studio?model=genjutsu-motion&source=youtube" className="featureCallout" style={{display:"flex",gap:18,alignItems:"center",marginBottom:24,flexWrap:"wrap",textDecoration:"none"}}>
+            <div><small>YOUTUBE → GENJUTSU · ШИНЭ</small><h2>Холбоосоор үзээд, хэрэгтэй клипээ сонго.</h2><p>YouTube-ийн албан тоглуулагчид видеогоо үзэж 1–30 секунд сонго. Өөрийн эсвэл ашиглах эрхтэй MP4 файлыг тайрч, Genjutsu Motion Transfer-д ашигла.</p></div>
+            <span className="primary">Клип бэлтгэх ↗</span>
+          </Link>
           <div className="appsGrid">
             {appTools.map((tool) => (
               <Link href={tool.href} className={"appTool accent-" + tool.accent} key={tool.title}>
