@@ -67,5 +67,11 @@ test("admin-only scenario shows reservations, no automatic recurring payments",(
  assert.match(admin,/Сценарийн үлдэх хувь/);
  assert.match(server,/requireAdmin/);
  assert.match(server,/Cache-Control/);
+ assert.match(server,/models\.map\(model=>/);
+ assert.match(server,/apiVerified/);
+ assert.match(server,/sample_quoted/);
+ assert.match(server,/quote_unavailable/);
+ assert.match(admin,/economics\.modelCatalog/);
+
  assert.doesNotMatch(server,/wireApiKey|higgsfieldCredentials/);
 });
