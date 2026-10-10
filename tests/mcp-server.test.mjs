@@ -27,7 +27,7 @@ test('cross-studio workflow is read-only, costs zero, and preserves independent 
   assert.equal(f.calls.length,0);
  }finally{await f.close()}
 });
-test('one-prompt movie plan splits 61 seconds into 3 valid scenes and requires no paid calls',async()=>{
+test('one-prompt movie plan uses cinematic pacing and cost guards with no paid calls',async()=>{
  const f=await connected(['ravs:read']);try{
   const r=await f.client.callTool({name:'ravs_long_movie_plan',arguments:{
     prompt:'An epic Mongolian cinematic journey through the Gobi desert, with consistent hero and sunset.',
@@ -35,7 +35,10 @@ test('one-prompt movie plan splits 61 seconds into 3 valid scenes and requires n
   assert.notEqual(r.isError,true,JSON.stringify(r));
   const p=JSON.parse(r.content[0].text);
   assert.equal(p.plannedSeconds,61);
-  assert.equal(p.sceneCount,3);
+  assert.equal(p.sceneCount,8);
+  assert.equal(p.qualityProfile,'cinematic');
+  assert.equal(p.scenes[0].beat,'setup');
+  assert.ok(p.scenes.every(x=>x.shotType && x.instructions.includes('continuity')));
   assert.equal(p.scenes.reduce((s,x)=>s+x.duration,0),61);
   assert.ok(p.scenes.every(x=>x.duration>=4&&x.duration<=30));
   assert.ok(p.totalVideoCredits>0);
