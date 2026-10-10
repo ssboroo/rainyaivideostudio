@@ -32,6 +32,7 @@ import { ModelFamilies } from "@/components/model-families";
 import { modelFamilyName, modelVariantLabel } from "@/lib/model-families";
 import { ModelExamples } from "@/components/model-examples";
 import { YouTubeGenjutsuSource } from "@/components/youtube-genjutsu-source";
+import { EconomyModelChoices } from "@/components/economy-model-choices";
 import { buildProviderInput, getModel, models, type ModelKind, type RavsModel } from "@/lib/models";
 
 type User = {
@@ -186,7 +187,7 @@ export function StudioClient() {
       : model.minDuration || 5;
     const requestedAspect = params.get("aspect");
     setDuration(model.durationOptions?.includes(safeDuration)===false ? model.durationOptions[0] : safeDuration);
-    setResolution(model.resolutions[0]);
+    setResolution(params.get("resolution") && model.resolutions.includes(params.get("resolution")!) ? params.get("resolution")! : model.resolutions[0]);
     setAudio(Boolean(model.parameters?.find(f=>f.name==="generate_audio")?.default ?? (model.parameters?.find(f=>f.name==="sound")?.default !== "off" && model.parameters?.find(f=>f.name==="keep_original_sound")?.default !== "no")));
     setAspect(requestedAspect && model.aspectRatios.includes(requestedAspect) ? requestedAspect : model.aspectRatios[0]);
     setModelOptions({});
@@ -206,7 +207,7 @@ export function StudioClient() {
         .then((data) => { const items=Array.isArray(data?.items)?data.items:[];setPresets(items);if(!items.length)setPresetError("Хэв маягийн жагсаалт түр боломжгүй байна. Өөр хэрэгсэл сонгоорой."); })
         .catch(() => setPresetError("Хэв маяг ачаалж чадсангүй."));
     }
-  }, [selected, params.get("duration"), params.get("aspect")]);
+  }, [selected, params.get("duration"), params.get("aspect"), params.get("resolution")]);
 
   async function load() {
     setHistoryLoading(true); setLoadError("");
@@ -536,7 +537,11 @@ export function StudioClient() {
               </div>
 
               {!pricingError && !pricingPending && cost>0 && <p className="serviceState">{model.kind === "video" ? (cost<=300 ? "Хэмнэлттэй" : cost<=800 ? "Стандарт" : "Премиум") : "Зураг / Workflow"} · Нэг бүтээл {cost.toLocaleString()} кредит{user ? ` · Үлдэгдлээр ${Math.floor(user.credits/cost)} бүтээл` : ""}. Үнэ сонгосон тохиргооноос хамаарна.</p>}
-              {model.kind === "video" && cost>800 && <p className="serviceState">Хэмнэх бол <Link href={`/studio?model=${models.find(m=>m.modelId==="minimax/hailuo-2.3/standard/text-to-video")?.slug || ""}`}>Hailuo 2.3 · 6 секунд →</Link></p>}
+              {model.kind === "video" && model.modelId.endsWith("/text-to-video") && model.apiVerified && !clipPending && !pricingPending && !pricingError && cost>0 &&
+                <EconomyModelChoices
+                  modelSlug={model.slug} currentCredits={cost} duration={duration}
+                  resolution={resolution} aspectRatio={aspect} generateAudio={audio} prompt={prompt}
+                />}
               {inputError&&hasInput&&<p className="serviceState">{inputError}</p>}
               {providerHealth==="missing"&&<div className="accountNotice"><Sparkles size={20}/><div>Үүсгэх үйлчилгээ бэлтгэгдэж байна. Одоогоор жишээ үзэж, санаа болон тохиргоогоо бэлдээрэй. <Link href="/video-guide">Гарын авлага үзэх →</Link></div></div>}
               {pricingError&&<p className="serviceState" role="alert">{pricingError} {model.group==="Genjutsu" && <Link href="/studio?model=genjutsu-motion&source=youtube">Motion Transfer сонгох →</Link>}</p>}

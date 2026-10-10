@@ -2,14 +2,14 @@
 // 3,900 MNT/USD is a CONSERVATIVE INTERNAL PLANNING RATE, not a claimed live FX quote.
 // Reviewed against official provider catalog 2026-10-11; no promotional prices assumed.
 export const pricingPolicy = {
- usdMnt: 3900, markup: 1.15, minCreditMnt: 100000 / 12000,
- // Target: at least 70% cost markup AFTER the planning reserves below.
+ usdMnt: 3900, markup: .90, minCreditMnt: 100000 / 12000,
+ // Lower RAINY API price ~11.6%; retain >=50% stress-tested net cost markup.
  // A 70% cost markup is not a 70% sales margin.
- minimumNetCostMarkup: .70,
+ minimumNetCostMarkup: .50,
  reviewedAt: '2026-10-11',
  // Cost-reserve assumptions for scenario stress tests; not published Wire fees or tax advice.
  fxStress: .10, paymentFeeReserve: .04, taxReserve: .10,
- infrastructureReserve: .07, minContribution: .30,
+ infrastructureReserve: .07, minContribution: .27,
  minimumPackMntPerCredit: 9.25,
 } as const;
 /**
@@ -37,9 +37,11 @@ export class PricingUnavailableError extends Error {}
 const unavailable = () => { throw new PricingUnavailableError('Энэ тохиргооны API өртгийг баталгаажуулж байна. Өөр загвар сонгоно уу.'); };
 export function providerCostUsd(id: string, input: Record<string, unknown>): number {
   const resolution = String(input.resolution || '720p').toLowerCase();
-  const seconds = Number(input.duration || 5);
-  const batch = Number(input.batch_size || input.num_images || 1);
-  if (!Number.isFinite(seconds) || seconds <= 0 || !Number.isSafeInteger(batch) || batch < 1) return unavailable();
+  // A missing duration can produce a silent undercharge on usage-metered
+  // video requests. Images do not use duration.
+  const seconds = input.duration === undefined ? NaN : Number(input.duration);
+  const batch = Number(input.batch_size ?? input.num_images ?? 1);
+  if (!Number.isSafeInteger(batch) || batch < 1 || batch > 100) return unavailable();
   // The official Higgsfield pages publish the SAME list rates for the
   // three documented Genjutsu endpoints. Billing uses source video duration,
   // rounded UP to a whole second. The duration is authenticated against a
@@ -69,7 +71,7 @@ export function providerCostUsd(id: string, input: Record<string, unknown>): num
     return unavailable();
   }
   const perSecond = (rates: Record<string, number>) => {
-    const rate = rates[resolution]; if (rate === undefined) return unavailable();
+    const rate = rates[resolution]; if (rate === undefined || !Number.isFinite(seconds) || seconds <= 0 || seconds > 3600) return unavailable();
     return rate * seconds;
   };
   const perImage = (rates: Record<string, number>) => {
@@ -77,6 +79,7 @@ export function providerCostUsd(id: string, input: Record<string, unknown>): num
     return rate * batch;
   };
   if (/^bytedance\/seedance-2\.[05]\//.test(id) || id === 'higgsfield/cinema-studio/4.0') {
+    if (!Number.isFinite(seconds) || seconds <= 0 || seconds > 30) return unavailable();
     if (/video-edit|video-extend/.test(id)) return unavailable();
     const shortEdge = ({'480p':480,'720p':720,'1080p':1080,'4k':2160} as Record<string, number>)[resolution];
     if (!shortEdge || resolution === '4k' && !id.includes('2.0')) return unavailable();
@@ -96,11 +99,14 @@ export function providerCostUsd(id: string, input: Record<string, unknown>): num
   if (/^wan\/v2\.[67]\//.test(id)) return perSecond({'720p':.10,'1080p':.15});
   if (id.startsWith('alibaba/happy-horse/') && !id.includes('/v1.1/')) return perSecond({'720p':.14,'1080p':.28});
   if (id.startsWith('minimax/h3/')) return perSecond({'2k':.13});
-  if (id.startsWith('minimax/hailuo-2.3/standard/')) return seconds * (seconds <= 6 ? .0467 : .056);
+  if (id.startsWith('minimax/hailuo-2.3/standard/')) {
+    if (![6,10].includes(seconds)) return unavailable();
+    return seconds * (seconds === 6 ? .0467 : .056);
+  }
   if (id.startsWith('alibaba/happy-horse/v1.1/')) return perSecond({'720p':.14,'1080p':.18});
   if (id.startsWith('xai/grok-imagine-video/v1.5/')) return perSecond({'480p':.08,'720p':.14,'1080p':.25});
   if (id.startsWith('lightricks/ltx-2.5/')) return perSecond(id.endsWith('/fast') ? {'720p':.09,'1080p':.13,'2k':.19,'4k':.30} : {'720p':.12,'1080p':.17});
-  if (id.startsWith('kling-video/v3.0/4k/')) return .42 * seconds;
+  if (id.startsWith('kling-video/v3.0/4k/')) return perSecond({ '720p': .42, '1080p': .42, '4k': .42 });
   // Upper rate covers sound-on/off variants; discounts are deliberately ignored.
   if (id.startsWith('kling-video/v3.0/pro/')) return .168 * seconds;
   if (id.startsWith('kling-video/v3.0/std/')) return (id.endsWith('image-to-video') ? .126 : .084) * seconds;
@@ -137,6 +143,9 @@ export function quoteApiCredits(id:string, input:Record<string,unknown>) {
   if(process.env.RAVS_PRICING_HOLD==="true")
     throw new PricingUnavailableError("Үнэ шинэчлэгдэж байна. Кредит зарцуулах генерац түр зогссон.");
   const usd = providerCostUsd(id,input);
+  if(!Number.isFinite(usd) || usd <= 0) return unavailable();
+  // Single source for Studio preview, MCP, REST, and the credit reservation.
+  // Use ceil so even very small image prices never round below provider cost.
   const credits = Math.ceil(usd * pricingPolicy.usdMnt * (1 + pricingPolicy.markup) / pricingPolicy.minCreditMnt);
   if (!Number.isSafeInteger(credits) || credits <= 0) return unavailable();
   return credits;

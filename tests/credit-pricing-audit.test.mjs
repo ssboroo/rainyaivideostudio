@@ -9,17 +9,17 @@ import {tsImport} from "tsx/esm/api";
 const {quoteValidatedGeneration}=await tsImport("../lib/generation-credit-quote.ts",{parentURL:import.meta.url});
 const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
 
-test("every real package clears 70% markup on provider cost AFTER 10% FX stress and 21% fee/tax/platform reserves",()=>{
+test("every real package clears 50% markup on provider cost AFTER 10% FX stress and 21% fee/tax/platform reserves",()=>{
  const packages=getCreditPackages();
  assert.ok(packages.length>=5);
  for(const p of packages){
   const a=estimatePackContribution(p.priceMnt,p.credits);
   assert.ok(a.guardPassed,p.name);
-  assert.ok(a.netCostMarkup>=.70,p.name+" has only "+(a.netCostMarkup*100)+"% net cost markup");
+  assert.ok(a.netCostMarkup>=pricingPolicy.minimumNetCostMarkup-1e-10,p.name+" has only "+(a.netCostMarkup*100)+"% net cost markup");
   assert.ok(a.estimatedContributionMargin>=pricingPolicy.minContribution,p.name);
   assert.ok(a.unitMnt>=pricingPolicy.minimumPackMntPerCredit,p.name);
  }
- assert.equal(getPricingScenario().minimumNetCostMarkup,.70);
+ assert.equal(getPricingScenario().minimumNetCostMarkup,.50);
  assert.equal(packages.find(p=>p.id==="starter")?.credits,3000);
  assert.equal(packages.find(p=>p.id==="agency")?.credits,95000);
 });
