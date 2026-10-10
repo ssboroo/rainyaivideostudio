@@ -5,6 +5,7 @@ export const dynamic="force-dynamic";
 export async function GET(_request:NextRequest,{params}:{params:Promise<{id:string}>}){
   const user=await requireUser();
   if(!user) return NextResponse.json({error:"Нэвтрэх шаардлагатай."},{status:401});
+  if(process.env.MOVIE_SCHEDULER_ENABLED!=="true") return NextResponse.json({enabled:false,projects:[],message:"Movie Producer v2 QA туршилт хүлээж байна."},{status:503});
   const {id}=await params;
   if(!/^[a-z0-9]{10,40}$/i.test(id)) return NextResponse.json({error:"Буруу ID"},{status:400});
   const movie=await getOwnMovie(user.id,id);
