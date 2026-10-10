@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {CreativeDemoGallery} from "@/components/creative-demo-gallery";
 import { ArrowRight, ScanFace, Sparkles, Upload, WandSparkles } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
 
@@ -26,6 +27,7 @@ export default function InfluencerPage() {
             <div className="featureCell"><WandSparkles/><b>Уран зөгнөлт төрх</b><p>Хошин болон уран зөгнөлт контентод зориулсан өвөрмөц дүр.</p></div>
           </div>
         </section>
+        <CreativeDemoGallery surface="influencer" compact/>
       </section>
     </main>
   );
