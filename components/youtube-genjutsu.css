@@ -1,0 +1,42 @@
+.ytGenjutsu{margin:18px 0;border-radius:17px;border:1px solid #5e5128;background:linear-gradient(135deg,#1c1b13,#10120f 68%);color:#f4f2e6;overflow:hidden}
+.ytGenjutsuHeading{display:flex;align-items:center;gap:12px;padding:17px 20px;border-bottom:1px solid #ffffff1b}
+.ytGenjutsuHeading>span{display:grid;place-items:center;flex:none;width:42px;height:42px;color:#f7df6a;border-radius:12px;border:1px solid #9d8c4659;background:#f7df6a12}
+.ytGenjutsuHeading b{display:block;font-size:16px;letter-spacing:-.025em}
+.ytGenjutsuHeading small{display:block;color:#bebca9;font-size:11px;line-height:1.5;margin-top:3px}
+.ytGenjutsuInputs{display:grid;gap:15px;padding:19px}
+.ytGenjutsuInputs>label:not(.ytGenjutsuConsent),.ytGenjutsuTime label{display:grid;gap:7px;min-width:0}
+.ytGenjutsuInputs label>span,.ytGenjutsuTime label>span{color:#ede1aa;font-size:11px;font-weight:800;letter-spacing:.01em}
+.ytGenjutsuInputs input:not([type=checkbox]):not([type=file]){width:100%;min-width:0;height:45px;background:#0d110f;color:#f2f3eb;border:1px solid #57574c;border-radius:10px;padding:10px 12px;font-size:13px;outline:none}
+.ytGenjutsuInputs input:focus-visible,.ytGenjutsuInputs button:focus-visible,.ytGenjutsuInputs a:focus-visible{outline:3px solid #f6db59;outline-offset:2px}
+.ytGenjutsuInputs input[type=file]{display:block;max-width:100%;width:100%;font-size:11px;color:#afb19f}
+.ytGenjutsuInputs input[type=file]::file-selector-button{background:#22251d;color:#f1df97;border:1px solid #645b34;border-radius:8px;padding:9px 11px;margin-right:12px;cursor:pointer}
+.ytGenjutsuTime{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 102px;gap:9px;align-items:end}
+.ytGenjutsuDuration{display:flex;align-items:flex-start;justify-content:center;flex-direction:column;border-radius:10px;min-height:45px;border:1px solid #514727;background:#262318;padding:6px 11px}
+.ytGenjutsuDuration small{color:#b6ad8e;font-size:9px}
+.ytGenjutsuDuration b{font-size:14px;color:#fce57f}
+.ytGenjutsuPreview{position:relative;display:grid;gap:9px;background:#0b0c0b;padding:10px;border:1px solid #2f302a;border-radius:13px}
+.ytGenjutsuPreview iframe{border:0;width:100%;aspect-ratio:16/9;min-height:200px;border-radius:8px;display:block}
+.ytGenjutsuPlaceholder{width:100%;min-height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border-radius:9px;background:radial-gradient(circle at center,#382d1e,#131412 70%);color:#f4cf66}
+.ytGenjutsuPlaceholder p{margin:0;color:#bbb7a4;font-size:12px;text-align:center}
+.ytGenjutsuInputs .ghost{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:10px 13px;border:1px solid #655d44;border-radius:8px;background:#171914;color:#ecdfa2;width:fit-content;font-size:11px;font-weight:800}
+.ytGenjutsuReplay{margin-left:auto}
+.ytGenjutsuSource{display:inline-flex;align-items:center;gap:5px;color:#bdb9a0;font-size:11px;text-decoration:underline;width:fit-content}
+.ytGenjutsuNotice{display:flex;align-items:flex-start;gap:11px;border:1px solid #55553e;border-radius:12px;padding:13px;background:#1d2119}
+.ytGenjutsuNotice svg{color:#efcd71;flex:none;margin-top:2px}
+.ytGenjutsuNotice p{margin:0;color:#bbbfae;font-size:11px;line-height:1.7}
+.ytGenjutsuNotice b{color:#f0e5c7}
+.ytGenjutsuUpload{border:1px dashed #686144;padding:14px;border-radius:12px;background:#171a14}
+.ytGenjutsuUpload small{display:flex;align-items:center;gap:7px;color:#d5c380;font-size:11px;overflow-wrap:anywhere}
+.ytGenjutsuLocal{display:grid;gap:8px}
+.ytGenjutsuLocal video{width:100%;max-height:330px;object-fit:contain;border:1px solid #31332d;border-radius:10px;background:#070907}
+.ytGenjutsuConsent{display:flex;align-items:flex-start;gap:10px;color:#e1dfd0;font-size:11px;line-height:1.7;cursor:pointer}
+.ytGenjutsuConsent input{margin:3px 0 0;width:17px;height:17px;accent-color:#f5d958;flex:none}
+.ytGenjutsuProcess{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:49px;border:0;border-radius:11px;padding:12px;background:#f7df57;color:#161408;font-size:12px;font-weight:900}
+.ytGenjutsuProcess:hover:not(:disabled){background:#ffeea3}
+.ytGenjutsuProcess:disabled{opacity:.5;cursor:not-allowed}
+.ytGenjutsuHint{color:#ffd58a;font-size:11px;margin:-5px 0 0}
+.ytGenjutsuMessage{display:flex;align-items:flex-start;gap:9px;border:1px solid #80743f88;padding:13px;border-radius:10px;background:#343018;color:#ffedac;font-size:12px;line-height:1.5;margin:0}
+.ytGenjutsuFootnote{display:flex;align-items:flex-start;gap:7px;color:#b3b49e;font-size:10px;line-height:1.6;margin:0}
+.ytGenjutsuFootnote svg{flex:none}
+@media(max-width:650px){.ytGenjutsuInputs{padding:13px;gap:13px}.ytGenjutsuHeading{padding:13px}.ytGenjutsuTime{grid-template-columns:repeat(2,minmax(0,1fr))}.ytGenjutsuDuration{grid-column:span 2;min-height:39px;display:flex;flex-direction:row;gap:9px;align-items:center;justify-content:space-between}.ytGenjutsuPreview iframe{min-height:165px}}
+@media(prefers-reduced-motion:reduce){.ytGenjutsu *{scroll-behavior:auto}}
