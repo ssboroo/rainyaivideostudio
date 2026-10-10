@@ -53,6 +53,7 @@ model User {
   payments     Payment[]
   oauthCodes   OAuthCode[]
   oauthGrants  OAuthGrant[]
+  movieProjects MovieProject[]
 }
 
 model Generation {
@@ -187,4 +188,65 @@ model DemoVideo {
   published Boolean @default(true)
   createdAt DateTime @default(now())
   @@index([published, createdAt])
+}
+
+model MovieProject {
+  id              String       @id @default(cuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String
+  requestKey      String
+  requestHash     String
+  prompt          String
+  targetSeconds   Int
+  aspectRatio     String
+  resolution      String
+  modelSlug       String
+  qualityProfile  String       @default("cinematic")
+  status          String       @default("QUEUED")
+  maxCredits      Int
+  quotedCredits   Int
+  leaseUntil      DateTime?
+  lastError       String?
+  aiQaApproved    Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  scenes          MovieScene[]
+  @@index([status, leaseUntil, createdAt])
+  @@index([userId, createdAt])
+  @@unique([userId, requestKey])
+}
+
+model MovieScene {
+  id              String       @id @default(cuid())
+  projectId       String
+  project         MovieProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  number          Int
+  duration        Int
+  prompt          String
+  input           Json
+  quotedCredits   Int
+  status          String       @default("PENDING")
+  generationId    String?
+  attempts        Int          @default(0)
+  lastError       String?
+  qaStatus        String       @default("NOT_RUN")
+  qaReport        Json?
+  nextAttemptAt   DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  attemptsLog     MovieGenerationAttempt[]
+  @@unique([projectId, number])
+  @@index([status, nextAttemptAt])
+}
+
+model MovieGenerationAttempt {
+  id             String @id @default(cuid())
+  sceneId        String
+  scene          MovieScene @relation(fields:[sceneId],references:[id],onDelete:Cascade)
+  attempt        Int
+  generationId   String @unique
+  quotedCredits  Int
+  createdAt      DateTime @default(now())
+  @@unique([sceneId, attempt])
 }
