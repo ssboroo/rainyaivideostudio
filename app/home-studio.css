@@ -1,0 +1,239 @@
+/* RAVS / premium creative discovery. Home-only overrides, isolated from
+   Studio forms, catalog, and existing API flows. */
+.productHome .homeWorkflowGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+.productHome .homeWorkflowCard {
+  --home-accent: 255, 230, 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 372px;
+  padding: 15px;
+  border: 1px solid #30302a;
+  border-radius: 19px;
+  isolation: isolate;
+  overflow: hidden;
+  background: linear-gradient(157deg, #1d1d1b 0%, #111210 42%, #0d0e0d 100%);
+  box-shadow: inset 0 1px 0 #ffffff0b, 0 12px 28px #0002;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.productHome .homeWorkflowCard:hover,
+.productHome .homeWorkflowCard:focus-within {
+  transform: translateY(-3px);
+  border-color: #9b891f;
+  box-shadow: inset 0 1px 0 #ffffff17, 0 22px 48px #0007;
+}
+.productHome .homeWorkflowTop { gap: 12px; min-height: 28px; }
+.productHome .homeWorkflowTop > span {
+  display: inline-flex;align-items: center;gap: 9px;
+  font-size: 9px;font-weight: 800;letter-spacing: .13em;
+  color: #b4b2a9;
+}
+.productHome .homeWorkflowTop .homeWorkflowSequence {
+  color: #f0df84;font-variant-numeric: tabular-nums;
+  font-size: 10px;letter-spacing: 0;font-weight: 850;
+}
+.productHome .homeWorkflowTop > b {
+  border: 1px solid #80712f60;
+  background: #d6c3480e;
+  color: #f4db68;
+  font-size: 9px;font-weight: 800;letter-spacing: .04em;
+  padding: 5px 9px;border-radius: 99px;white-space: nowrap;
+}
+.productHome .homeWorkflowArtwork {
+  height: 134px;min-height: 134px;
+  position: relative;isolation: isolate;overflow: hidden;
+  margin: 13px 0 15px;
+  border: 1px solid #38392f;
+  border-radius: 13px;
+  background: radial-gradient(ellipse at 50% 48%, #d4c44f18, transparent 57%), linear-gradient(135deg,#1b1c18,#111310 65%,#1c1e17);
+}
+.productHome .homeArtworkGrid {
+  position: absolute;inset: 0;
+  background-image: linear-gradient(#ffffff0d 1px,transparent 1px),linear-gradient(90deg,#ffffff0d 1px,transparent 1px);
+  background-size: 20px 20px;
+  mask-image: linear-gradient(to right,transparent,#000 14%,#000 86%,transparent);
+  opacity: .6;
+}
+.productHome .homeArtworkHalo {
+  position: absolute;width: 150px;height: 150px;left: 50%;top: 45%;
+  transform: translate(-50%,-50%) rotate(-25deg);
+  border: 1px solid #f7dc4840;border-radius: 40px;
+  box-shadow: 0 0 0 21px #ffdb0010, 0 0 0 42px #ffdb0008;
+}
+.productHome .homeArtworkFrame {
+  position: absolute;left: 50%;top: 47%;transform:translate(-50%,-50%) rotate(-7deg);
+  display: grid;place-items:center;
+  width: 88px;height: 79px;
+  border-radius: 17px;
+  border: 1px solid #ffea6388;
+  background: linear-gradient(138deg,#403816,#191c15 78%);
+  color: #ffe675;
+  box-shadow: 0 14px 30px #0008,inset 0 1px 0 #f8e47f40;
+  transition: transform .22s ease;
+}
+.productHome .homeWorkflowCard:hover .homeArtworkFrame {
+  transform: translate(-50%,-50%) rotate(0) scale(1.05);
+}
+.productHome .homeArtworkCorners {
+  position: absolute;inset: 8px;border: 1px solid #ffe76618;border-radius: 11px;pointer-events: none;
+}
+.productHome .homeArtworkSatellite {
+  position: absolute;right: 16%;top: 19%;
+  width: 37px;height: 37px;display:grid;place-items:center;
+  border: 1px solid #787451;background: #1a1d18;border-radius: 11px;
+  color: #ddd5a5;transform: rotate(11deg);
+  box-shadow: 0 8px 18px #0008;
+}
+.productHome .homeArtworkCaption {
+  position: absolute;bottom: 11px;left: 12px;
+  display:flex;align-items:center;gap: 7px;
+  font: 750 9px/1.1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing:.095em;color: #c2c1aa;
+}
+.productHome .homeArtworkLive {display:inline-block;width:5px;height:5px;border-radius:50%;background:#efd967;box-shadow:0 0 8px #f7dc78}
+.productHome .homeArtworkRuler {
+  position: absolute;right: 13px;bottom:12px;display:flex;align-items:flex-end;gap: 4px;
+}
+.productHome .homeArtworkRuler span {width:2px;height:7px;border-radius:2px;background:#e8cf5366}
+.productHome .homeArtworkRuler span:nth-child(3),
+.productHome .homeArtworkRuler span:nth-child(6) {height:13px;background:#e8cf53a3}
+.productHome .homeWorkflowArtwork--image .homeArtworkFrame {transform: translate(-50%,-50%) rotate(5deg);border-radius: 13px;}
+.productHome .homeWorkflowArtwork--image .homeArtworkHalo {border-radius:50%;}
+.productHome .homeWorkflowArtwork--cinema .homeArtworkFrame {width: 108px;height: 70px;transform: translate(-50%,-50%) rotate(0);border-radius: 8px;}
+.productHome .homeWorkflowArtwork--cinema .homeArtworkCorners {border-radius: 4px;}
+.productHome .homeWorkflowArtwork--cinema .homeArtworkHalo {transform:translate(-50%,-50%) rotate(25deg);border-radius:50%;}
+.productHome .homeWorkflowArtwork--genjutsu .homeArtworkFrame {transform:translate(-50%,-50%) rotate(8deg)}
+.productHome .homeWorkflowArtwork--genjutsu .homeArtworkHalo {transform:translate(-50%,-50%) rotate(45deg);border-radius:30px}
+.productHome .homeWorkflowArtwork--marketing .homeArtworkFrame {width: 95px;transform:translate(-50%,-50%) rotate(-3deg)}
+.productHome .homeWorkflowArtwork--influencer .homeArtworkFrame {border-radius: 50%;height:87px;width:87px;}
+.productHome .homeWorkflowArtwork--influencer .homeArtworkCorners {border-radius:50%;}
+.productHome .homeWorkflowArtwork--apps .homeArtworkFrame {transform:translate(-50%,-50%) rotate(0);border-radius:22px;}
+.productHome .homeWorkflowBody {display: flex;flex-direction:column;min-width:0;flex:1}
+.productHome .homeWorkflowBody h3 {font-size: 17px;line-height:1.34;letter-spacing:-.025em;margin:0 0 7px;color:#f3f2e9}
+.productHome .homeWorkflowBody p {margin:0 0 16px;flex:1;font-size:12px;line-height:1.65;color:#c1c1b7}
+.productHome .homeWorkflowTags {display:flex;flex-wrap:wrap;gap:6px;margin:0}
+.productHome .homeWorkflowTags span {font-size:10px;color:#c3c1ab;border:1px solid #ffffff16;background:#ffffff06;border-radius:6px;padding:4px 7px;line-height:1.2}
+.productHome .homeWorkflowActions {
+  min-width:0;display:flex;align-items:center;gap:9px;margin-top:16px;
+  padding-top:13px;border-top:1px solid #e3dc9c1b;justify-content:space-between;
+}
+.productHome .homeWorkflowActions a {font-size:11px;font-weight:800;text-decoration:none}
+.productHome .homeWorkflowActions a:hover {text-decoration:none}
+.productHome .homeWorkflowPrimary {
+  display:flex;gap:10px;align-items:center;justify-content:space-between;min-height:44px;
+  flex:1;min-width:0;border-radius:9px;padding:10px 12px;
+  color:#101107!important;background:#f4de48;
+  transition:background .15s ease;
+}
+.productHome .homeWorkflowPrimary:hover {background:#fff088}
+.productHome .homeWorkflowHelp {
+  display:grid;place-items:center;min-height:44px;min-width:62px;
+  border:1px solid #555348;border-radius:9px;color:#eee9d3!important;padding:8px 10px;
+}
+.productHome .homeWorkflowHelp:hover {background:#2b2c25;}
+.productHome .homeWorkflowCard a:focus-visible,
+.productHome .homeEngineCard:focus-visible {outline:3px solid #ffe65b;outline-offset:3px;box-shadow:0 0 0 5px #000}
+
+/* Engine selector / one system, distinctive family marks. */
+.productHome .homeEngineGrid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:stretch}
+.productHome .homeEngineCard {
+  display:grid;grid-template-columns:48px minmax(0,1fr) 20px;gap:12px;
+  align-items:center;min-width:0;min-height:106px;padding:12px;
+  background:linear-gradient(120deg,#161714,#10110f);
+  border:1px solid #33352e;border-radius:14px;
+  box-shadow:inset 0 1px 0 #fff1;
+  transition:border-color .17s ease,background .17s ease,transform .17s ease;
+}
+.productHome .homeEngineCard:hover,.productHome .homeEngineCard:focus-visible {border-color:#b4a33f;background:#1e2119;transform:translateY(-1px)}
+.productHome .homeEngineMark {
+  position:relative;display:grid;place-items:center;width:48px;height:48px;
+  border:1px solid #92824455;border-radius:13px;
+  background:radial-gradient(circle at 30% 22%,#fce97530,transparent 65%),linear-gradient(145deg,#3d351b,#181b15);
+  color:#ffeb91;overflow:hidden;
+}
+.productHome .homeEngineMarkOrbit {
+  position:absolute;inset:7px;border:1px solid #f6da7844;border-radius:50%;
+  transform:rotate(-25deg);pointer-events:none;
+}
+.productHome .homeEngineMark svg {position:relative;z-index:1;filter:drop-shadow(0 2px 6px #0005)}
+.productHome .homeEngineMarkIndex {
+  position:absolute;bottom:3px;right:5px;color:#fbe5a1a6;
+  font:800 7px/1 ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+.productHome .homeEngineMark--kling .homeEngineMarkOrbit {border-radius:5px;transform:rotate(45deg)}
+.productHome .homeEngineMark--wan .homeEngineMarkOrbit {border-style:dashed}
+.productHome .homeEngineMark--cinema .homeEngineMarkOrbit {border-width:2px}
+.productHome .homeEngineMark--genjutsu .homeEngineMarkOrbit {transform:rotate(23deg);border-radius:8px}
+.productHome .homeEngineMark--portrait .homeEngineMarkOrbit {border-radius:35%}
+.productHome .homeEngineDescription {
+  min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:4px;
+}
+.productHome .homeEngineDescription strong {
+  display:block;max-width:100%;font-size:12px;line-height:1.35;font-weight:850;
+  color:#f0eee5;overflow-wrap:break-word;
+}
+.productHome .homeEngineDescription > small {display:block;max-width:100%;font-size:10px;line-height:1.4;color:#b0af9f}
+.productHome .homeEngineCapabilities {display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}
+.productHome .homeEngineCapabilities span {
+  font-size:9px;line-height:1.3;color:#d3cfaf;
+  background:#f9e8660d;border:1px solid #f9e86620;border-radius:5px;
+  padding:3px 5px;
+}
+.productHome .homeEngineAside {align-self:center;display:flex;align-items:center;justify-content:center;min-width:0}
+.productHome .homeEngineKind {font-size:8px;font-weight:850;letter-spacing:.05em;color:#d8cb7d;white-space:nowrap}
+.productHome .homeEngineLaunch {display:grid;place-items:center;color:#fbe477;min-width:21px;min-height:21px}
+.productHome .homeEngineLaunch svg {transition:transform .15s ease}
+.productHome .homeEngineCard:hover .homeEngineLaunch svg {transform:translate(2px,-2px)}
+
+/* Engine selector uses all available width at laptop sizes, avoiding
+   tiny two-column cards inside a half-width split section. */
+@media(max-width:1380px) {
+  .productHome .splitSection {grid-template-columns:minmax(0,1fr);gap:38px}
+  .productHome .homeEngineGrid {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:1250px) {
+  .productHome .homeWorkflowGrid {grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:1020px) {
+  .productHome .homeWorkflowGrid {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px) {
+  .productHome .homeWorkflowGrid {grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .productHome .homeWorkflowCard {min-height:360px;padding:12px}
+  .productHome .homeWorkflowArtwork {height:110px;min-height:110px;margin:11px 0 14px}
+  .productHome .homeArtworkFrame{width:77px;height:69px}
+  .productHome .homeArtworkFrame svg{width:40px;height:40px}
+  .productHome .homeWorkflowBody h3 {font-size:16px}
+  .productHome .homeEngineGrid {grid-template-columns:1fr}
+  .productHome .homeEngineCard {min-height:91px}
+}
+@media(max-width:570px) {
+  .productHome .homeWorkflowGrid {grid-template-columns:minmax(0,1fr);gap:12px}
+  .productHome .homeWorkflowCard {min-height:0;padding:13px}
+  .productHome .homeWorkflowArtwork {height:115px;min-height:115px;margin:11px 0 13px}
+  .productHome .homeWorkflowBody h3{font-size:17px}
+  .productHome .homeWorkflowBody p{min-height:0;margin-bottom:12px}
+  .productHome .homeWorkflowActions {margin-top:14px}
+  .productHome .homeEngineGrid {gap:9px}
+  .productHome .homeEngineCard{grid-template-columns:48px minmax(0,1fr) 20px;min-height:96px;padding:12px}
+  .productHome .sectionTitleRow{align-items:flex-start;gap:13px}
+  .productHome .sectionTitleRow h2{font-size:clamp(23px,6vw,29px)}
+}
+@media(max-width:360px) {
+  .productHome .homeWorkflowActions{flex-wrap:wrap}
+  .productHome .homeWorkflowPrimary{width:100%}
+  .productHome .homeWorkflowHelp{width:100%}
+  .productHome .homeEngineMark{width:44px;height:44px}
+  .productHome .homeEngineCard{grid-template-columns:44px minmax(0,1fr) 20px;gap:9px}
+}
+@media(prefers-reduced-motion:reduce) {
+  .productHome .homeWorkflowCard,.productHome .homeArtworkFrame,
+  .productHome .homeEngineCard,.productHome .homeEngineLaunch svg {transition:none}
+  .productHome .homeWorkflowCard:hover,.productHome .homeEngineCard:hover {transform:none}
+}

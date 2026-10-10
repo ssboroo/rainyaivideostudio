@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { UserActions } from "@/components/user-actions";
-import { WorkflowIcon } from "@/components/workflow-icon";
+import { WorkflowArtwork, EngineMark, EngineLaunch } from "@/components/home-iconography";
 import { WorkflowTutorials } from "@/components/workflow-tutorials";
 import {
   ArrowRight,
@@ -19,6 +19,7 @@ import { TrendShowcase } from "@/components/trend-showcase";
 import { CommunityInspiration } from "@/components/community-inspiration";
 import { promptPresets, workflows } from "@/lib/product";
 import { models } from "@/lib/models";
+import "./home-studio.css";
 
 export default function Home() {
   const featured = models.filter((model) => model.featured).slice(0, 8);
@@ -76,18 +77,25 @@ export default function Home() {
             </div>
             <Link href="/explore">Бүгдийг харах <ChevronRight size={16} /></Link>
           </div>
-          <div className="workflowGrid">
-            {workflows.map((item) => (
-              <article className={"workflowCard accent-" + item.accent} key={item.id}>
-                <div className="workflowTop">
-                  <span>{item.eyebrow}</span>
+          <div className="workflowGrid homeWorkflowGrid">
+            {workflows.map((item, index) => (
+              <article className={"workflowCard homeWorkflowCard accent-" + item.accent} key={item.id}>
+                <div className="workflowTop homeWorkflowTop">
+                  <span><span className="homeWorkflowSequence">{String(index + 1).padStart(2, "0")}</span> {item.eyebrow}</span>
                   <b>{item.badge}</b>
                 </div>
-                <div className="workflowIconStage"><WorkflowIcon id={item.id} size={42}/><span>{item.title}</span></div>
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
-                <div className="tagRow">{item.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
-                <div className="workflowActions"><Link href={item.href}>Бүтээж эхлэх <ArrowRight size={13}/></Link><Link href={"/video-guide#"+item.id}>Заавар үзэх</Link></div>
+                <WorkflowArtwork id={item.id} />
+                <div className="homeWorkflowBody">
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                  <div className="tagRow homeWorkflowTags">{item.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
+                </div>
+                <div className="workflowActions homeWorkflowActions">
+                  <Link href={item.href} className="homeWorkflowPrimary" aria-label={item.title + " — бүтээж эхлэх"}>
+                    Бүтээж эхлэх <ArrowRight size={16} />
+                  </Link>
+                  <Link href={"/video-guide#" + item.id} className="homeWorkflowHelp" aria-label={item.title + " — Монгол заавар"}>Заавар</Link>
+                </div>
               </article>
             ))}
           </div>
@@ -131,15 +139,22 @@ export default function Home() {
                 <p>RAVS model бүрийн оролт, хугацаа, харьцаа, reference-ийг автоматаар тааруулна.</p>
               </div>
             </div>
-            <div className="modelMiniGrid">
+            <div className="modelMiniGrid homeEngineGrid">
               {featured.map((model) => (
-                <Link href={"/studio?model=" + model.slug} className="modelMini" key={model.slug}>
-                  <div className={"modelGlyph tone-" + (model.tone || "violet")}><WorkflowIcon id={model.slug} size={20} /></div>
-                  <div>
-                    <b>{model.name}</b>
-                    <small>{model.maker || model.provider} · {model.badge}</small>
+                <Link
+                  href={"/studio?model=" + encodeURIComponent(model.slug)}
+                  className="modelMini homeEngineCard"
+                  key={model.slug}
+                  aria-label={model.name + " — Studio-д нээх"}
+                >
+                  <EngineMark slug={model.slug} kind={model.kind} />
+                  <div className="homeEngineDescription">
+                    <span className="homeEngineKind">{model.kind === "video" ? "ВИДЕО" : model.kind === "image" ? "ЗУРАГ" : "WORKFLOW"}</span>
+                    <strong>{model.name}</strong>
+                    <small>{model.maker || model.provider}</small>
+                    <span className="homeEngineCapabilities">{(model.capabilities || []).slice(0, 2).map((capability) => <span key={capability}>{capability}</span>)}</span>
                   </div>
-                  <span>{model.kind}</span>
+                  <div className="homeEngineAside"><EngineLaunch /></div>
                 </Link>
               ))}
             </div>
