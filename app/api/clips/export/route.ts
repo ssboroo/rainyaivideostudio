@@ -4,6 +4,7 @@ import {mkdtemp,readFile,rm,stat,writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {spawn} from "node:child_process";
+import {validClipSourceType,validClipWindow} from "@/lib/clip-media";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -28,7 +29,7 @@ export async function POST(request:Request){
   if(new URL(origin).host!==new URL(request.url).host)return fail("Хүсэлтийн эх сурвалж зөвшөөрөгдөөгүй.",403);
  }catch{return fail("Хүсэлтийн эх сурвалж буруу.",403);}}
  if(processing)return fail("Видео боловсруулалт явагдаж байна.",429);
- if(!request.headers.get("content-type")?.startsWith("multipart/form-data"))return fail("Эх MP4 файл оруулна уу.");
+ if(!request.headers.get("content-type")?.startsWith("multipart/form-data"))return fail("Эх MP4/MOV файл оруулна уу.");
  const length=Number(request.headers.get("content-length")||0);
  if(length>81*1024*1024)return fail("80MB хүртэл MP4 файл зөвшөөрнө.",413);
  processing=true;
@@ -37,8 +38,8 @@ export async function POST(request:Request){
   const form=await request.formData();
   if(form.get("confirmRights")!=="true")return fail("Ашиглах эрхээ баталгаажуулна уу.");
   const input=form.get("file"),start=Number(form.get("start")),end=Number(form.get("end"));
-  if(!(input instanceof File)||input.type!=="video/mp4"||input.size===0||input.size>80*1024*1024)return fail("80MB хүртэлх эх MP4 сонгоно уу.",413);
-  if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end-start<1||end-start>30||end>3600)return fail("1–30 секундын хэсэг сонгоно уу.");
+  if(!(input instanceof File)||!validClipSourceType(input.name,input.type)||input.size===0||input.size>80*1024*1024)return fail("MP4, MOV, M4V (80MB хүртэл) файл сонгоно уу.",413);
+  if(!form.has("start")||!form.has("end")||!validClipWindow(start,end))return fail("1–30 секундын хэсэг сонгоно уу.");
   folder=await mkdtemp(join(tmpdir(),"rainy-export-"));
   const source=join(folder,"input.mp4"),output=join(folder,"output.mp4");
   await writeFile(source,Buffer.from(await input.arrayBuffer()));
