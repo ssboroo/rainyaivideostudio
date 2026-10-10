@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto";
 import { db } from "./db.ts";
 import { createLongMoviePlan } from "./long-movie-plan.ts";
+import {getModel,buildProviderInput,estimateCredits} from "./models.ts";
 import { createUserGeneration, getUserGeneration } from "./generation-service.ts";
 
 export type MovieScene={number:number;duration:number;credits:number;modelSlug:string;
- input:Record<string,unknown>;generationId?:string;state:"queued"|"submitted"|"completed"|"failed";mediaUrl?:string;error?:string};
+ input:Record<string,unknown>;generationId?:string;revision?:number;lastRetryHash?:string;state:"queued"|"submitted"|"completed"|"failed";mediaUrl?:string;error?:string};
 type Payload={prompt:string;sceneCount:number;targetSeconds:number;aspectRatio:string;qualityProfile:string;
  scenes:MovieScene[];videoCreditsQuoted:number;spentCredits:number;reference:string};
 type MovieRow={id:string;user_id:string;status:string;payload:Payload;updated_at:Date};
@@ -22,7 +23,7 @@ function view(row:MovieRow){
   completedScenes:p.scenes.filter(s=>s.state==="completed").length,
   spentVideoCredits:p.spentCredits,approvedVideoCredits:p.videoCreditsQuoted,
   scenes:p.scenes.map(s=>({number:s.number,state:s.state,duration:s.duration,credits:s.credits,
-  generationId:s.generationId,mediaUrl:s.state==="completed"?s.mediaUrl:undefined,error:s.error})),
+  generationId:s.generationId,revision:s.revision||0,mediaUrl:s.state==="completed"?s.mediaUrl:undefined,error:s.error})),
   backgroundWorker:true,finalMp4Ready:false,
   exportReady:row.status==="completed"&&p.scenes.every(s=>s.state==="completed"&&s.mediaUrl),
   lastUpdated:row.updated_at,
@@ -68,6 +69,48 @@ export async function cancelMovie(userId:string,id:string){
  await db.$executeRawUnsafe("UPDATE rainy_movie_jobs SET status='canceled',updated_at=now() WHERE id=$1 AND user_id=$2 AND status IN ('queued','blocked')",id,userId);
  return movieStatus(userId,id);
 }
+export async function retryMovieScene(userId:string,movieId:string,number:number,newPrompt:string,
+ maxAdditionalCredits:number,confirmGeneration:boolean,idempotencyKey:string){
+ if(!enabled())throw new Error("Movie Producer идэвхгүй.");
+ if(!/^[a-f0-9]{40}$/.test(movieId)||!Number.isInteger(number)||number<1||number>120)
+   throw new Error("Movie ID эсвэл scene дугаар буруу.");
+ if(confirmGeneration!==true||!/^[A-Za-z0-9_-]{16,128}$/.test(idempotencyKey))
+   throw new Error("Нэмэлт retry кредитийн илэрхий зөвшөөрөл, idempotencyKey шаардлагатай.");
+ if(typeof newPrompt!=="string"||newPrompt.length<50||newPrompt.length>6000)
+   throw new Error("Дахин үүсгэх кадрын шинэ prompt 50–6000 тэмдэгттэй байна.");
+ if(!Number.isSafeInteger(maxAdditionalCredits)||maxAdditionalCredits<1)
+   throw new Error("Нэмэлт кредитийн дээд хэмжээ буруу.");
+ await ensureMovieTables();
+ const row=await getRow(userId,movieId);
+ if(!["blocked","completed"].includes(row.status))
+  throw new Error("Өмнөх киноны generation ажиллаж байна. Эхлээд статусыг шалгана уу.");
+ const scene=row.payload.scenes.find(x=>x.number===number);
+ if(!scene)throw new Error("Кадр олдсонгүй.");
+ const hash=createHash("sha256").update(JSON.stringify([number,newPrompt,idempotencyKey])).digest("hex");
+ if(scene.lastRetryHash===hash)return view(row);
+ if((scene.revision||0)>=2)throw new Error("Нэг кадрын нэмэлт retry дээд тал нь 2 байна.");
+ const model=getModel(scene.modelSlug);
+ if(!model||!model.apiVerified)throw new Error("Видео модель баталгаажаагүй.");
+ const input={...scene.input,prompt:newPrompt};
+ const validated=buildProviderInput(model,input);
+ const credits=estimateCredits(model,Number(validated.duration),validated);
+ if(!Number.isSafeInteger(credits)||credits<1||credits>maxAdditionalCredits)
+  throw new Error("Нэмэлт сцен үүсгэлт зөвшөөрсөн кредитээс хэтэрсэн.");
+ const old=JSON.stringify(row.payload);
+ scene.revision=(scene.revision||0)+1;
+ scene.lastRetryHash=hash;
+ scene.input=input;
+ scene.credits=credits;
+ scene.state="queued";
+ scene.generationId=undefined;scene.mediaUrl=undefined;scene.error=undefined;
+ row.payload.videoCreditsQuoted+=credits;
+ // Single conditional UPDATE is the concurrency guard; never silently schedule two revisions.
+ const written=await db.$executeRawUnsafe(
+  "UPDATE rainy_movie_jobs SET status='queued',payload=$1::jsonb,updated_at=now(),lease_until=NULL WHERE id=$2 AND user_id=$3 AND status IN ('completed','blocked') AND payload=$4::jsonb",
+  JSON.stringify(row.payload),movieId,userId,old);
+ if(written!==1)throw new Error("Киноны төлөв зэрэг өөрчлөгдсөн. Шинээр цэнэглэхгүйгээр шалгана уу.");
+ return movieStatus(userId,movieId);
+}
 async function persist(row:MovieRow,status:string){
  await db.$executeRawUnsafe("UPDATE rainy_movie_jobs SET payload=$1::jsonb,status=$2,updated_at=now(),lease_until=NULL WHERE id=$3 AND status='running'",JSON.stringify(row.payload),status,row.id);
 }
@@ -81,7 +124,7 @@ export async function tickMovieJobs(){
   const scene=p.scenes.find(s=>s.state!=="completed");
   if(!scene){await persist(row,"completed");return true;}
   if(scene.state==="failed"){await persist(row,"blocked");return true;}
-  const key="rainy-movie-"+row.id+"-scene-"+scene.number;
+  const key="rainy-movie-"+row.id+"-scene-"+scene.number+"-revision-"+(scene.revision||0);
   if(!scene.generationId){
     try{
       const reply=await createUserGeneration(row.user_id,{...scene.input,modelSlug:scene.modelSlug},{idempotencyKey:key,maxCredits:scene.credits});
