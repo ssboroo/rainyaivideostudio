@@ -73,6 +73,15 @@ export function providerCostUsd(id: string, input: Record<string, unknown>): num
   if (id.startsWith('kling-video/v3.0/pro/')) return .168 * seconds;
   if (id.startsWith('kling-video/v3.0/std/')) return (id.endsWith('image-to-video') ? .126 : .084) * seconds;
   if (id.startsWith('kling-video/v3.0-turbo/')) return perSecond({'720p':.112,'1080p':.14});
+  // Conservative non-discounted rate caps from official Kling playgrounds;
+  // do not assume temporary 2026 launch promotions or account discounts.
+  if (id === 'kling-video/o3/first-last-frame') return .112 * seconds;
+  if (id === 'kling-video/o3/image-reference') return .084 * seconds;
+  if (id === 'kling-video/o3/video-reference') return .168 * seconds;
+  if (id === 'kling-video/omni/image-reference' || id === 'kling-video/omni/first-last-frame') return .112 * seconds;
+  if (id === 'kling-video/omni/video-reference') return .168 * seconds;
+  if (/^kling-video\/v2\.5-turbo\/pro\/(text-to-video|image-to-video)$/.test(id)) return .07 * seconds;
+  if (id === 'kling-video/v2.5-turbo/standard/image-to-video') return .042 * seconds;
   if (id === 'higgsfield/ai-influencer') return .05 * batch;
   if (id.startsWith('higgsfield-ai/soul/v2/')) return perImage({'720p':.0032,'1080p':.0057});
   if (id === 'higgsfield-ai/soul/standard') return perImage({'720p':.0938,'1080p':.1875});
