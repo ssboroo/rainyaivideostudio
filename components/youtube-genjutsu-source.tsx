@@ -12,7 +12,7 @@ export function YouTubeGenjutsuSource({onPrepared,onSourceChange,onProcessing}:P
  const initialStart=Number(params.get("start")||"0");
  const initialEnd=Number(params.get("end")||"8");
  const safeInitial= /^[A-Za-z0-9_-]{11}$/.test(initialId)&&Number.isFinite(initialStart)&&Number.isFinite(initialEnd)
-  &&initialStart>=0&&initialEnd-initialStart>=1&&initialEnd-initialStart<=30;
+  &&initialStart>=0&&initialEnd<=86400&&initialEnd-initialStart>=1&&initialEnd-initialStart<=30;
  const [link,setLink]=useState(safeInitial?"https://www.youtube.com/watch?v="+initialId:"");
  const [from,setFrom]=useState(safeInitial?initialStart:0);
  const [to,setTo]=useState(safeInitial?initialEnd:8);
@@ -28,7 +28,7 @@ export function YouTubeGenjutsuSource({onPrepared,onSourceChange,onProcessing}:P
  const videoRef=useRef<HTMLVideoElement>(null);
  const youtube=parseYouTubeVideo(link);
  const seconds=to-from;
- const validTimes=Number.isFinite(from)&&Number.isFinite(to)&&from>=0&&seconds>=1&&seconds<=30;
+ const validTimes=Number.isFinite(from)&&Number.isFinite(to)&&from>=0&&to<=86400&&seconds>=1&&seconds<=30;
  const previewSharePath=youtube&&validTimes?youtubeClipSharePath(youtube.id,from,to):"";
  useEffect(()=>{
   if(!file){setLocalPreview("");return;}
@@ -36,7 +36,7 @@ export function YouTubeGenjutsuSource({onPrepared,onSourceChange,onProcessing}:P
   return()=>URL.revokeObjectURL(src);
  },[file]);
  useEffect(()=>{onProcessing(busy)},[busy,onProcessing]);
- function resetPrepared(){onSourceChange();setMessage("");}
+ function resetPrepared(){onSourceChange();setMessage("");setCopied(false);}
  function previewYoutube(){if(!youtube||!validTimes)return;setLoaded(true);setCopied(false);setEmbedRevision(n=>n+1);}
  async function copyPreview(){
   if(!previewSharePath)return;
