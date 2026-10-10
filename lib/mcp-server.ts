@@ -68,7 +68,9 @@ export function createRavsMcpServer(identity: McpIdentity, services: McpServices
       modelSlug:z.string().min(1).max(100).default('seedance-2-5'),
       aspectRatio:z.enum(['9:16','16:9','1:1']).default('9:16'),
       resolution:z.enum(['480p','720p','1080p']).default('720p'),
-      generateAudio:z.boolean().default(true)
+      generateAudio:z.boolean().default(true),
+      qualityProfile:z.enum(['cinematic','balanced','fast']).default('cinematic'),
+      styleBible:z.string().max(2000).optional()
     },annotations:readAnnotations
   },async (input)=>guarded('ravs:read',async()=>createLongMoviePlan(input)));
   server.registerTool('ravs_scene_batch_estimate', {
@@ -141,11 +143,12 @@ export function createRavsMcpServer(identity: McpIdentity, services: McpServices
   },async ({prompt,seconds,aspectRatio})=>({messages:[{role:'user',content:{type:'text',text:
     'RAINY Video болон RAINY Voice MCP хоёрыг хэрэглэ. Миний НЭГ санаа: '+prompt+
     '. Хүссэн хугацаа (сек): '+seconds+', харьцаа: '+aspectRatio+
-    '. Эхлээд ravs_long_movie_plan, scene бүрийн бие даасан кино зохиол, дүр, кадрын хөдөлгөөний prompt-ыг боловсруул. '+
+    '. Эхлээд ravs_long_movie_plan qualityProfile=cinematic, scene бүрийн бие даасан кино зохиол, дүр, камер, continuity bible, narrative beat-ийг боловсруул. '+
     'RAVS видео болон Voice TTS/MP4 эвлүүлгийн кредитийг тус тусад нь quote хий. Бүх ажлын дээд төсөв, үнэ болон эрсдэлийг надад НЭГ удаа танилцуулж зөвшөөрөл ав. '+
     'Миний зөвшөөрөлгүйгээр нэг ч төлбөртэй хүсэлт бүү үүсгэ. Зөвшөөрсөн бол баталсан storyboard болон төсөвт багтах бүх scene-ийг ravs_create_generation-аар, '+
     'өөр өөр scene-д ялгаатай idempotencyKey хэрэглэн эхлүүл. Retry-д анхны key-г хадгал. scene бүрийн ravs_generation_status COMPLETED ба медиа URL-ийг шалга. '+
-    'Монгол дуу хэрэгтэй бол rainy_voice_quote_tts / rainy_voice_create_tts / rainy_voice_job_status-аар хийнэ. '+
+    'Монгол дуу хэрэгтэй бол rainy_voice_prepare_script, rainy_voice_quote_tts / rainy_voice_create_tts / rainy_voice_job_status-аар хийнэ. '+
+    'Кадр бүрийн duration/frame integrity болон төлөвийг шалга. Дүр ба бүтээгдэхүүний үнэн зөв байдлын QA-г AI үнэлсэн гэж 100% баталж болохгүй. '+
     'Бүх scene бэлэн болмогц CDN зөвшөөрөгдсөн эсэхийг rainy_voice_movie_quote-аар шалгаж, хэрэглэгчийн баталсан төсвийн хүрээнд rainy_voice_create_movie, '+
     'rainy_voice_movie_status дуудан эцсийн MP4 татах холбоосыг өг. Төлөв queued/running бол бэлэн гэж бүү хэл. '+
     'Энэ урсгал ChatGPT/Claude MCP клиент нээлттэй ажиллаж байхыг шаардана; 1 цагийн бүтээлийг ганц request-ээр фонтойгоо үүсгэнэ гэж бүү амла. '+
