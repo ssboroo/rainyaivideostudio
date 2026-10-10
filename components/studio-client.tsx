@@ -115,7 +115,7 @@ export function StudioClient() {
   const attempt = useRef<GenerationAttempt | null>(null);
 
   const model = getModel(selected) || models[0];
-  const clipGenjutsu = ["genjutsu-motion","genjutsu-restyle"].includes(model.slug);
+  const clipGenjutsu = ["genjutsu-motion","genjutsu-object","genjutsu-restyle"].includes(model.slug);
   const clipPending = clipGenjutsu && (!videoUrl || clipSeconds===null || !clipToken);
   const apiNotReady = !model.apiVerified;
   let cost = 0;
@@ -468,7 +468,7 @@ export function StudioClient() {
                 />
               )}
               {clipGenjutsu && videoUrl && !clipToken && <p className="serviceState" role="status">Энэ эх видео Genjutsu-д бэлэн болоогүй. Эх MP4-гээ дээрх хэсгээр тайрч хугацааг серверээр баталгаажуулна уу.</p>}
-              {model.slug==="genjutsu-object" && !model.apiVerified && <div className="accountNotice"><WandSparkles size={18}/><div>Object Swap API-ийн параметрүүд хараахан баталгаажаагүй тул энэ загварын үүсгэлт түр хаалттай. <Link href="/studio?model=genjutsu-motion&source=youtube">Genjutsu Motion Transfer руу шилжих →</Link></div></div>}
+              {clipGenjutsu && model.slug!=="genjutsu-motion" && <p className="serviceState" role="status">Энэ Genjutsu хувилбарт хамгийн багадаа 4 секундын эх видео шаардлагатай. {model.slug==="genjutsu-object"?"1–8 жишиг зураг оруулна уу.":"Одоогийн хэв маягийн preset сонгоно уу."}</p>}
               {presetError&&<p className="serviceState" role="status">{presetError}</p>}
               <div className="inputPreview">{[imageUrl,...refs].filter(Boolean).map((url,index)=><div key={url+index}><img src={url} alt={`Жишиг зураг ${index+1}`}/><button aria-label="Жишиг зураг хасах" onClick={()=>imageUrl===url?setImageUrl(""):setRefs(current=>current.filter(value=>value!==url))}><X size={12}/></button></div>)}{videoUrl&&<button className="ghost" onClick={()=>{setVideoUrl("");setClipToken("");setClipSeconds(null);}}><Video size={14}/> Жишиг видео хасах</button>}</div>
               {presets.length > 0 && (
