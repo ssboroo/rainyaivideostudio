@@ -26,8 +26,8 @@ test("full model catalog is audited honestly without charging credits or contact
  for(const m of entries){assert.ok(expected.includes(m.pricing),m.slug);assert.ok(m.note);assert.ok(m.modelId);}
  const by=(slug)=>entries.find(m=>m.slug===slug);
  assert.equal(by("genjutsu-motion").pricing,"source_clip_required");
- assert.equal(by("genjutsu-restyle").pricing,"pricing_unavailable");
- assert.equal(by("genjutsu-object").pricing,"unsupported_endpoint");
+ assert.equal(by("genjutsu-restyle").pricing,"source_clip_required");
+ assert.equal(by("genjutsu-object").pricing,"source_clip_required");
  assert.equal(by("seedance-2-5").pricing,"quote_implemented");
  assert.equal(by("marketing-studio").pricing,"pricing_unavailable");
 });
