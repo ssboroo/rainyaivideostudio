@@ -32,7 +32,7 @@ test("MP4 export requires a user-owned uploaded source, limited trim and consent
  assert.match(client,/response\.blob\(\)/);
  assert.match(api,/confirmRights/);
  assert.match(api,/await request\.formData\(\)/);
- assert.match(api,/end-start<1\|\|end-start>30/);
+ assert.match(api,/validClipWindow\(start,end\)/);
  assert.match(api,/ffprobe/);
  assert.match(api,/ffmpeg/);
  assert.match(api,/0:a:0\?/);
