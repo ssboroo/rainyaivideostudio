@@ -58,6 +58,20 @@ test("clip provenance proof is bound to exact user, URL, expiration and HMAC",()
  }finally{if(original===undefined)delete process.env.SESSION_SECRET;else process.env.SESSION_SECRET=original;}
 });
 
+test("Studio lets Motion / Restyle users prepare signed clips before quoting credits",()=>{
+ const studio=read("components/studio-client.tsx");
+ const generation=read("lib/generation-service.ts");
+ assert.match(studio,/const clipGenjutsu = \["genjutsu-motion","genjutsu-restyle"\]/);
+ assert.match(studio,/const clipPending = clipGenjutsu/);
+ assert.match(studio, /"Клип бэлтгэнэ үү"/);
+ assert.match(studio, /clipGenjutsu && model\.apiVerified &&/);
+ assert.match(studio, /!clipPending && !!model\.apiVerified/);
+ assert.match(studio,/__verifiedClipSeconds: clipGenjutsu && clipToken/);
+ assert.match(generation,/\["genjutsu-motion","genjutsu-restyle"\]\.includes\(model\.slug\)/);
+ assert.match(generation,/readClipProof\(raw\.clipToken,userId,input\.video_url\)/);
+ assert.match(studio,/Genjutsu Motion Transfer руу шилжих/);
+});
+
 test("YouTube is used ONLY as official embed: FFmpeg accepts only user-uploaded MP4, generation validates clip proof",()=>{
  const api=read("app/api/clips/prepare/route.ts");
  const ui=read("components/youtube-genjutsu-source.tsx");
