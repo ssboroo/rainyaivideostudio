@@ -537,7 +537,7 @@ export function StudioClient() {
               </div>
 
               {!pricingError && !pricingPending && cost>0 && <p className="serviceState">{model.kind === "video" ? (cost<=300 ? "Хэмнэлттэй" : cost<=800 ? "Стандарт" : "Премиум") : "Зураг / Workflow"} · Нэг бүтээл {cost.toLocaleString()} кредит{user ? ` · Үлдэгдлээр ${Math.floor(user.credits/cost)} бүтээл` : ""}. Үнэ сонгосон тохиргооноос хамаарна.</p>}
-              {model.kind === "video" && model.modelId.endsWith("/text-to-video") && model.apiVerified && !clipPending &&
+              {model.kind === "video" && model.modelId.endsWith("/text-to-video") && model.apiVerified && !clipPending && !pricingPending && !pricingError && cost>0 &&
                 <EconomyModelChoices
                   modelSlug={model.slug} currentCredits={cost} duration={duration}
                   resolution={resolution} aspectRatio={aspect} generateAudio={audio} prompt={prompt}
