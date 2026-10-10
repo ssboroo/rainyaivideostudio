@@ -40,3 +40,13 @@
 .ytGenjutsuFootnote svg{flex:none}
 @media(max-width:650px){.ytGenjutsuInputs{padding:13px;gap:13px}.ytGenjutsuHeading{padding:13px}.ytGenjutsuTime{grid-template-columns:repeat(2,minmax(0,1fr))}.ytGenjutsuDuration{grid-column:span 2;min-height:39px;display:flex;flex-direction:row;gap:9px;align-items:center;justify-content:space-between}.ytGenjutsuPreview iframe{min-height:165px}}
 @media(prefers-reduced-motion:reduce){.ytGenjutsu *{scroll-behavior:auto}}
+
+/* Shareable YouTube segment: official player only, not a downloaded MP4. */
+.ytClipShareActions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0}
+.ytClipShareActions>.ytClipShareLink{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:10px 13px;border:1px solid #e3cc5e;border-radius:8px;background:#e9d668;color:#171509;text-decoration:none;font-size:11px;font-weight:850}
+.ytClipShareActions>.ytClipShareLink:hover{background:#f8e9a3}
+.ytClipPreviewDisclaimer{padding:12px 13px;margin:5px 0 0;border-radius:9px;border:1px solid #4f5937;background:#192318;color:#c4d1b6;font-size:11px;line-height:1.65}
+.ytClipPreviewDisclaimer b{color:#f7e29e}
+.ytGenjutsuNotice a{color:#f2df96;text-decoration:underline}
+.ytGenjutsuNotice a:focus-visible,.ytClipShareActions a:focus-visible{outline:3px solid #f8dc65;outline-offset:3px}
+@media(max-width:570px){.ytClipShareActions{display:grid;grid-template-columns:minmax(0,1fr)}.ytClipShareActions>*{width:100%!important;justify-content:center!important}.ytClipPreviewDisclaimer{font-size:11px}}

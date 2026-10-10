@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {tsImport} from "tsx/esm/api";
-const {parseYouTubeVideo,youtubeClipEmbed}=await tsImport("../lib/youtube-clip.ts",{parentURL:import.meta.url});
+const {parseYouTubeVideo,youtubeClipEmbed,youtubeClipSharePath}=await tsImport("../lib/youtube-clip.ts",{parentURL:import.meta.url});
 const {providerCostUsd,quoteApiCredits}=await tsImport("../lib/api-pricing.ts",{parentURL:import.meta.url});
 const {issueClipProof,readClipProof}=await tsImport("../lib/clip-proof.ts",{parentURL:import.meta.url});
 const read=(path)=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
@@ -33,6 +33,29 @@ test("official YouTube URL parser accepts only valid video IDs and clean HTTPS h
  assert.throws(()=>youtubeClipEmbed(id,1,40));
 });
 
+test("YouTube-only segment becomes a replayable, non-downloadable share link",()=>{
+ const id="dQw4w9WgXcQ";
+ const path=youtubeClipSharePath(id,11,27);
+ assert.equal(path,"/clip?v="+id+"&start=11&end=27");
+ assert.ok(youtubeClipEmbed(id,11,27).includes("start=11"));
+ assert.throws(()=>youtubeClipSharePath(id,0,31));
+ assert.throws(()=>youtubeClipSharePath("../x",2,6));
+ // Fractional selections remain bounded to 30 seconds after rounding.
+ const fractional=youtubeClipSharePath(id,8.5,38.5);
+ assert.equal(fractional,"/clip?v="+id+"&start=8&end=38");
+ assert.ok(youtubeClipEmbed(id,8.5,38.5).includes("end=38"));
+ const page=read("app/clip/page.tsx");
+ const editor=read("components/youtube-genjutsu-source.tsx");
+ assert.match(page,/youtubeClipEmbed\(v,startValue,endValue\)/);
+ assert.match(page,/MP4 файл биш/);
+ assert.match(page,/robots:\{index:false,follow:false\}/);
+ assert.match(editor,/youtubeClipSharePath\(youtube.id,from,to\)/);
+ assert.match(editor,/navigator.clipboard.writeText/);
+ assert.match(editor,/Бэлдсэн үзэх клипийг нээх/);
+ assert.match(editor,/MP4 видео файл үүсээгүй/);
+ assert.match(editor,/support.google.com\/youtube\/answer\/56100/);
+ assert.match(editor,/confirmRights/);
+});
 test("verified Genjutsu 1-30 second clip metering is distinct from unverified arbitrary URLs",()=>{
  const id="higgsfield/genjutsu/motion-transfer/v1.0",video_url="https://owned.example/video.mp4";
  assert.throws(()=>providerCostUsd(id,{resolution:"720p",video_url,duration:10}));
