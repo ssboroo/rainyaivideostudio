@@ -33,3 +33,15 @@ export function youtubeClipEmbed(id:string,start:number,end:number) {
  const params=new URLSearchParams({start:String(Math.floor(start)),end:String(Math.ceil(end)),rel:"0",playsinline:"1"});
  return "https://www.youtube-nocookie.com/embed/"+id+"?"+params.toString();
 }
+
+/** A reusable playback segment, NOT an extracted or downloadable MP4. */
+export function youtubeClipSharePath(id:string,start:number,end:number){
+ // Reuse the same strict validation as the official player URL.
+ youtubeClipEmbed(id,start,end);
+ const search=new URLSearchParams({
+  v:id,
+  start:String(Math.floor(start)),
+  end:String(Math.ceil(end)),
+ });
+ return "/clip?"+search.toString();
+}
