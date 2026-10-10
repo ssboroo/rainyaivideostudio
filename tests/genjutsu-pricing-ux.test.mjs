@@ -21,7 +21,7 @@ test("verified Genjutsu Motion quotes after preparing a signed 1-30 second clip"
  const model=getModel("genjutsu-motion");
  const input={resolution:"720p",video_url:"https://provider.example/verified.mp4",__verifiedClipSeconds:8};
  assert.ok(estimateCredits(model,5,input)>0);
- assert.throws(()=>estimateCredits(model,5,{resolution:"720p"}),/эх видео хэрэгтэй/);
+ assert.throws(()=>estimateCredits(model,5,{resolution:"720p"}),/эх MP4 клип шаардлагатай/);
  assert.throws(()=>estimateCredits(model,5,{resolution:"720p",video_url:input.video_url}),/хугацаа баталгаажаагүй/);
 });
 test("Studio does not quote unsupported models or present a clipped-video prerequisite as an API outage",()=>{
