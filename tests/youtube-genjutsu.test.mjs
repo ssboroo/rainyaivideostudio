@@ -5,6 +5,7 @@ import {tsImport} from "tsx/esm/api";
 const {parseYouTubeVideo,youtubeClipEmbed,youtubeClipSharePath}=await tsImport("../lib/youtube-clip.ts",{parentURL:import.meta.url});
 const {providerCostUsd,quoteApiCredits}=await tsImport("../lib/api-pricing.ts",{parentURL:import.meta.url});
 const {issueClipProof,readClipProof}=await tsImport("../lib/clip-proof.ts",{parentURL:import.meta.url});
+const {validClipSourceType,validClipWindow}=await tsImport("../lib/clip-media.ts",{parentURL:import.meta.url});
 const read=(path)=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 
 test("official YouTube URL parser accepts only valid video IDs and clean HTTPS hosts",()=>{
@@ -113,4 +114,29 @@ test("YouTube is used ONLY as official embed: FFmpeg accepts only user-uploaded 
  assert.match(studio,/clipToken/);
  assert.match(service,/readClipProof\(raw.clipToken,userId,input.video_url\)/);
  assert.match(csp,/frame-src 'self' https:\/\/www.youtube-nocookie.com/);
+});
+
+test("iPhone MOV and MP4 generate real clips with safe bounded FFmpeg requests",()=>{
+ assert.ok(validClipSourceType("phone.MOV","video/quicktime"));
+ assert.ok(validClipSourceType("phone.mp4","video/mp4"));
+ assert.ok(validClipSourceType("sample.m4v","video/x-m4v"));
+ assert.equal(validClipSourceType("danger.exe","video/mp4"),false);
+ assert.equal(validClipSourceType("demo.mp4","text/html"),false);
+ for(const [start,end] of [[0,1],[2.5,31],[3560,3590]])assert.equal(validClipWindow(start,end),true);
+ for(const [start,end] of [[0,0],[-1,3],[0,31],[0,Infinity],[3598,3600.1]])assert.equal(validClipWindow(start,end),false);
+ for(const path of ["app/api/clips/export/route.ts","app/api/clips/prepare/route.ts"]){
+  const code=read(path);
+  assert.match(code,/validClipSourceType/);
+  assert.match(code,/validClipWindow/);
+  assert.match(code,/if\(origin\)/);
+  assert.match(code,/ffprobe/);
+  assert.match(code,/ffmpeg/);
+ }
+ const component=read("components/youtube-genjutsu-source.tsx");
+ assert.match(component,/downloadClip\(\)/);
+ assert.match(component,/response\.blob\(\)/);
+ assert.match(component,/a\.download=/);
+ assert.match(component,/\.mov,\.m4v/);
+ assert.match(component,/minSeconds/);
+ assert.match(component,/Genjutsu-д бэлтгэх/);
 });
