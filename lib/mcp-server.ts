@@ -58,6 +58,42 @@ export function createRavsMcpServer(identity: McpIdentity, services: McpServices
   server.registerPrompt('mongolian_campaign', { title: 'Монгол кампанит ажил', description: 'RAVS хэрэгслээр санаанаас нийтлэх контент хүртэл төлөвлөх', argsSchema: { brand: z.string().max(150), goal: z.string().max(1000), audience: z.string().max(500) } }, async ({ brand, goal, audience }) => ({ messages: [{ role: 'user', content: { type: 'text', text: `${brand} брэндэд Монгол хэлээр бүтэн контент бэлд. Зорилго: ${goal}. Үзэгчид: ${audience}. Эхлээд ravs_list_models, сонгосон ravs_model_guide ашигла. 3 санаа, storyboard, кадр бүрийн prompt/тохиргоо, caption, hook, CTA, нийтлэх төлөвлөгөө гарга. ravs_estimate ашиглаж кредитийг харуул. Миний тусдаа зөвшөөрөлгүйгээр төлбөртэй үүсгэлт бүү хий. Хүсэлт эхэлсэн бол ravs_generation_status-аар шалгаж, зөвхөн COMPLETED ба URL байвал бэлэн гэж хэл.` } }] }));
   // This tool and prompt coordinate two independently authorized MCP servers.
   // No Voice credentials, accounts, audio, or payment operations cross this boundary.
+  server.registerTool('ravs_scene_batch_estimate', {
+    title: 'Олон кадрын нийт өртөг',
+    description: 'Хамгийн ихдээ 20 кадрын загвар, оролт бүрийг тус тусад нь шалгаж кредитийг нэгтгэнэ. Ямар ч төлбөртэй generation эхлүүлэхгүй.',
+    inputSchema: {
+      scenes: z.array(z.object({
+        scene: z.string().min(1).max(100),
+        modelSlug,
+        input: generationInput
+      })).min(1).max(20)
+    },
+    annotations: readAnnotations
+  }, async ({ scenes }) => guarded('ravs:read', async () => {
+    let totalCredits = 0;
+    const estimates = scenes.map(({scene,modelSlug,input}) => {
+      const m = getModel(modelSlug);
+      if (!m || !m.apiVerified) return {scene,modelSlug,error:'Энэ загвар API-аар баталгаажаагүй эсвэл олдсонгүй.'};
+      try {
+        const providerInput = buildProviderInput(m,input);
+        const credits = estimateCredits(m,Number(providerInput.duration),providerInput);
+        if (!Number.isSafeInteger(credits) || credits < 0) throw new Error('Тооцоо хүчингүй.');
+        totalCredits += credits;
+        if (!Number.isSafeInteger(totalCredits)) throw new Error('Нийт кредитийн хэмжээ хэтэрлээ.');
+        return {scene,modelSlug,modelName:m.name,credits,validatedInput:providerInput};
+      } catch(e) { return {scene,modelSlug,error:e instanceof Error?e.message:'Тооцоолол амжилтгүй.'}; }
+    });
+    const valid=estimates.every(x=>!('error' in x));
+    return {
+      status:valid?'quoted':'invalid',
+      scenes:estimates,
+      totalCredits:valid?totalCredits:null,
+      billable:false,
+      priceGuarantee:false,
+      voiceCreditsIncluded:false,
+      note:'Энэ нь зөвхөн видеоны кредитийн тооцоо. Voice студийн TTS кредитийг rainy_voice_quote_tts хэрэгслээр тусад нь шалга. Кадр бүрд төлбөртэй generation хийхээс өмнө хэрэглэгчийн зөвшөөрөл ав.',
+    };
+  }));
   server.registerTool('ravs_voice_workflow_plan', {
     title: 'RAINY Video + Voice ажлын урсгал',
     description: 'Хоёр тусдаа сайт (RAVS Video болон RAINY Voice)-ын MCP хэрэгслээр видео, Монгол voice-over төлөвлөх үнэ төлбөргүй handoff. Voice сайтыг автоматаар дуудахгүй.',
