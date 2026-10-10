@@ -1,20 +1,23 @@
 import { tickMovieJobs, movieEnabled } from "../lib/movie-producer.ts";
+import { tickMovieProducer } from "../lib/movie-producer-v2.ts";
 let stopped=false;
-process.on("SIGTERM",()=>{stopped=true});
-process.on("SIGINT",()=>{stopped=true});
-const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+for(const signal of ["SIGTERM","SIGINT"]) process.on(signal,()=>{stopped=true});
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function main(){
- console.log("[RAINY Movie Producer] started; enabled="+movieEnabled());
+ console.log("[RAINY Movie Worker] legacy="+movieEnabled()+", v2="+(process.env.MOVIE_SCHEDULER_ENABLED==="true"));
  while(!stopped){
+  let worked=false;
   try{
-   if(movieEnabled()){
-    // No background AI generation happens before explicit user consent in movie project.
-    const didWork=await tickMovieJobs();
-    await pause(didWork?1500:12000);
-   }else await pause(30000);
+   if(movieEnabled()){const result=await tickMovieJobs();worked=!!result}
+   if(process.env.MOVIE_SCHEDULER_ENABLED==="true"){
+    // Durable Postgres lease + idempotent per-scene provider requests.
+    const result=await tickMovieProducer();
+    worked=worked || !["idle","busy","disabled"].includes(result.status);
+   }
+   await sleep(worked?3000:12000);
   }catch(e){
-   console.error("[RAINY Movie Producer] tick failed:",e instanceof Error?e.message:"unknown");
-   await pause(15000);
+   console.error("[RAINY Movie Worker] tick error:",e instanceof Error?e.name:"unknown");
+   await sleep(15000);
   }
  }
 }

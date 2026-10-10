@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { createLongMoviePlan } from './long-movie-plan.ts';
+import { createMovie as createDurableMovie, getOwnMovie as getDurableMovie, listOwnMovies as listDurableMovies, pauseOwnMovie as pauseDurableMovie, resumeOwnMovie as resumeDurableMovie } from './movie-producer-v2.ts';
 import { reviewStoryboard } from './storyboard-quality.ts';
 import { createMovie, movieStatus, cancelMovie, retryMovieScene, movieEnabled } from './movie-producer.ts';
 import { models, getModel, buildProviderInput, estimateCredits } from './models.ts';
@@ -123,6 +124,45 @@ export function createRavsMcpServer(identity: McpIdentity, services: McpServices
     },annotations:readAnnotations
   },async({targetSeconds,styleBible,scenes})=>guarded('ravs:read',
     async()=>reviewStoryboard(scenes,targetSeconds,styleBible)));
+
+  server.registerTool('ravs_movie_v2_projects',{
+    title:'One-Prompt Movie төслүүд',
+    description:'Server-side Railway scheduler дээр хадгалагдсан өөрийн урт киноны төслүүдийг үзэх.',
+    inputSchema:{},annotations:readAnnotations
+  },async()=>guarded('ravs:read',()=>process.env.MOVIE_SCHEDULER_ENABLED==='true'?listDurableMovies(identity.userId):Promise.resolve({enabled:false,projects:[],message:'Movie Producer v2 туршилтын төлөвтэй.'})));
+  server.registerTool('ravs_movie_v2_status',{
+    title:'Movie Producer ажлын төлөв',
+    description:'ChatGPT хаалттай байсан ч PostgreSQL-ээс scene бүрийн ажил, QA, provider generation ID-г авна.',
+    inputSchema:{projectId:z.string().min(10).max(80)},annotations:readAnnotations
+  },async({projectId})=>guarded('ravs:read',()=>process.env.MOVIE_SCHEDULER_ENABLED==='true'?getDurableMovie(identity.userId,projectId):Promise.resolve({enabled:false,message:'Movie Producer v2 идэвхгүй.'})));
+  if(identity.scopes.includes('ravs:generate')) {
+  server.registerTool('ravs_movie_v2_submit',{
+    title:'One-Prompt Movie эхлүүлэх',
+    description:'Баталсан кредитийн дээд хязгаар дотор нэг удаа серверийн киноны ажил эхлүүлнэ. Movie scheduler flag идэвхтэй үед л төлбөртэй генерац queue-д орно.',
+    inputSchema:{
+      title:z.string().max(120).optional(),prompt:z.string().min(12).max(6000),
+      targetSeconds:z.number().int().min(4).max(3600),modelSlug:z.string().min(1).max(100),
+      aspectRatio:z.enum(['9:16','16:9','1:1']),resolution:z.enum(['480p','720p','1080p']),
+      qualityProfile:z.enum(['cinematic','balanced','fast']).default('cinematic'),
+      generateAudio:z.boolean().default(false),styleBible:z.string().max(2000).optional(),
+      aiQaApproved:z.boolean().default(false),maxCredits:z.number().int().min(1).max(10000000),
+      confirmBudget:z.literal(true),idempotencyKey:z.string().regex(/^[A-Za-z0-9_-]{16,128}$/)
+    },annotations:{readOnlyHint:false,destructiveHint:false,idempotentHint:true,openWorldHint:true}
+  },async(input)=>guarded('ravs:generate',async()=>{
+    if(process.env.MOVIE_SCHEDULER_ENABLED!=='true')return {enabled:false,message:'Movie Producer v2 нь туршилтын төлөвтэй. Кредит зарцуулахгүй.'};
+    return createDurableMovie(identity.userId,input);
+  }));
+  server.registerTool('ravs_movie_v2_pause',{
+    title:'Кино түр зогсоох',description:'Шинэ scene эхлүүлэхгүй. Гуравдагч API руу аль хэдийн илгээсэн клипийг хүчингүй болгож чадахгүй.',
+    inputSchema:{projectId:z.string().min(10).max(80),confirmPause:z.literal(true)},
+    annotations:{readOnlyHint:false,destructiveHint:false,idempotentHint:true,openWorldHint:false}
+  },async({projectId})=>guarded('ravs:generate',()=>pauseDurableMovie(identity.userId,projectId)));
+  server.registerTool('ravs_movie_v2_resume',{
+    title:'Кино үргэлжлүүлэх',description:'PostgreSQL-д зогсоосон төслийг Railway worker-ээр үргэлжлүүлнэ.',
+    inputSchema:{projectId:z.string().min(10).max(80),confirmResume:z.literal(true)},
+    annotations:{readOnlyHint:false,destructiveHint:false,idempotentHint:true,openWorldHint:false}
+  },async({projectId})=>guarded('ravs:generate',()=>resumeDurableMovie(identity.userId,projectId)));
+  }
   server.registerTool('ravs_long_movie_plan', {
     title:'Ганц санаанаас урт кино төлөвлөх',
     description:'4 секундээс 60 минут хүртэл урт кинонд API хязгаарын дагуу scene хувааж, видео кредитийг автоматаар нэгтгэх. Энэ нь 100% үнэгүй, зөвхөн төлөвлөлт бөгөөд видео/voice/MP4 экспорт эхлүүлэхгүй.',
