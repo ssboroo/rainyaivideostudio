@@ -19,6 +19,30 @@ function fixture() {
  getGenerationStatus:async()=>({status:'completed',video:{url:'https://cdn.example/video.mp4'}}),cancelGeneration:async()=>({}) };
  return {service:createGenerationService(deps),deps,rows,calls};
 }
+test('all three Genjutsu models require user-bound source clip proof before reservation',async()=>{
+ const {tsImport}=await import('tsx/esm/api');
+ const {issueClipProof}=await tsImport('../lib/clip-proof.ts',{parentURL:import.meta.url});
+ const old=process.env.SESSION_SECRET;process.env.SESSION_SECRET='testing-secret-0123456789-hmac-security-key';
+ try{
+  for(const slug of ['genjutsu-motion','genjutsu-object','genjutsu-restyle']){
+   const f=fixture();
+   const videoUrl='https://cdn.example.com/owned-clip.mp4';
+   const input={
+    modelSlug:slug,videoUrl,resolution:'720p',prompt:'Preserve the character',
+    referenceUrls:['https://cdn.example.com/character.jpg'],
+    presetId:'c2143317-f28d-4c3c-a0b8-39bd547e08a7',
+    clipToken:issueClipProof('user-a',videoUrl,6),
+   };
+   const opts={idempotencyKey:'clip-'+slug+'-123456',maxCredits:10000};
+   await assert.rejects(f.service.create('user-a',{...input,clipToken:'invalid'},opts),e=>e.status===503);
+   assert.equal(f.calls.reserves,0,slug);
+   const generated=await f.service.create('user-a',input,opts);
+   assert.equal(generated.generation.modelSlug,slug);
+   assert.equal(f.calls.reserves,1,slug);
+   assert.equal(f.calls.submits,1,slug);
+  }
+ }finally{if(old===undefined)delete process.env.SESSION_SECRET;else process.env.SESSION_SECRET=old;}
+});
 test('creation retries reuse the same own request and do not submit or bill twice',async()=>{
  const f=fixture();const opts={idempotencyKey:'request-123',maxCredits:10000};
  const first=await f.service.create('user-a',input,opts);const second=await f.service.create('user-a',input,opts);

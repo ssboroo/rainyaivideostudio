@@ -61,7 +61,7 @@ test("verified Genjutsu 1-30 second clip metering is distinct from unverified ar
  assert.throws(()=>providerCostUsd(id,{resolution:"720p",video_url,duration:10}));
  assert.equal(providerCostUsd(id,{resolution:"480p",video_url,__verifiedClipSeconds:5.25}),Math.ceil(5.25)*.318);
  assert.equal(providerCostUsd(id,{resolution:"720p",video_url,__verifiedClipSeconds:8}),8*.681);
- assert.throws(()=>providerCostUsd(id,{resolution:"1080p",video_url,__verifiedClipSeconds:6}));
+ assert.equal(providerCostUsd(id,{resolution:"1080p",video_url,__verifiedClipSeconds:6}),6*1.632);
  assert.ok(quoteApiCredits(id,{resolution:"720p",video_url,__verifiedClipSeconds:8})>0);
  for(const value of [0,-1,31,NaN,"8"])assert.throws(()=>providerCostUsd(id,{resolution:"720p",video_url,__verifiedClipSeconds:value}));
 });
@@ -81,18 +81,18 @@ test("clip provenance proof is bound to exact user, URL, expiration and HMAC",()
  }finally{if(original===undefined)delete process.env.SESSION_SECRET;else process.env.SESSION_SECRET=original;}
 });
 
-test("Studio lets Motion / Restyle users prepare signed clips before quoting credits",()=>{
+test("Studio lets all Genjutsu models prepare signed clips before quoting credits",()=>{
  const studio=read("components/studio-client.tsx");
  const generation=read("lib/generation-service.ts");
- assert.match(studio,/const clipGenjutsu = \["genjutsu-motion","genjutsu-restyle"\]/);
+ assert.match(studio,/const clipGenjutsu = \["genjutsu-motion","genjutsu-object","genjutsu-restyle"\]/);
  assert.match(studio,/const clipPending = clipGenjutsu/);
  assert.match(studio, /"Клип бэлтгэнэ үү"/);
  assert.match(studio, /clipGenjutsu && model\.apiVerified &&/);
  assert.match(studio, /!clipPending && !!model\.apiVerified/);
  assert.match(studio,/__verifiedClipSeconds: clipGenjutsu && clipToken/);
- assert.match(generation,/\["genjutsu-motion","genjutsu-restyle"\]\.includes\(model\.slug\)/);
+ assert.match(generation,/\["genjutsu-motion","genjutsu-object","genjutsu-restyle"\]\.includes\(model\.slug\)/);
  assert.match(generation,/readClipProof\(raw\.clipToken,userId,input\.video_url\)/);
- assert.match(studio,/Genjutsu Motion Transfer руу шилжих/);
+ assert.match(studio,/Энэ Genjutsu хувилбарт хамгийн багадаа 4 секундын эх видео шаардлагатай/);
 });
 
 test("YouTube is used ONLY as official embed: FFmpeg accepts only user-uploaded MP4, generation validates clip proof",()=>{

@@ -8,24 +8,29 @@ export function providerCostUsd(id: string, input: Record<string, unknown>): num
   const seconds = Number(input.duration || 5);
   const batch = Number(input.batch_size || input.num_images || 1);
   if (!Number.isFinite(seconds) || seconds <= 0 || !Number.isSafeInteger(batch) || batch < 1) return unavailable();
-  // Higgsfield Genjutsu list rates: source-video seconds rounded UP. The
-  // input duration can only come from a server-probed clip proof when charged.
-  // Motion / Restyle price sources: official Higgsfield playground (2026-10-10).
-  // Restyle does not publish an independently verifiable per-second rate;
-  // never silently reuse Motion Transfer's rate for that different endpoint.
-  const genjutsuSourceModel = id === "higgsfield/genjutsu/motion-transfer/v1.0";
-  if(id === "higgsfield/genjutsu/restyle/v1.0")
-    throw new PricingUnavailableError("Genjutsu Restyle-ийн API өртөг албан ёсоор баталгаажаагүй байна. Кредит зарцуулахгүй. Genjutsu Motion Transfer-ийг сонгоно уу.");
+  // The official Higgsfield pages publish the SAME list rates for the
+  // three documented Genjutsu endpoints. Billing uses source video duration,
+  // rounded UP to a whole second. The duration is authenticated against a
+  // server-probed user-owned clip before credit reservation.
+  // Sources:
+  // https://open.higgsfield.ai/models/higgsfield/genjutsu/motion-transfer/v1.0/playground
+  // https://open.higgsfield.ai/models/higgsfield/genjutsu/restyle/v1.0/api-reference
+  // https://open.higgsfield.ai/models/higgsfield/genjutsu/object-swap/v1.0/api-reference
+  const genjutsuSourceModel = [
+    "higgsfield/genjutsu/motion-transfer/v1.0",
+    "higgsfield/genjutsu/restyle/v1.0",
+    "higgsfield/genjutsu/object-swap/v1.0",
+  ].includes(id);
   if(genjutsuSourceModel && !input.video_url)
-    throw new PricingUnavailableError("Genjutsu-ийн үнийг тооцоход эх видео хэрэгтэй. Доорх 'YouTube → Genjutsu' хэсэгт эрхтэй MP4-гээ оруулж 1–30 секундийн клип бэлтгэнэ үү.");
+    throw new PricingUnavailableError("Genjutsu-ийн эх MP4 клип шаардлагатай. 1–30 секундын хэсгийг бэлтгэнэ үү.");
   if (input.video_url || (Array.isArray(input.video_urls) && input.video_urls.length)) {
     if(genjutsuSourceModel){
       const verified = input.__verifiedClipSeconds;
       if(typeof verified !== "number" || !Number.isFinite(verified) || verified < 1 || verified > 30)
-        throw new PricingUnavailableError("Клипийн хугацаа баталгаажаагүй байна. Эх MP4-гээ 'Клип тайрч Genjutsu-д бэлтгэх' товчоор боловсруулна уу.");
-      // Public Motion Transfer playground confirms 480p and 720p rates.
-      // Avoid inventing a rate for 1080p until separately published.
-      const rate=({"480p":.318,"720p":.681} as Record<string,number>)[resolution];
+        throw new PricingUnavailableError("Клипийн хугацаа баталгаажаагүй. Эх MP4-г серверийн тайрах хэрэгслээр бэлтгэнэ үү.");
+      if(id!=="higgsfield/genjutsu/motion-transfer/v1.0" && verified < 4)
+        throw new PricingUnavailableError("Object Swap / Restyle-д хамгийн багадаа 4 секундын видео шаардлагатай.");
+      const rate=({"480p":.318,"720p":.681,"1080p":1.632} as Record<string,number>)[resolution];
       if(rate===undefined)return unavailable();
       return Math.ceil(verified)*rate;
     }
@@ -68,6 +73,21 @@ export function providerCostUsd(id: string, input: Record<string, unknown>): num
   if (id.startsWith('kling-video/v3.0/pro/')) return .168 * seconds;
   if (id.startsWith('kling-video/v3.0/std/')) return (id.endsWith('image-to-video') ? .126 : .084) * seconds;
   if (id.startsWith('kling-video/v3.0-turbo/')) return perSecond({'720p':.112,'1080p':.14});
+  // Conservative non-discounted rate caps from official Kling playgrounds;
+  // do not assume temporary 2026 launch promotions or account discounts.
+  if (id === 'kling-video/o3/first-last-frame') {
+    if(input.mode === '4k')return unavailable(); // 4K mode has a distinct undisclosed price
+    return .112 * seconds;
+  }
+  if (id === 'kling-video/o3/image-reference') {
+    if(input.mode !== undefined && input.mode !== 'std')return unavailable();
+    return .084 * seconds;
+  }
+  if (id === 'kling-video/o3/video-reference') return .168 * seconds;
+  if (id === 'kling-video/omni/image-reference' || id === 'kling-video/omni/first-last-frame') return .112 * seconds;
+  if (id === 'kling-video/omni/video-reference') return .168 * seconds;
+  if (/^kling-video\/v2\.5-turbo\/pro\/(text-to-video|image-to-video)$/.test(id)) return .07 * seconds;
+  if (id === 'kling-video/v2.5-turbo/standard/image-to-video') return .042 * seconds;
   if (id === 'higgsfield/ai-influencer') return .05 * batch;
   if (id.startsWith('higgsfield-ai/soul/v2/')) return perImage({'720p':.0032,'1080p':.0057});
   if (id === 'higgsfield-ai/soul/standard') return perImage({'720p':.0938,'1080p':.1875});

@@ -16,18 +16,18 @@ test('resolution and image batch affect price',()=>{
 test('unknown metering is rejected before spending provider funds',()=>{
  for(const [id,input] of [['unknown',{}],['marketing-studio/image/sunburst',{}],['higgsfield/genjutsu/motion-transfer/v1.0',{video_url:'https://example.com/v.mp4'}],['bytedance/seedance-2.5/reference-to-video',{video_urls:['https://example.com/v.mp4']}],['recraft/v4.1/text-to-image',{resolution:'4k'}]]) assert.throws(()=>quoteApiCredits(id,input));
 });
-test('Genjutsu Motion quote is strictly source-probed and Restyle is held until published pricing',()=>{
- for (const id of ['higgsfield/genjutsu/motion-transfer/v1.0']) {
-  assert.throws(()=>quoteApiCredits(id,{resolution:'720p'}),/эх видео хэрэгтэй/);
-  assert.throws(()=>quoteApiCredits(id,{resolution:'720p',video_url:'https://example.com/input.mp4'}),/хугацаа баталгаажаагүй/);
-  const clip={video_url:'https://example.com/output.mp4',__verifiedClipSeconds:7.05};
+test('all three Genjutsu providers quote only verified source media and supported resolutions',()=>{
+ for(const id of ['higgsfield/genjutsu/motion-transfer/v1.0','higgsfield/genjutsu/object-swap/v1.0','higgsfield/genjutsu/restyle/v1.0']){
+  assert.throws(()=>quoteApiCredits(id,{resolution:'720p'}),/эх MP4/);
+  assert.throws(()=>quoteApiCredits(id,{resolution:'720p',video_url:'https://example.com/x.mp4'}),/баталгаажаагүй/);
+  const clip={video_url:'https://example.com/clip.mp4',__verifiedClipSeconds:7.05};
   assert.equal(providerCostUsd(id,{...clip,resolution:'480p'}),8*.318);
   assert.equal(providerCostUsd(id,{...clip,resolution:'720p'}),8*.681);
-  assert.throws(()=>providerCostUsd(id,{...clip,resolution:'1080p'}));
+  assert.equal(providerCostUsd(id,{...clip,resolution:'1080p'}),8*1.632);
   assert.ok(quoteApiCredits(id,{...clip,resolution:'720p'})>0);
   for(const invalid of [0,31,NaN,undefined,'9'])assert.throws(()=>quoteApiCredits(id,{...clip,__verifiedClipSeconds:invalid,resolution:'720p'}));
+  if(!id.includes('motion-transfer')) assert.throws(()=>quoteApiCredits(id,{...clip,__verifiedClipSeconds:3,resolution:'720p'}),/4 секунд/);
  }
- assert.throws(()=>quoteApiCredits('higgsfield/genjutsu/restyle/v1.0',{resolution:'720p',video_url:'https://example.com/v.mp4',__verifiedClipSeconds:5}),/Restyle-ийн API өртөг/);
 });
 
 test('unsafe environment packages cannot undercut minimum credit value',()=>{
@@ -37,4 +37,16 @@ test('unsafe environment packages cannot undercut minimum credit value',()=>{
   process.env.CREDIT_PACKAGES_JSON='[]';assert.throws(()=>getCreditPackages());
   process.env.CREDIT_PACKAGES_JSON=JSON.stringify([{id:'ok',name:'OK',priceMnt:10000,credits:1000,validityMonths:1}]);assert.equal(getCreditPackages()[0].credits,1000);
  } finally {if(previous===undefined)delete process.env.CREDIT_PACKAGES_JSON;else process.env.CREDIT_PACKAGES_JSON=previous;}
+});
+
+test('published standard-rate Kling families quote only documented modes',()=>{
+ const base={duration:5};
+ assert.equal(providerCostUsd('kling-video/o3/first-last-frame',{...base,mode:'pro'}),.112*5);
+ assert.equal(providerCostUsd('kling-video/o3/image-reference',{...base,mode:'std'}),.084*5);
+ assert.equal(providerCostUsd('kling-video/o3/video-reference',{...base,mode:'pro'}),.168*5);
+ assert.equal(providerCostUsd('kling-video/omni/video-reference',{...base,mode:'pro'}),.168*5);
+ assert.equal(providerCostUsd('kling-video/v2.5-turbo/pro/text-to-video',base),.07*5);
+ assert.equal(providerCostUsd('kling-video/v2.5-turbo/pro/image-to-video',base),.07*5);
+ assert.throws(()=>providerCostUsd('kling-video/o3/first-last-frame',{...base,mode:'4k'}));
+ assert.throws(()=>providerCostUsd('kling-video/o3/image-reference',{...base,mode:'pro'}));
 });
