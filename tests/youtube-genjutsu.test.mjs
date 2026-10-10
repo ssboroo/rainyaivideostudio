@@ -56,6 +56,26 @@ test("YouTube-only segment becomes a replayable, non-downloadable share link",()
  assert.match(editor,/support.google.com\/youtube\/answer\/56100/);
  assert.match(editor,/confirmRights/);
 });
+test("selected YouTube time range produces only a reusable official-player link",()=>{
+ const id="dQw4w9WgXcQ";
+ const shared=youtubeClipSharePath(id,6.5,11.5);
+ assert.ok(shared.startsWith("/clip?v="+id+"&start=6&end=12"));
+ assert.throws(()=>youtubeClipSharePath(id,1,60));
+ assert.throws(()=>youtubeClipSharePath("not-video",0,5));
+ const embed=youtubeClipEmbed(id,1.2,31.2);
+ const params=new URL(embed).searchParams;
+ assert.equal(Number(params.get("end"))-Number(params.get("start")),30);
+ const component=read("components/youtube-genjutsu-source.tsx");
+ const page=read("app/clip/page.tsx");
+ assert.match(component,/youtubeClipSharePath/);
+ assert.match(component,/navigator\.clipboard\.writeText/);
+ assert.match(component,/MP4 видео файл үүсээгүй/);
+ assert.match(component,/youtu\.be/); // Existing supported format reference
+ assert.match(page,/youtubeClipEmbed/);
+ assert.match(page,/MP4 татахгүй/);
+ assert.doesNotMatch(page,/yt-dlp|ytdl|fetch\(/);
+});
+
 test("verified Genjutsu 1-30 second clip metering is distinct from unverified arbitrary URLs",()=>{
  const id="higgsfield/genjutsu/motion-transfer/v1.0",video_url="https://owned.example/video.mp4";
  assert.throws(()=>providerCostUsd(id,{resolution:"720p",video_url,duration:10}));
