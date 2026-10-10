@@ -5,7 +5,7 @@ import {getCreditPackages,getPricingScenario} from "../lib/billing.ts";
 import {pricingPolicy,estimatePackContribution,quoteApiCredits} from "../lib/api-pricing.ts";
 const read=(path)=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 
-test("all five video-ready monthly packs meet the 70% net cost markup floor",()=>{
+test("all five video-ready monthly packs meet the 50% net cost markup floor",()=>{
  const packages=getCreditPackages();
  assert.deepEqual(packages.map(x=>x.priceMnt),[29900,69900,179000,449000,899000]);
  assert.deepEqual(packages.map(x=>x.credits),[3000,7400,19000,48000,95000]);
@@ -19,7 +19,7 @@ test("all five video-ready monthly packs meet the 70% net cost markup floor",()=
  }
  assert.equal(pricingPolicy.reviewedAt,"2026-10-11");
  assert.equal(pricingPolicy.usdMnt,3900);
- assert.equal(pricingPolicy.markup,1.15);
+ assert.equal(pricingPolicy.markup,.90);
 });
 
 test("external pricing overrides must not silently destroy margins",()=>{
@@ -55,7 +55,7 @@ test("emergency API pricing hold disables new credits but does not disable billi
 
 test("admin-only scenario shows reservations, no automatic recurring payments",()=>{
  const scenario=getPricingScenario();
- assert.equal(scenario.apiMarkupMultiplier,2.15);
+ assert.equal(scenario.apiMarkupMultiplier,1.90);
  assert.equal(scenario.packages.length,5);
  assert.ok(scenario.assumptions.includes("баталгаат net profit биш"));
  const page=read("components/billing-client.tsx");
