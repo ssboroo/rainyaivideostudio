@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {quoteApiCredits, providerCostUsd, pricingPolicy} from '../lib/api-pricing.ts';
 import {getCreditPackages} from '../lib/billing.ts';
+import {estimatePackContribution} from '../lib/api-pricing.ts';
 test('lower 2026 video prices remain protected by FX, fees, tax and infrastructure stress reserves',()=>{
  for(const input of [{resolution:'480p',duration:5,aspect_ratio:'16:9'},{resolution:'720p',duration:10,aspect_ratio:'9:16'},{resolution:'1080p',duration:30,aspect_ratio:'21:9'}]) {
   const usd=providerCostUsd('bytedance/seedance-2.5/text-to-video',input);
@@ -18,7 +19,7 @@ test('lower 2026 video prices remain protected by FX, fees, tax and infrastructu
 test('new prices are lower while current packages remain profitable in configured stress scenario',()=>{
   assert.equal(pricingPolicy.markup,.90);
   assert.ok((1+pricingPolicy.markup)/(1+1.15)<.89);
-  const {estimatePackContribution}=requireContribution();
+  
   for(const pack of getCreditPackages()){
     const audit=estimatePackContribution(pack.priceMnt,pack.credits);
     assert.ok(audit.guardPassed,pack.id);
@@ -34,13 +35,6 @@ test('new prices are lower while current packages remain profitable in configure
     assert.ok(credits<=Math.ceil(rate*10*3900*2.15/(100000/12000)),id);
   }
 });
-function requireContribution(){return {estimatePackContribution:(price,credits)=>{
-  const u=price/credits;
-  const provider=(100000/12000)*(1+.10)/(1+.90);
-  const net=u*(1-.04-.10-.07);
-  return {guardPassed:u>=9.25&&net/provider-1>=.50-1e-10&&(net-provider)/u>=.27,
-    estimatedContributionMargin:(net-provider)/u,netCostMarkup:net/provider-1};
-}};}
 
 test('missing duration and unsupported Hailuo duration cannot be silently priced as 5 sec',()=>{
   assert.throws(()=>quoteApiCredits('alibaba/wan-3.0/text-to-video',{resolution:'720p'}));
