@@ -7,10 +7,10 @@ import {UsersRound,Clapperboard,CheckCircle2,TriangleAlert,WalletCards,BadgeDoll
 type Stats={expiredCredits:number;users:number;today:{generations:number;completed:number;failed:number;payments:number;revenueMnt:number}};
 type Health={database?:string;configuration?:{missing?:string[];higgsfield?:boolean;wire?:boolean}};
 type ApiAudit={credentialConfigured:boolean;totals:Record<string,number>;models:Array<{slug:string;name:string;pricing:string;endpointDocumented:boolean;note:string}>;disclaimer:string};
-type PriceEconomics={reviewedAt:string;forecastUsdMnt:number;apiMarkupMultiplier:number;minCreditMnt:number;
+type PriceEconomics={reviewedAt:string;forecastUsdMnt:number;apiMarkupMultiplier:number;minCreditMnt:number;minimumNetCostMarkup:number;
  reviewAgeDays:number|null;reviewDue:boolean;emergencyHold:boolean;assumptions:string;disclaimer:string;
  scenarioReserves:{fxStress:number;paymentFee:number;tax:number;infrastructure:number};
- packages:Array<{id:string;name:string;priceMnt:number;credits:number;unitMnt:number;estimatedContributionMargin:number;guardPassed:boolean}>;
+ packages:Array<{id:string;name:string;priceMnt:number;credits:number;unitMnt:number;estimatedContributionMargin:number;netCostMarkup:number;guardPassed:boolean}>;
  sampleQuotes:Array<{name:string;providerUsd?:number;saleCredits?:number;available?:boolean}>;
  modelCatalog:Array<{slug:string;name:string;modelId:string;kind:string;apiVerified:boolean;status:string;resolution?:string;durationSeconds?:number|null;providerUsd?:number;credits?:number;retailMnt?:number;stressMargin?:number;note?:string}>};
 export function AdminClient(){
@@ -50,6 +50,7 @@ export function AdminClient(){
     <div><h3>Төсвийн USD/MNT</h3><p><b>{economics.forecastUsdMnt.toLocaleString("mn-MN")}₮</b> — live ханш биш</p></div>
     <div><h3>API үнэ ×</h3><p><b>{economics.apiMarkupMultiplier.toFixed(2)}</b> · FX зардлын нөөцтэй</p></div>
     <div><h3>Кредитийн доод үнэ</h3><p><b>{economics.minCreditMnt.toFixed(2)}₮</b> · нэг кредитэд</p></div>
+    <div><h3>Зорилтот өртгийн markup</h3><p><b>{(economics.minimumNetCostMarkup*100).toFixed(0)}%+</b> · стресс зардлын дараах тооцоо, цэвэр ашиг биш</p></div>
    </div>
    <p style={{fontSize:12,color:"var(--muted)",marginTop:16}}>Сүүлд судалсан: {economics.reviewedAt} · {(economics.reviewAgeDays??"—")} хоног · Төлбөрийн нөөц {(economics.scenarioReserves.paymentFee*100).toFixed(0)}%, татварын нөөц {(economics.scenarioReserves.tax*100).toFixed(0)}%, серверийн нөөц {(economics.scenarioReserves.infrastructure*100).toFixed(0)}%, FX өсөлтийн сценарий {(economics.scenarioReserves.fxStress*100).toFixed(0)}%.</p>
    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:10,marginTop:18}}>
@@ -57,6 +58,7 @@ export function AdminClient(){
        <strong>{p.name}</strong><p style={{margin:"7px 0 4px",fontSize:12}}>{p.priceMnt.toLocaleString("mn-MN")}₮ · {p.credits.toLocaleString("mn-MN")} credit</p>
        <p style={{fontSize:12,color:"#c5d5ac",margin:"6px 0"}}>{p.unitMnt.toFixed(2)}₮/credit</p>
        <p style={{fontSize:12,fontWeight:800,color:p.guardPassed?"#b8e88f":"#f7ba78"}}>Сценарийн үлдэх хувь {(p.estimatedContributionMargin*100).toFixed(1)}% {p.guardPassed?"✓":"✕"}</p>
+       <p style={{fontSize:12,fontWeight:850,color:p.guardPassed?"#d1ee99":"#ffc47c"}}>Өртгийн markup {(p.netCostMarkup*100).toFixed(1)}% · босго {(economics.minimumNetCostMarkup*100).toFixed(0)}% {p.guardPassed?"✓":"✕"}</p>
      </div>)}
    </div>
    <details className="modelExtraSettings" style={{marginTop:18}}><summary>Жишиг API нэхэмжлэл ба кредитийн үнэ</summary>
