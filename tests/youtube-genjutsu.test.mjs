@@ -4,6 +4,7 @@ import {readFileSync} from "node:fs";
 import {tsImport} from "tsx/esm/api";
 const {parseYouTubeVideo,youtubeClipEmbed}=await tsImport("../lib/youtube-clip.ts",{parentURL:import.meta.url});
 const {providerCostUsd,quoteApiCredits}=await tsImport("../lib/api-pricing.ts",{parentURL:import.meta.url});
+const {issueClipProof,readClipProof}=await tsImport("../lib/clip-proof.ts",{parentURL:import.meta.url});
 const read=(path)=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 
 test("official YouTube URL parser accepts only valid video IDs and clean HTTPS hosts",()=>{
@@ -40,6 +41,21 @@ test("verified Genjutsu 1-30 second clip metering is distinct from unverified ar
  assert.equal(providerCostUsd(id,{resolution:"1080p",video_url,__verifiedClipSeconds:6}),6*1.632);
  assert.ok(quoteApiCredits(id,{resolution:"720p",video_url,__verifiedClipSeconds:8})>0);
  for(const value of [0,-1,31,NaN,"8"])assert.throws(()=>providerCostUsd(id,{resolution:"720p",video_url,__verifiedClipSeconds:value}));
+});
+
+test("clip provenance proof is bound to exact user, URL, expiration and HMAC",()=>{
+ const original=process.env.SESSION_SECRET;
+ process.env.SESSION_SECRET="test-secret-0123456789-abcdefghij-klmnopqrstuvwxyz";
+ try {
+  const videoUrl="https://example.com/uploaded-clip.mp4";
+  const token=issueClipProof("user-1",videoUrl,6.75);
+  assert.equal(readClipProof(token,"user-1",videoUrl),6.75);
+  assert.equal(readClipProof(token,"user-2",videoUrl),null);
+  assert.equal(readClipProof(token,"user-1",videoUrl+"?changed=1"),null);
+  assert.equal(readClipProof(token.slice(0,-1)+"x","user-1",videoUrl),null);
+  assert.equal(readClipProof("not.a-token","user-1",videoUrl),null);
+  assert.throws(()=>issueClipProof("user-1",videoUrl,31));
+ }finally{if(original===undefined)delete process.env.SESSION_SECRET;else process.env.SESSION_SECRET=original;}
 });
 
 test("YouTube is used ONLY as official embed: FFmpeg accepts only user-uploaded MP4, generation validates clip proof",()=>{
