@@ -29,6 +29,6 @@ test("do not substitute lower resolution, shorter duration or missing audio for 
 });
 test("no full-auto provider generation or financial reservation happens for economy suggestions",()=>{
  const s=String(affordableVideoModels);
- assert.doesNotMatch(s,/submitGeneration|reserveCredits|\\$transaction|fetch\\(/);
+ assert.ok(!["submitGeneration","reserveCredits","$transaction","fetch("].some(term=>s.includes(term)));
  assert.ok(affordableVideoModels({duration:5,resolution:"720p",aspectRatio:"9:16",generateAudio:false}).length<=5);
 });
