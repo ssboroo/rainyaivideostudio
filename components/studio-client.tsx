@@ -117,11 +117,22 @@ export function StudioClient() {
   const model = getModel(selected) || models[0];
   const clipGenjutsu = ["genjutsu-motion","genjutsu-restyle"].includes(model.slug);
   const clipPending = clipGenjutsu && (!videoUrl || clipSeconds===null || !clipToken);
+  const apiNotReady = !model.apiVerified;
   let cost = 0;
   let pricingError = "";
-  try { cost = estimateCredits(model, duration, { ...modelOptions, resolution, aspect_ratio: aspect, sound: audio ? "on" : "off", generate_audio: audio, video_url: videoUrl || undefined,
-     __verifiedClipSeconds: clipGenjutsu && clipToken ? clipSeconds ?? undefined : undefined }); }
-  catch (error) { pricingError = error instanceof Error ? error.message : "Үнэ баталгаажуулж байна."; }
+  // Never attempt to quote an API model whose endpoint has not been verified.
+  // An incomplete Genjutsu clip is a preparation step, not a price error.
+  if(!apiNotReady && !clipPending) {
+    try {
+      cost = estimateCredits(model, duration, { ...modelOptions, resolution, aspect_ratio: aspect, sound: audio ? "on" : "off", generate_audio: audio, video_url: videoUrl || undefined,
+        __verifiedClipSeconds: clipGenjutsu && clipToken ? clipSeconds ?? undefined : undefined });
+    } catch (error) {
+      const detail=error instanceof Error ? error.message : "";
+      pricingError=detail.startsWith("Энэ тохиргооны API өртгийг баталгаажуулж байна")
+        ? model.name+" ("+resolution+") загварын API үнэ одоогоор баталгаажаагүй. Кредит зарцуулахгүй."
+        : detail || "API үнэ баталгаажаагүй. Кредит зарцуулахгүй.";
+    }
+  }
   const group = params.get("group");
 
   const visibleModels = useMemo(() => {
@@ -382,7 +393,7 @@ export function StudioClient() {
                 <h1>{model.name}</h1>
                 <p>{model.description}</p>
               </div>
-              <div className="estimateBadge"><span>Кредитийн тооцоо</span><b>{clipPending ? "Клип бэлтгэнэ үү" : pricingError ? "Үнэ түр боломжгүй" : `${cost} кредит`}</b></div>
+              <div className="estimateBadge"><span>Кредитийн тооцоо</span><b>{apiNotReady ? "API бэлэн биш" : clipPending ? "Клип бэлтгэнэ үү" : pricingError ? "Үнэ баталгаажаагүй" : `${cost} кредит`}</b></div>
             </div>
 
             <div className="composerPanel">
@@ -467,7 +478,7 @@ export function StudioClient() {
                 </select>
               )}
 
-              {!model.apiVerified&&<p className="serviceState" role="status">{model.apiReason}</p>}
+              {apiNotReady&&<p className="serviceState" role="status">{model.name} одоогоор баталгаажсан API холболтгүй тул үүсгэлт хаалттай. Кредит зарцуулахгүй. {model.group==="Genjutsu"&&<Link href="/studio?model=genjutsu-motion&source=youtube">Genjutsu Motion Transfer сонгох →</Link>}</p>}
               <details className="modelExtraSettings"><summary>Нэмэлт тохиргоо</summary><div className="modelApiFields">{(model.parameters||[]).filter(f=>!["prompt","duration","resolution","aspect_ratio","image_url","video_url","image_urls","video_urls","reference_urls","first_frame_url","start_image_url","generate_audio","sound","keep_original_sound","preset_id"].includes(f.name)).map(f=><label key={f.name}><span>{parameterLabel(f.name)}{f.required?" *":""}</span><small>{parameterHelp(f)}</small>{f.options?<select value={String(modelOptions[f.name]??f.default??"")} onChange={e=>setModelOptions(o=>({...o,[f.name]:e.target.value===""?undefined:/integer|number/.test(f.type)?Number(e.target.value):e.target.value}))}>{f.default===undefined&&<option value="">Үндсэн горим</option>}{f.options.map(v=><option value={v} key={v}>{optionLabel(v)}</option>)}</select>:f.type.includes("boolean")?<input type="checkbox" checked={Boolean(modelOptions[f.name]??f.default)} onChange={e=>setModelOptions(o=>({...o,[f.name]:e.target.checked}))}/>:f.type.includes("array")||f.type.includes("object")?<textarea placeholder={f.type.includes("object")?"{}":"[]"} aria-label={parameterLabel(f.name)} onChange={e=>{try{const value=JSON.parse(e.target.value||"null");setModelOptions(o=>({...o,[f.name]:value}));}catch{setModelOptions(o=>({...o,[f.name]:e.target.value}));}}}/>:<input type={/integer|number/.test(f.type)?"number":"text"} min={f.minimum} max={f.maximum} maxLength={f.maxLength} value={String(modelOptions[f.name]??f.default??"")} onChange={e=>setModelOptions(o=>({...o,[f.name]:e.target.value===""?undefined:/integer|number/.test(f.type)?Number(e.target.value):e.target.value}))}/>}</label> )}</div></details>
               <div className="composerBottom">
                 <div className="inlineSettings" id="studio-settings">
@@ -503,7 +514,7 @@ export function StudioClient() {
                 <button className="generateButton" disabled={!canSubmit} onClick={submit}>
                   {busy ? <LoaderCircle className="spin" size={17} /> : <ArrowUp size={17} />}
                   <span>{busy ? "Илгээж байна" : "Үүсгэх"}</span>
-                  <b>{pricingError ? "Түр боломжгүй" : `${cost} кредит`}</b>
+                  <b>{apiNotReady ? "API баталгаажаагүй" : clipPending ? "Клип шаардлагатай" : pricingError ? "Үнэ баталгаажаагүй" : `${cost} кредит`}</b>
                 </button>
               </div>
 
@@ -511,7 +522,7 @@ export function StudioClient() {
               {model.kind === "video" && cost>800 && <p className="serviceState">Хэмнэх бол <Link href={`/studio?model=${models.find(m=>m.modelId==="minimax/hailuo-2.3/standard/text-to-video")?.slug || ""}`}>Hailuo 2.3 · 6 секунд →</Link></p>}
               {inputError&&hasInput&&<p className="serviceState">{inputError}</p>}
               {providerHealth==="missing"&&<div className="accountNotice"><Sparkles size={20}/><div>Үүсгэх үйлчилгээ бэлтгэгдэж байна. Одоогоор жишээ үзэж, санаа болон тохиргоогоо бэлдээрэй. <Link href="/video-guide">Гарын авлага үзэх →</Link></div></div>}
-              {pricingError&&<p className="serviceState">{pricingError}</p>}
+              {pricingError&&<p className="serviceState" role="alert">{pricingError} {model.group==="Genjutsu" && <Link href="/studio?model=genjutsu-motion&source=youtube">Motion Transfer сонгох →</Link>}</p>}
               {user&&user.credits<cost&&<p className="serviceState">Энэ бүтээлд {cost} кредит хэрэгтэй. Таны үлдэгдэл {user.credits}. <Link href="/billing">Кредитийн багц үзэх →</Link></p>}
               {message && <div className={"studioMessage " + (message.includes("алдаа") || message.includes("дутуу") ? "error" : "")}>{message}</div>}
             </div>
