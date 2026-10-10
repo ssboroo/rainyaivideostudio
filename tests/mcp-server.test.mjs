@@ -5,6 +5,8 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 const {createRavsMcpServer}=await tsImport('../lib/mcp-server.ts',import.meta.url);
+const {quoteApiCredits}=await tsImport('../lib/api-pricing.ts',import.meta.url);
+const exampleSeedanceCredits=()=>quoteApiCredits('bytedance/seedance-2.5/text-to-video',{duration:5,resolution:'720p',aspect_ratio:'16:9'});
 function fixture(scopes=['ravs:read','ravs:generate']) {
  const calls=[];const services=Object.fromEntries(['createUserGeneration','getUserGeneration','cancelUserGeneration','listUserGenerations','getUserAccount'].map(name=>[name,async(...args)=>{calls.push([name,...args]);return{name,status:'SUBMITTED'}}]));
  const server=createRavsMcpServer({userId:'own-user',grantId:'test-grant',scopes},services);
@@ -69,7 +71,7 @@ test('batch estimate validates every scene and never charges a provider',async()
   const response=await f.client.callTool({name:'ravs_scene_batch_estimate',arguments:{scenes:[scene,{...scene,scene:'Scene 02'}]}});
   const quote=JSON.parse(response.content[0].text);
   assert.equal(quote.status,'quoted');
-  assert.equal(quote.totalCredits,4380);
+  assert.equal(quote.totalCredits,exampleSeedanceCredits()*2);
   assert.equal(quote.voiceCreditsIncluded,false);
   assert.equal(quote.billable,false);
   assert.equal(f.calls.length,0);
@@ -84,7 +86,7 @@ test('create requires explicit confirmation and routes fixed user, max credits a
  const f=await connected();try{const args={modelSlug:'seedance-2-5',input:{prompt:'A cinematic scene at sunset',duration:5,resolution:'720p',aspectRatio:'16:9'},maxCredits:210,idempotencyKey:'request-1234567890'};const no=await f.client.callTool({name:'ravs_create_generation',arguments:args});assert.equal(no.isError,true);assert.equal(f.calls.length,0);await f.client.callTool({name:'ravs_create_generation',arguments:{...args,confirmGeneration:true}});assert.equal(f.calls[0][1],'own-user');assert.deepEqual(f.calls[0][3],{maxCredits:210,idempotencyKey:args.idempotencyKey});}finally{await f.close()}
 });
 test('estimate validates real model schema and does not call a paid provider',async()=>{
- const f=await connected();try{const response=await f.client.callTool({name:'ravs_estimate',arguments:{modelSlug:'seedance-2-5',input:{prompt:'A cinematic scene at sunset',duration:5,resolution:'720p',aspectRatio:'16:9'}}});assert.equal(JSON.parse(response.content[0].text).credits,2190);const bad=await f.client.callTool({name:'ravs_estimate',arguments:{modelSlug:'seedance-2-5',input:{prompt:'a',duration:5,resolution:'4k'}}});assert.ok(JSON.parse(bad.content[0].text).error);assert.equal(f.calls.length,0);}finally{await f.close()}
+ const f=await connected();try{const response=await f.client.callTool({name:'ravs_estimate',arguments:{modelSlug:'seedance-2-5',input:{prompt:'A cinematic scene at sunset',duration:5,resolution:'720p',aspectRatio:'16:9'}}});assert.equal(JSON.parse(response.content[0].text).credits,exampleSeedanceCredits());const bad=await f.client.callTool({name:'ravs_estimate',arguments:{modelSlug:'seedance-2-5',input:{prompt:'a',duration:5,resolution:'4k'}}});assert.ok(JSON.parse(bad.content[0].text).error);assert.equal(f.calls.length,0);}finally{await f.close()}
 });
 test('WebStandard stateless transport handles initialize and tools/list in independent requests',async()=>{
  for(const message of [{jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2025-11-25',capabilities:{},clientInfo:{name:'test',version:'1'}}},{jsonrpc:'2.0',id:2,method:'tools/list',params:{}}]){
