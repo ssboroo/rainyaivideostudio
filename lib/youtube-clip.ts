@@ -29,8 +29,9 @@ export function parseYouTubeVideo(input: string): {id:string;start:number}|null 
 }
 export function youtubeClipEmbed(id:string,start:number,end:number) {
  if(!/^[A-Za-z0-9_-]{11}$/.test(id))throw new Error("YouTube видео ID буруу");
- if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end<=start||end-start>30)throw new Error("Клип 1–30 секунд");
- const params=new URLSearchParams({start:String(Math.floor(start)),end:String(Math.ceil(end)),rel:"0",playsinline:"1"});
+ if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end<=start||end-start<1||end-start>30||end>86400)throw new Error("Клип 1–30 секунд");
+ const first=Math.floor(start),last=Math.min(first+30,Math.ceil(end));
+ const params=new URLSearchParams({start:String(first),end:String(last),rel:"0",playsinline:"1"});
  return "https://www.youtube-nocookie.com/embed/"+id+"?"+params.toString();
 }
 
@@ -41,7 +42,7 @@ export function youtubeClipSharePath(id:string,start:number,end:number){
  const search=new URLSearchParams({
   v:id,
   start:String(Math.floor(start)),
-  end:String(Math.ceil(end)),
+  end:String(Math.min(Math.floor(start)+30,Math.ceil(end))),
  });
  return "/clip?"+search.toString();
 }
