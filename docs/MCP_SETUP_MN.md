@@ -70,3 +70,9 @@ Mock тестүүд SDK initialize/list/call, read scope, explicit confirmation,
 - Status-г тусдаа шалгаж, RAVS `COMPLETED`, Voice `done` болсны дараа л бэлэн гэж мэдээл.
 - **Анхаар:** Эхний MCP workflow нь медиа файл автоматаар mux хийхгүй. Voice download URL нь нэвтэрсэн хэрэглэгчийн session шаарддаг. Нэг MP4 болгон экспортолсон гэж мэдэгдэж болохгүй.
 
+
+## Олон кадрын тооцоолол — 2026-10-10
+
+- `ravs_scene_batch_estimate`: 1–20 кадрын modelSlug, параметрийг тус бүр шалгаж, хүчинтэй бол нийт RAVS кредит гаргана. Төлбөртэй Higgsfield хүсэлт илгээхгүй.
+- Нэг кадр буруу байвал `status: invalid`, `totalCredits: null` гэж буцаана. Нийт дүнг батлагдсан үнэ гэж бүү тайлбарла.
+- Voice-ийн үнэд `rainy_voice_quote_tts` хэрэгслийг **тусад нь** хэрэглэ. Кадр тус бүрийн generation-д хүний тодорхой зөвшөөрөл шаардлагатай.
