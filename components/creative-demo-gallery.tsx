@@ -31,6 +31,12 @@ function normalizeImported(input:ImportedDemo):CreativeDemo|null {
   return{id:"admin-"+input.id.slice(0,80),title:input.title.slice(0,130),description:"Админ баталгаажуулж нэмсэн видео. Тайлбар нь жишиг санаа бөгөөд эх видеоны яг анхны prompt биш.",category:c,videoUrl:video.toString(),sourceUrl:source.toString(),poster:"",badge:"ШИНЭ ЖИШЭЭ",modelSlug:hints[c],prompt:starter.prompt,use:categoryLabels[c],isImported:true};
  }catch{return null;}
 }
+function PromptCopy({prompt}:{prompt:string}){
+ const[copied,setCopied]=useState(false);
+ return <button type="button" className="creativeCopyButton" onClick={async()=>{try{await navigator.clipboard.writeText(prompt);setCopied(true);}catch{setCopied(false);}}}>
+ {copied?<Check size={14}/>:<ClipboardCopy size={14}/>} {copied?"Хууллаа":"Prompt хуулах"}
+ </button>;
+}
 function ExampleCard({item}:{item:CreativeDemo}){
  const[copied,setCopied]=useState(false);
  async function copyPrompt(){
@@ -101,7 +107,7 @@ export function CreativeDemoGallery({surface="trends",compact=false}:{surface?:S
       <div className="creativeUpcomingHead"><TrendingUp size={20}/><div><h3>Higgsfield-ийн шинэ трендүүд · 2026</h3><p>Албан ёсны чиглэлүүд. Яг таарсан видео файл баталгаажаагүй тул энд тоглох видео гэж дүр эсгэхгүй; зөвшөөрсөн демог админ импортолсны дараа галерейд гарна.</p></div></div>
       <div className="creativeUpcomingList">{latest.map(idea=><article key={idea.id}>
         <div><small>{categoryLabels[idea.category]}</small><h4>{idea.title}</h4><p>{idea.desc}</p></div>
-        <details><summary>Монгол prompt жишээ</summary><p>{idea.prompt}</p></details>
+        <details><summary>Монгол prompt жишээ</summary><p>{idea.prompt}</p><PromptCopy prompt={idea.prompt}/></details>
         <a href={idea.official} target="_blank" rel="noopener noreferrer">Албан эх сурвалж <ArrowUpRight size={13}/></a>
       </article>)}</div>
    </div>}
