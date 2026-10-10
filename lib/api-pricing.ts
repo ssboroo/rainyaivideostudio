@@ -8,24 +8,29 @@ export function providerCostUsd(id: string, input: Record<string, unknown>): num
   const seconds = Number(input.duration || 5);
   const batch = Number(input.batch_size || input.num_images || 1);
   if (!Number.isFinite(seconds) || seconds <= 0 || !Number.isSafeInteger(batch) || batch < 1) return unavailable();
-  // Higgsfield Genjutsu list rates: source-video seconds rounded UP. The
-  // input duration can only come from a server-probed clip proof when charged.
-  // Motion / Restyle price sources: official Higgsfield playground (2026-10-10).
-  // Restyle does not publish an independently verifiable per-second rate;
-  // never silently reuse Motion Transfer's rate for that different endpoint.
-  const genjutsuSourceModel = id === "higgsfield/genjutsu/motion-transfer/v1.0";
-  if(id === "higgsfield/genjutsu/restyle/v1.0")
-    throw new PricingUnavailableError("Genjutsu Restyle-ийн API өртөг албан ёсоор баталгаажаагүй байна. Кредит зарцуулахгүй. Genjutsu Motion Transfer-ийг сонгоно уу.");
+  // The official Higgsfield pages publish the SAME list rates for the
+  // three documented Genjutsu endpoints. Billing uses source video duration,
+  // rounded UP to a whole second. The duration is authenticated against a
+  // server-probed user-owned clip before credit reservation.
+  // Sources:
+  // https://open.higgsfield.ai/models/higgsfield/genjutsu/motion-transfer/v1.0/playground
+  // https://open.higgsfield.ai/models/higgsfield/genjutsu/restyle/v1.0/api-reference
+  // https://open.higgsfield.ai/models/higgsfield/genjutsu/object-swap/v1.0/api-reference
+  const genjutsuSourceModel = [
+    "higgsfield/genjutsu/motion-transfer/v1.0",
+    "higgsfield/genjutsu/restyle/v1.0",
+    "higgsfield/genjutsu/object-swap/v1.0",
+  ].includes(id);
   if(genjutsuSourceModel && !input.video_url)
-    throw new PricingUnavailableError("Genjutsu-ийн үнийг тооцоход эх видео хэрэгтэй. Доорх 'YouTube → Genjutsu' хэсэгт эрхтэй MP4-гээ оруулж 1–30 секундийн клип бэлтгэнэ үү.");
+    throw new PricingUnavailableError("Genjutsu-ийн эх MP4 клип шаардлагатай. 1–30 секундын хэсгийг бэлтгэнэ үү.");
   if (input.video_url || (Array.isArray(input.video_urls) && input.video_urls.length)) {
     if(genjutsuSourceModel){
       const verified = input.__verifiedClipSeconds;
       if(typeof verified !== "number" || !Number.isFinite(verified) || verified < 1 || verified > 30)
-        throw new PricingUnavailableError("Клипийн хугацаа баталгаажаагүй байна. Эх MP4-гээ 'Клип тайрч Genjutsu-д бэлтгэх' товчоор боловсруулна уу.");
-      // Public Motion Transfer playground confirms 480p and 720p rates.
-      // Avoid inventing a rate for 1080p until separately published.
-      const rate=({"480p":.318,"720p":.681} as Record<string,number>)[resolution];
+        throw new PricingUnavailableError("Клипийн хугацаа баталгаажаагүй. Эх MP4-г серверийн тайрах хэрэгслээр бэлтгэнэ үү.");
+      if(id!=="higgsfield/genjutsu/motion-transfer/v1.0" && verified < 4)
+        throw new PricingUnavailableError("Object Swap / Restyle-д хамгийн багадаа 4 секундын видео шаардлагатай.");
+      const rate=({"480p":.318,"720p":.681,"1080p":1.632} as Record<string,number>)[resolution];
       if(rate===undefined)return unavailable();
       return Math.ceil(verified)*rate;
     }
