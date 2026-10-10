@@ -6,6 +6,7 @@ import {mkdtemp,readFile,rm,stat,writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {spawn} from "node:child_process";
+import {validClipSourceType,validClipWindow} from "@/lib/clip-media";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -25,6 +26,9 @@ async function processMedia(args:string[],maxMs:number){
 export async function POST(request:Request){
  const user=await requireUser();
  if(!user)return error("Нэвтэрнэ үү.",401);
+ const origin=request.headers.get("origin");
+ if(origin){try{if(new URL(origin).host!==new URL(request.url).host)return error("Хүсэлтийн эх сурвалж зөвшөөрөгдөөгүй.",403);}
+ catch{return error("Хүсэлтийн эх сурвалж буруу.",403);}}
  if(processing)return error("Видео боловсруулалт үргэлжилж байна. Дахин оролдоно уу.",429);
  const contentLength=Number(request.headers.get("content-length")||0);
  if(contentLength>MAX_FILE+1024*1024)return error("Эх MP4 80MB-аас бага байна.",413);
@@ -36,8 +40,8 @@ export async function POST(request:Request){
   const media=form.get("file"),rights=form.get("confirmRights");
   const start=Number(form.get("start")),end=Number(form.get("end"));
   if(rights!=="true")return error("Эх видеог ашиглах эрхээ баталгаажуулна уу.");
-  if(!(media instanceof File)||media.type!=="video/mp4"||media.size===0||media.size>MAX_FILE)return error("MP4 (80MB хүртэл) файл оруулна уу.",413);
-  if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end-start<1||end-start>30||end>86400)return error("Клипийн эхлэл, төгсгөл 1–30 секунд байна.");
+  if(!(media instanceof File)||!validClipSourceType(media.name,media.type)||media.size===0||media.size>MAX_FILE)return error("MP4 (80MB хүртэл) файл оруулна уу.",413);
+  if(!form.has("start")||!form.has("end")||!validClipWindow(start,end))return error("Клипийн эхлэл, төгсгөл 1–30 секунд байна.");
   directory=await mkdtemp(join(tmpdir(),"ravs-clip-"));
   const input=join(directory,"input.mp4"),output=join(directory,"clip.mp4");
   await writeFile(input,Buffer.from(await media.arrayBuffer()));
