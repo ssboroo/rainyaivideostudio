@@ -5,7 +5,7 @@ import {getModel,estimateCredits} from "../lib/models.ts";
 
 const studio=readFileSync(new URL("../components/studio-client.tsx",import.meta.url),"utf8");
 
-test("Genjutsu IDs are canonical and Object Swap is not treated as production-ready",()=>{
+test("all three Genjutsu IDs map to documented provider endpoints",()=>{
  const motion=getModel("genjutsu-motion");
  const restyle=getModel("genjutsu-restyle");
  const object=getModel("genjutsu-object");
@@ -14,8 +14,8 @@ test("Genjutsu IDs are canonical and Object Swap is not treated as production-re
  assert.equal(object?.modelId,"higgsfield/genjutsu/object-swap/v1.0");
  assert.equal(motion?.apiVerified,true);
  assert.equal(restyle?.apiVerified,true);
- assert.equal(object?.apiVerified,false);
- assert.ok(!object?.parameters?.length);
+ assert.equal(object?.apiVerified,true);
+ assert.ok(object?.parameters?.some(f=>f.name==="image_urls"&&f.required));
 });
 test("verified Genjutsu Motion quotes after preparing a signed 1-30 second clip",()=>{
  const model=getModel("genjutsu-motion");
