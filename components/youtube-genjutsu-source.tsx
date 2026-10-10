@@ -5,8 +5,8 @@ import {useSearchParams} from "next/navigation";
 import {parseYouTubeVideo,youtubeClipEmbed,youtubeClipSharePath} from "@/lib/youtube-clip";
 import "./youtube-genjutsu.css";
 
-type Props={onPrepared:(videoUrl:string,seconds:number,proof:string)=>void;onSourceChange:()=>void;onProcessing:(active:boolean)=>void};
-export function YouTubeGenjutsuSource({onPrepared,onSourceChange,onProcessing}:Props){
+type Props={onPrepared:(videoUrl:string,seconds:number,proof:string)=>void;onSourceChange:()=>void;onProcessing:(active:boolean)=>void;minSeconds?:number};
+export function YouTubeGenjutsuSource({onPrepared,onSourceChange,onProcessing,minSeconds=1}:Props){
  const params=useSearchParams();
  const initialId=params.get("youtube")||"";
  const initialStart=Number(params.get("start")||"0");
@@ -28,7 +28,7 @@ export function YouTubeGenjutsuSource({onPrepared,onSourceChange,onProcessing}:P
  const videoRef=useRef<HTMLVideoElement>(null);
  const youtube=parseYouTubeVideo(link);
  const seconds=to-from;
- const validTimes=Number.isFinite(from)&&Number.isFinite(to)&&from>=0&&to<=86400&&seconds>=1&&seconds<=30;
+ const validTimes=Number.isFinite(from)&&Number.isFinite(to)&&from>=0&&to<=86400&&seconds>=minSeconds&&seconds<=30;
  const previewSharePath=youtube&&validTimes?youtubeClipSharePath(youtube.id,from,to):"";
  useEffect(()=>{
   if(!file){setLocalPreview("");return;}
@@ -67,7 +67,7 @@ export function YouTubeGenjutsuSource({onPrepared,onSourceChange,onProcessing}:P
   finally{setBusy(false);}
  }
  return <section className="ytGenjutsu" aria-label="YouTube видеоноос Genjutsu клип бэлтгэх">
-  <div className="ytGenjutsuHeading"><span><Youtube size={20}/></span><div><b>YouTube → Genjutsu</b><small>Холбоосоор үзэх · 1–30 сек сонгох · өөрийн MP4-г тайрах</small></div></div>
+  <div className="ytGenjutsuHeading"><span><Youtube size={20}/></span><div><b>YouTube → Genjutsu</b><small>Холбоосоор үзэх · {minSeconds}–30 сек сонгох · өөрийн MP4-г тайрах</small></div></div>
   <div className="ytGenjutsuInputs">
    <label><span>1 · YouTube холбоос (хэсэг сонгож үзэх)</span><input type="url" value={link} placeholder="https://www.youtube.com/watch?v=..." onChange={e=>{
     const value=e.target.value;
@@ -81,7 +81,7 @@ export function YouTubeGenjutsuSource({onPrepared,onSourceChange,onProcessing}:P
     <label><span>Дуусах (сек)</span><input type="number" inputMode="decimal" min="0" step=".1" value={to} onChange={e=>{setTo(Number(e.target.value));setLoaded(false);resetPrepared();}}/></label>
     <div className="ytGenjutsuDuration"><small>Сонгосон клип</small><b>{Number.isFinite(seconds)?seconds.toFixed(1):"–"} сек</b></div>
    </div>
-   {!validTimes&&<p className="ytGenjutsuHint" role="alert">1–30 секундийн хэсэг сонгоно уу.</p>}
+   {!validTimes&&<p className="ytGenjutsuHint" role="alert">{minSeconds}–30 секундийн хэсэг сонгоно уу.</p>}
    {youtube&&<div className="ytGenjutsuPreview">
     {loaded&&validTimes?<iframe key={youtube.id+"-"+embedRevision} title="YouTube клипийн урьдчилсан үзлэг" src={youtubeClipEmbed(youtube.id,from,to)} allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"/>:
     <div className="ytGenjutsuPlaceholder"><Youtube size={34}/><p>YouTube дээрээс хэрэгтэй 1–30 секундийг шууд сонгоод үзнэ.</p><button type="button" className="ghost" disabled={!validTimes} onClick={previewYoutube}><Play size={14}/> Сонгосон хэсгийг бэлтгэж үзэх</button></div>}
