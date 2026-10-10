@@ -462,6 +462,7 @@ export function StudioClient() {
 
               {clipGenjutsu && model.apiVerified &&(
                 <YouTubeGenjutsuSource
+                  minSeconds={model.slug==="genjutsu-motion"?1:4}
                   onPrepared={(url,seconds,proof)=>{setVideoUrl(url);setClipSeconds(seconds);setClipToken(proof);setMessage("Genjutsu эх видео бэлэн.");}}
                   onSourceChange={()=>{setVideoUrl("");setClipToken("");setClipSeconds(null);}}
                   onProcessing={setUploading}
