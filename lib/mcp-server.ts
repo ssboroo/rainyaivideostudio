@@ -167,7 +167,7 @@ export function createRavsMcpServer(identity: McpIdentity, services: McpServices
     'өөр өөр scene-д ялгаатай idempotencyKey хэрэглэн эхлүүл. Retry-д анхны key-г хадгал. scene бүрийн ravs_generation_status COMPLETED ба медиа URL-ийг шалга. '+
     'Монгол дуу хэрэгтэй бол rainy_voice_prepare_script, rainy_voice_quote_tts / rainy_voice_create_tts / rainy_voice_job_status-аар хийнэ. '+
     'Кадр бүрийн duration/frame integrity болон төлөвийг шалга. Дүр ба бүтээгдэхүүний үнэн зөв байдлын QA-г AI үнэлсэн гэж 100% баталж болохгүй. '+
-    'Бүх scene бэлэн болмогц CDN зөвшөөрөгдсөн эсэхийг rainy_voice_movie_quote-аар шалгаж, хэрэглэгчийн баталсан төсвийн хүрээнд rainy_voice_create_movie, '+
+    'Бүх scene бэлэн болмогц Voice-д movie tools байгаа эсэхийг шалга. Байхгүй бол бодит CDN host/холболт баталгаажаагүй гэсэн үг: MP4 бэлэн гэж бүү мэдэгд, Video болон Voice-ийн тусдаа үр дүн, job ID-г үзүүл. Tool байвал rainy_voice_movie_quote-аар CDN ба кредитийг шалгаж, зөвхөн баталсан төсвийн хүрээнд rainy_voice_create_movie, '+
     'rainy_voice_movie_status дуудан эцсийн MP4 татах холбоосыг өг. Төлөв queued/running бол бэлэн гэж бүү хэл. '+
     'Энэ урсгал ChatGPT/Claude MCP клиент нээлттэй ажиллаж байхыг шаардана; 1 цагийн бүтээлийг ганц request-ээр фонтойгоо үүсгэнэ гэж бүү амла. '+
     'Хэрэв хэт олон генерац, төсөв, серверийн лимитээс болж дуусахгүй бол төлөвийг үнэн зөв мэдээл, бүх сцен ба output-ыг алдахгүй хадгал.'}}]}));
