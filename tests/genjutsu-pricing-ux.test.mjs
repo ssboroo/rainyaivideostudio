@@ -51,3 +51,13 @@ test("Kling Turbo text and AI Influencer are selectable with official parameter 
  assert.equal(influencer.maxReferences,3);
  assert.ok(estimateCredits(influencer,5,{})>0);
 });
+
+test("Wan 3.0 Image-to-Video uses documented inputs and already-reviewed per-second pricing",()=>{
+ const wan=getModel("alibaba-wan-3-0-image-to-video");
+ assert.equal(wan?.apiVerified,true);
+ const input=buildProviderInput(wan,{prompt:"Монгол талын кадр",imageUrl:"https://cdn.example.com/frame.jpg",duration:5,resolution:"720p",aspectRatio:"16:9"});
+ assert.equal(input.image_url,"https://cdn.example.com/frame.jpg");
+ assert.equal(input.prompt,"Монгол талын кадр");
+ assert.ok(estimateCredits(wan,5,{resolution:"720p"})>0);
+ assert.throws(()=>buildProviderInput(wan,{prompt:"Монгол талын кадр",duration:5,resolution:"720p"}),/image_url/);
+});
