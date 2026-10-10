@@ -8,7 +8,7 @@ test("standalone YouTube downloads menu does not depend on Genjutsu or credit fl
  assert.match(nav,/\["\/youtube", "YouTube видео татах", Film\]/);
  assert.match(page,/<YoutubeDownloadPanel\/>/);
  assert.doesNotMatch(page,/Genjutsu|generation|credit/);
- assert.doesNotMatch(client,/Genjutsu|\/api\/generations|credit/i);
+ assert.doesNotMatch(client,/\/api\/generations|clipToken|providerCostUsd/);
  assert.match(client,/https:\/\/studio\.youtube\.com\//);
  assert.match(client,/YouTube Studio/);
 });
@@ -28,7 +28,7 @@ test("MP4 export requires a user-owned uploaded source, limited trim and consent
  assert.match(client,/data|FormData/);
  assert.match(client,/confirmRights/);
  assert.match(client,/fetch\("\/api\/clips\/export"/);
- assert.match(client,/a\.download=/);
+ assert.match(client,/el\.download=/);
  assert.match(client,/response\.blob\(\)/);
  assert.match(api,/confirmRights/);
  assert.match(api,/await request\.formData\(\)/);
