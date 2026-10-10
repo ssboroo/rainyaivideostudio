@@ -13,13 +13,14 @@ const sampleVideoModels=[
 export function getVideoCreditExamples(packs:CreditPackage[]) {
  const examples=sampleVideoModels.flatMap(sample=>{
   const model=getModel(sample.slug);
-  if(!model?.apiVerified||!model.resolutions.includes("720p"))return [];
+  if(!model?.apiVerified||!model.resolutions.some(r=>r==="720p"||r==="auto"))return [];
   const duration=5,resolution="720p",aspectRatio="9:16";
+  const displayResolution=model.resolutions.includes("720p")?"720p":"Стандарт";
   try{
    const actual=buildProviderInput(model,{prompt:"A short cinematic product scene",duration,resolution,aspectRatio});
    const credits=estimateCredits(model,duration,actual);
    if(!Number.isSafeInteger(credits)||credits<=0)return [];
-   return [{modelSlug:sample.slug,name:sample.label,duration,resolution,creditsPerVideo:credits}];
+   return [{modelSlug:sample.slug,name:sample.label,duration,resolution:displayResolution,creditsPerVideo:credits}];
   }catch{return [];}
  });
  return packs.map(pack=>({
