@@ -185,7 +185,7 @@
   background:#f9e8660d;border:1px solid #f9e86620;border-radius:5px;
   padding:3px 5px;
 }
-.productHome .homeEngineAside {align-self:stretch;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:6px;min-width:0}
+.productHome .homeEngineAside {align-self:center;display:flex;align-items:center;justify-content:center;min-width:0}
 .productHome .homeEngineKind {font-size:8px;font-weight:850;letter-spacing:.05em;color:#d8cb7d;white-space:nowrap}
 .productHome .homeEngineLaunch {display:grid;place-items:center;color:#fbe477;min-width:21px;min-height:21px}
 .productHome .homeEngineLaunch svg {transition:transform .15s ease}
