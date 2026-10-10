@@ -24,7 +24,7 @@ export async function POST(req:Request){
  }
  if(b.action!=='import')return jsonError('Үйлдэл буруу.');
  const original=sourceUrl(b.videoUrl,true),title=String(b.title||'').trim().slice(0,160);
- if(!title||!['effects','genjutsu','marketing','influencer'].includes(b.category))return jsonError('Нэр, ангилал оруулна уу.');
+ if(!title||!['effects','genjutsu','marketing','influencer','cinema'].includes(b.category))return jsonError('Нэр, ангилал оруулна уу.');
  const exists=await db.demoVideo.findUnique({where:{sourceMediaUrl:original}});
  if(exists)return NextResponse.json({item:exists,duplicate:true});
  const {bytes,contentType}=await boundedFetch(original,30*1024*1024);
