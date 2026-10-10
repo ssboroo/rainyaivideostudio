@@ -276,7 +276,7 @@ export function StudioClient() {
     } finally {setUploading(false);}
   }
 
-  const hasInput = Boolean(prompt.trim() || imageUrl || videoUrl || refs.length || Object.values(modelOptions).some(value=>value!==undefined&&value!==null&&value!==""));
+  const hasInput = Boolean(model.slug==="ai-influencer" || prompt.trim() || imageUrl || videoUrl || refs.length || Object.values(modelOptions).some(value=>value!==undefined&&value!==null&&value!==""));
   let inputError="";
   try {buildProviderInput(model,{prompt,imageUrl,videoUrl,referenceUrls:refs,presetId,duration,resolution,aspectRatio:aspect,generateAudio:audio,modelOptions});}catch(e){inputError=e instanceof Error?e.message:"Оролтоо шалгана уу.";}
   const canSubmit = !busy && !uploading && !clipPending && !!model.apiVerified && hasInput && !inputError && !pricingError && !!user && user.credits>=cost && providerHealth==="ready";
