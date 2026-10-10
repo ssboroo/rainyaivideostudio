@@ -11,7 +11,8 @@ type PriceEconomics={reviewedAt:string;forecastUsdMnt:number;apiMarkupMultiplier
  reviewAgeDays:number|null;reviewDue:boolean;emergencyHold:boolean;assumptions:string;disclaimer:string;
  scenarioReserves:{fxStress:number;paymentFee:number;tax:number;infrastructure:number};
  packages:Array<{id:string;name:string;priceMnt:number;credits:number;unitMnt:number;estimatedContributionMargin:number;guardPassed:boolean}>;
- sampleQuotes:Array<{name:string;providerUsd?:number;saleCredits?:number;available?:boolean}>};
+ sampleQuotes:Array<{name:string;providerUsd?:number;saleCredits?:number;available?:boolean}>;
+ modelCatalog:Array<{slug:string;name:string;modelId:string;kind:string;apiVerified:boolean;status:string;resolution?:string;durationSeconds?:number|null;providerUsd?:number;credits?:number;retailMnt?:number;stressMargin?:number;note?:string}>};
 export function AdminClient(){
  const[data,setData]=useState<Stats|null>(null),[health,setHealth]=useState<Health|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(true);
  const[audit,setAudit]=useState<ApiAudit|null>(null),[auditError,setAuditError]=useState(""),[checkingApi,setCheckingApi]=useState(false),[probeResult,setProbeResult]=useState("");
@@ -60,6 +61,23 @@ export function AdminClient(){
    </div>
    <details className="modelExtraSettings" style={{marginTop:18}}><summary>Жишиг API нэхэмжлэл ба кредитийн үнэ</summary>
      {economics.sampleQuotes.map(e=><p key={e.name}>{e.name}: {e.saleCredits!==undefined?e.saleCredits.toLocaleString("mn-MN")+" credit · API $"+e.providerUsd?.toFixed(4):"Тухайн тохиргооны үнэ баталгаажаагүй."}</p>)}
+   </details>
+   <details className="modelExtraSettings" style={{marginTop:18}}>
+     <summary>Бүх загварын API өртөг ба RAINY үнэ ({economics.modelCatalog?.length||0} загвар)</summary>
+     <p style={{fontSize:11,lineHeight:1.7,color:"var(--muted)"}}>Тус бүрийн жишиг resolution/хугацааны үнэ. Баталгаагүй загварт үнэ зохиогоогүй. «Үлдэх хувь» нь зөвхөн FX, шимтгэл, татвар, серверийн нөөцтэй сценарий.</p>
+     <div style={{maxHeight:540,overflowY:"auto",border:"1px solid #4446",borderRadius:11,marginTop:12}}>
+       {economics.modelCatalog?.map(m=><div key={m.slug} style={{padding:"12px 14px",borderBottom:"1px solid #5554"}}>
+        <b style={{display:"block",fontSize:12}}>{m.name}</b>
+        <small style={{display:"block",color:"#aeb0a3",fontSize:10,overflowWrap:"anywhere"}}>{m.modelId}</small>
+        {m.status==="sample_quoted"?<p style={{margin:"7px 0 0",fontSize:12}}>
+          {m.resolution} {m.durationSeconds?("· "+m.durationSeconds+" сек"):"· 1 зураг"} ·
+          <strong> API ${m.providerUsd?.toFixed(4)}</strong> →
+          <strong> {m.credits?.toLocaleString("mn-MN")} credit</strong> →
+          <strong> ойролцоо {m.retailMnt?.toLocaleString("mn-MN")}₮</strong>
+          {typeof m.stressMargin==="number"&&<span style={{color:"#cbdda6"}}> · Үлдэх хувь {(m.stressMargin*100).toFixed(1)}%</span>}
+        </p>:<p style={{margin:"6px 0 0",fontSize:11,color:"#f4b981"}}>Үнэ / endpoint баталгаажаагүй. {m.note}</p>}
+       </div>)}
+     </div>
    </details>
    <p style={{fontSize:11,color:"var(--muted)",marginTop:15}}>{economics.disclaimer}</p>
    <button type="button" className="ghost" onClick={()=>void loadEconomics()}>Ашгийн сценарий дахин шалгах</button>
