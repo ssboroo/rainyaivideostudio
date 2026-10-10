@@ -1,0 +1,33 @@
+/* RAINY pricing: clearly prepaid, model-metered, never unlimited or auto-renew. */
+.billingPage .sectionHead em{font-style:normal;color:#d9ff63}
+.billingPage .sectionHead>div{max-width:800px}
+.billingPage .sectionHead p{font-size:13px;line-height:1.8;color:#b6b6ba}
+.planTrustStrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0 25px}
+.planTrustStrip span{display:flex;align-items:center;gap:9px;min-height:56px;padding:10px 12px;border:1px solid #343831;border-radius:11px;background:linear-gradient(130deg,#141a13,#10120f);color:#d7e4cd;font-size:11px;line-height:1.5;font-weight:700}
+.planTrustStrip svg{flex:none;color:#d8f377}
+.billingPage .revampedPlanGrid{align-items:stretch}
+.billingPage .revampedPlanGrid .priceCard{position:relative;min-width:0;display:flex;flex-direction:column;gap:10px;background:linear-gradient(145deg,#1a1c17,#101110);border:1px solid #3b3d33;border-radius:17px;padding:24px 20px}
+.billingPage .revampedPlanGrid .priceCard.popular{border-color:#d0b956;box-shadow:0 0 0 1px #d0b95655,0 17px 45px #0004}
+.billingPage .revampedPlanGrid .priceCard .popularBadge{top:-11px;font-weight:850;letter-spacing:.01em}
+.planCardIntro{margin-bottom:2px}
+.planCardIntro small{display:block;color:#dcce78;font-size:10px;letter-spacing:.12em;font-weight:800;margin-bottom:8px}
+.planCardIntro h3{font-size:22px;line-height:1.2;margin:0;color:#fff}
+.billingPage .revampedPlanGrid .bigPrice{font-size:clamp(22px,2.2vw,30px);line-height:1.3;font-weight:900;letter-spacing:-.035em;margin:0;white-space:normal}
+.billingPage .revampedPlanGrid .bigPrice small{font-size:11px;color:#9d9e93;font-weight:500;letter-spacing:0;display:block}
+.billingPage .planCreditCount{font-size:14px;color:#eef8d9}
+.planPerCredit{font-size:11px;color:#bbbda8;font-weight:650;padding:9px 10px;background:#25281b;border:1px solid #454d31;border-radius:8px}
+.billingPage .revampedPlanGrid .priceCard ul{padding:16px 0;margin:3px 0 0;border-top:1px solid #ffffff16;display:flex;flex-direction:column;gap:13px;flex:1}
+.billingPage .revampedPlanGrid .priceCard li{font-size:11px;line-height:1.65;color:#c0c2b5}
+.billingPage .revampedPlanGrid .priceCard li svg{flex:none;color:#cbeb78;margin-top:2px}
+.billingPage .revampedPlanGrid .priceCard button{min-height:45px;font-size:11px;white-space:normal}
+.planHowPricingWorks{margin:35px 0 0;padding:26px;border:1px solid #363a32;border-radius:18px;background:linear-gradient(100deg,#181b16,#0d0f0d)}
+.planHowPricingWorks h2{margin:0 0 20px;font-size:21px;letter-spacing:-.035em}
+.planHowGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.planHowGrid>div{border:1px solid #2a3029;border-radius:11px;padding:17px;background:#101510}
+.planHowGrid strong{color:#e6ebd3;font-size:12px}
+.planHowGrid p{font-size:11px;line-height:1.8;color:#b3b6a8;margin:8px 0 0}
+.planPolicyFootnote{font-size:10px;line-height:1.8;color:#999d92;margin:22px 0 0}
+@media(max-width:1350px){.planTrustStrip{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:920px){.planHowGrid{grid-template-columns:1fr}}
+@media(max-width:640px){.planTrustStrip{grid-template-columns:1fr;gap:8px}.planTrustStrip span{min-height:45px}.billingPage .revampedPlanGrid{grid-template-columns:1fr}.billingPage .revampedPlanGrid .priceCard{padding:21px}.planHowPricingWorks{padding:17px}.planHowPricingWorks h2{font-size:19px}}
+@media(prefers-reduced-motion:reduce){.billingPage .revampedPlanGrid *{scroll-behavior:auto}}
