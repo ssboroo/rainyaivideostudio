@@ -4,6 +4,7 @@ import { Generation, GenerationStatus, Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { getModel, estimateCredits, buildProviderInput } from "@/lib/models";
+import {readClipProof} from "@/lib/clip-proof";
 import { reserveCredits, refundGeneration, markTerminalAndRefund } from "@/lib/credits";
 import { submitGeneration, getGenerationStatus, cancelGeneration, mapProviderStatus } from "@/lib/higgsfield";
 import { mediaFrom } from "@/lib/generation-media";
@@ -53,7 +54,13 @@ export function createGenerationService(deps: typeof defaults = defaults) {
     let input: Record<string, unknown>;
     try { input = buildProviderInput(model, raw); } catch (error) { throw new GenerationServiceError(error instanceof Error ? error.message : "Оролт буруу байна.", 400); }
     let cost: number;
-    try { cost = estimateCredits(model, Number(input.duration), input); }
+    try {
+      if(model.slug==="genjutsu-motion"&&input.video_url) {
+        const seconds=readClipProof(raw.clipToken,userId,input.video_url);
+        if(seconds===null)throw new Error("Genjutsu-д зөвшөөрөлтэй эх MP4-г клип таслах хэсгээр байршуулна уу. Клипийн баталгаа 24 цаг хүчинтэй.");
+        cost=estimateCredits(model,Number(input.duration),{...input,__verifiedClipSeconds:seconds});
+      } else cost=estimateCredits(model, Number(input.duration), input);
+    }
     catch (error) { throw new GenerationServiceError(error instanceof Error ? error.message : "Үнэ баталгаажуулж байна.", 503); }
     if (cost > options.maxCredits) throw new GenerationServiceError(`Энэ үүсгэлт ${cost} кредит шаардлагатай. Дээд хэмжээг дахин зөвшөөрнө үү.`, 409);
     const externalRequestKey = createHash("sha256").update(JSON.stringify([userId, options.idempotencyKey])).digest("hex");
