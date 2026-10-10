@@ -24,7 +24,7 @@ function normalizeImported(input:ImportedDemo):CreativeDemo|null {
   const video=new URL(input.videoUrl),source=new URL(input.sourceUrl);
   if(video.protocol!=="https:"||source.protocol!=="https:"||!["higgsfield.ai","www.higgsfield.ai"].includes(source.hostname))return null;
   // Imported media is published only via the admin's reviewed Higgsfield pipeline.
-  if(!["cdn.higgsfield.ai","static-public-media.higgsfield.ai","storage.higgsfield.ai","assets.higgsfield.ai"].includes(video.hostname))return null;
+  if(video.username||video.password||video.port||source.username||source.password)return null;
   const c=["effects","genjutsu","cinema","marketing","influencer"].includes(input.category)?input.category as DemoCategory:"effects";
   const hints={effects:"seedance-2-5-image",genjutsu:"genjutsu-motion",cinema:"seedance-2-5",marketing:"marketing-studio",influencer:"ai-influencer"} as const;
   const starter=getCreativePrompt(c==="marketing"?"product-ad":c==="influencer"?"ai-character":c==="genjutsu"?"motion-transfer-1":c==="cinema"?"world-morphing":"eyes-in");
