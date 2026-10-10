@@ -61,7 +61,7 @@ test("verified Genjutsu 1-30 second clip metering is distinct from unverified ar
  assert.throws(()=>providerCostUsd(id,{resolution:"720p",video_url,duration:10}));
  assert.equal(providerCostUsd(id,{resolution:"480p",video_url,__verifiedClipSeconds:5.25}),Math.ceil(5.25)*.318);
  assert.equal(providerCostUsd(id,{resolution:"720p",video_url,__verifiedClipSeconds:8}),8*.681);
- assert.equal(providerCostUsd(id,{resolution:"1080p",video_url,__verifiedClipSeconds:6}),6*1.632);
+ assert.throws(()=>providerCostUsd(id,{resolution:"1080p",video_url,__verifiedClipSeconds:6}));
  assert.ok(quoteApiCredits(id,{resolution:"720p",video_url,__verifiedClipSeconds:8})>0);
  for(const value of [0,-1,31,NaN,"8"])assert.throws(()=>providerCostUsd(id,{resolution:"720p",video_url,__verifiedClipSeconds:value}));
 });
