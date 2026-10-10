@@ -1,6 +1,29 @@
-// Official model playground prices inspected 2026-10-07. Use list rates,
-// never assume account-specific or temporary promotional discounts.
-export const pricingPolicy = { usdMnt: 3700, markup: 1, minCreditMnt: 100000 / 12000, reviewedAt: '2026-10-07' };
+// Higgsfield API list-price estimates (NOT Higgsfield's website subscription).
+// 3,900 MNT/USD is a CONSERVATIVE INTERNAL PLANNING RATE, not a claimed live FX quote.
+// Reviewed against official provider catalog 2026-10-11; no promotional prices assumed.
+export const pricingPolicy = {
+ usdMnt: 3900, markup: 1.15, minCreditMnt: 100000 / 12000,
+ reviewedAt: '2026-10-11',
+ // Cost-reserve assumptions for scenario stress tests; not published Wire fees or tax advice.
+ fxStress: .10, paymentFeeReserve: .04, taxReserve: .10,
+ infrastructureReserve: .07, minContribution: .30,
+ minimumPackMntPerCredit: 9.25,
+} as const;
+/**
+ * Conservative contribution AFTER estimated provider, FX stress, payment,
+ * potential VAT/tax reserve, and platform operations.
+ * This is NOT net profit, guaranteed margin or a binding merchant fee rate.
+ */
+export function estimatePackContribution(priceMnt:number,credits:number) {
+ if(!Number.isSafeInteger(priceMnt)||!Number.isSafeInteger(credits)||priceMnt<=0||credits<=0)
+   throw new Error("Багцын үнэ эсвэл кредит буруу байна.");
+ const unit=priceMnt/credits;
+ const providerCostPerCredit=pricingPolicy.minCreditMnt*(1+pricingPolicy.fxStress)/(1+pricingPolicy.markup);
+ const reserves=pricingPolicy.paymentFeeReserve+pricingPolicy.taxReserve+pricingPolicy.infrastructureReserve;
+ const margin=(unit-providerCostPerCredit-unit*reserves)/unit;
+ return {unitMnt:unit,providerCostPerCredit,estimatedContributionMargin:margin,
+  guardPassed:unit>=pricingPolicy.minimumPackMntPerCredit && margin>=pricingPolicy.minContribution};
+}
 export class PricingUnavailableError extends Error {}
 const unavailable = () => { throw new PricingUnavailableError('Энэ тохиргооны API өртгийг баталгаажуулж байна. Өөр загвар сонгоно уу.'); };
 export function providerCostUsd(id: string, input: Record<string, unknown>): number {
@@ -101,6 +124,9 @@ export function providerCostUsd(id: string, input: Record<string, unknown>): num
   return unavailable();
 }
 export function quoteApiCredits(id:string, input:Record<string,unknown>) {
+  // Emergency kill switch if Higgsfield changes pricing faster than an audit.
+  if(process.env.RAVS_PRICING_HOLD==="true")
+    throw new PricingUnavailableError("Үнэ шинэчлэгдэж байна. Кредит зарцуулах генерац түр зогссон.");
   const usd = providerCostUsd(id,input);
   const credits = Math.ceil(usd * pricingPolicy.usdMnt * (1 + pricingPolicy.markup) / pricingPolicy.minCreditMnt);
   if (!Number.isSafeInteger(credits) || credits <= 0) return unavailable();
