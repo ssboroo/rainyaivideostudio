@@ -1,5 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { createLongMoviePlan } from './long-movie-plan.ts';
+import { reviewStoryboard } from './storyboard-quality.ts';
 import { models, getModel, buildProviderInput, estimateCredits } from './models.ts';
 import { modelGuide, parameterLabel, parameterHelp, durationLabel, resolutionLabel, aspectLabel } from './model-guides.ts';
 
@@ -58,6 +60,37 @@ export function createRavsMcpServer(identity: McpIdentity, services: McpServices
   server.registerPrompt('mongolian_campaign', { title: 'Монгол кампанит ажил', description: 'RAVS хэрэгслээр санаанаас нийтлэх контент хүртэл төлөвлөх', argsSchema: { brand: z.string().max(150), goal: z.string().max(1000), audience: z.string().max(500) } }, async ({ brand, goal, audience }) => ({ messages: [{ role: 'user', content: { type: 'text', text: `${brand} брэндэд Монгол хэлээр бүтэн контент бэлд. Зорилго: ${goal}. Үзэгчид: ${audience}. Эхлээд ravs_list_models, сонгосон ravs_model_guide ашигла. 3 санаа, storyboard, кадр бүрийн prompt/тохиргоо, caption, hook, CTA, нийтлэх төлөвлөгөө гарга. ravs_estimate ашиглаж кредитийг харуул. Миний тусдаа зөвшөөрөлгүйгээр төлбөртэй үүсгэлт бүү хий. Хүсэлт эхэлсэн бол ravs_generation_status-аар шалгаж, зөвхөн COMPLETED ба URL байвал бэлэн гэж хэл.` } }] }));
   // This tool and prompt coordinate two independently authorized MCP servers.
   // No Voice credentials, accounts, audio, or payment operations cross this boundary.
+  server.registerTool('ravs_storyboard_quality_check',{
+    title:'Сторибордын чанарын шалгалт',
+    description:'Кадр давтагдсан, хугацаа зөрсөн, дүр continuity reference дутуу зэрэг алдааг төлбөргүй шалгана. Текстийн QA болохоос AI видеоны дүрсний чанарын баталгаа биш.',
+    inputSchema:{
+      targetSeconds:z.number().int().min(4).max(3600),
+      styleBible:z.string().max(2000).optional(),
+      scenes:z.array(z.object({
+        number:z.number().int().min(1).max(120),
+        duration:z.number().min(0).max(120),
+        prompt:z.string().max(6000),
+        beat:z.string().max(100).optional(),
+        shotType:z.string().max(150).optional(),
+        continuityReference:z.string().max(2000).optional()
+      })).min(1).max(120)
+    },annotations:readAnnotations
+  },async({targetSeconds,styleBible,scenes})=>guarded('ravs:read',
+    async()=>reviewStoryboard(scenes,targetSeconds,styleBible)));
+  server.registerTool('ravs_long_movie_plan', {
+    title:'Ганц санаанаас урт кино төлөвлөх',
+    description:'4 секундээс 60 минут хүртэл урт кинонд API хязгаарын дагуу scene хувааж, видео кредитийг автоматаар нэгтгэх. Энэ нь 100% үнэгүй, зөвхөн төлөвлөлт бөгөөд видео/voice/MP4 экспорт эхлүүлэхгүй.',
+    inputSchema:{
+      prompt:z.string().min(12).max(6000),
+      targetSeconds:z.number().int().min(4).max(3600),
+      modelSlug:z.string().min(1).max(100).default('seedance-2-5'),
+      aspectRatio:z.enum(['9:16','16:9','1:1']).default('9:16'),
+      resolution:z.enum(['480p','720p','1080p']).default('720p'),
+      generateAudio:z.boolean().default(true),
+      qualityProfile:z.enum(['cinematic','balanced','fast']).default('cinematic'),
+      styleBible:z.string().max(2000).optional()
+    },annotations:readAnnotations
+  },async (input)=>guarded('ravs:read',async()=>createLongMoviePlan(input)));
   server.registerTool('ravs_scene_batch_estimate', {
     title: 'Олон кадрын нийт өртөг',
     description: 'Хамгийн ихдээ 20 кадрын загвар, оролт бүрийг тус тусад нь шалгаж кредитийг нэгтгэнэ. Ямар ч төлбөртэй generation эхлүүлэхгүй.',
@@ -117,6 +150,27 @@ export function createRavsMcpServer(identity: McpIdentity, services: McpServices
     caution: 'Хоёр MCP нь нэг хэрэглэгчийн нэвтрэлтийг хуваалцдаггүй. Нэгтгэсэн media mux/редактор/нийтлэлт одоогоор суулгагдаагүй. Хоёул амжилттай болсон гэсэн баталгаа өгч болохгүй.',
     requirements: ['ChatGPT эсвэл Claude-д RAVS Video болон RAINY Voice хоёр custom MCP connector-ийг хэрэглэгч тус тусад нь холбосон байх', 'Хэрэглэгч төлбөртэй generation бүрийг зөвшөөрөх'],
   })));
+  server.registerPrompt('rainy_one_prompt_movie', {
+    title:'RAINY One Prompt Movie — бүтэн кино',
+    description:'Нэг Монгол prompt-оос олон кадрын видео, Voice TTS, эцсийн MP4 (хэрэглэгчийн нэг багц зөвшөөрөлтэй).',
+    argsSchema:{
+      prompt:z.string().min(12).max(5000),
+      seconds:z.string().max(12),
+      aspectRatio:z.string().max(10),
+    }
+  },async ({prompt,seconds,aspectRatio})=>({messages:[{role:'user',content:{type:'text',text:
+    'RAINY Video болон RAINY Voice MCP хоёрыг хэрэглэ. Миний НЭГ санаа: '+prompt+
+    '. Хүссэн хугацаа (сек): '+seconds+', харьцаа: '+aspectRatio+
+    '. Эхлээд ravs_long_movie_plan qualityProfile=cinematic, scene бүрийн бие даасан кино зохиол, дүр, камер, continuity bible, narrative beat-ийг боловсруул. '+
+     'ravs_storyboard_quality_check-ээр кадрын давхардал, хугацаа, continuity шалга, өндөр давхардалтай prompt-ыг зас. RAVS видео болон Voice TTS/MP4 эвлүүлгийн кредитийг тус тусад нь quote хий. Бүх ажлын дээд төсөв, үнэ болон эрсдэлийг надад НЭГ удаа танилцуулж зөвшөөрөл ав. '+
+    'Миний зөвшөөрөлгүйгээр нэг ч төлбөртэй хүсэлт бүү үүсгэ. Зөвшөөрсөн бол баталсан storyboard болон төсөвт багтах бүх scene-ийг ravs_create_generation-аар, '+
+    'өөр өөр scene-д ялгаатай idempotencyKey хэрэглэн эхлүүл. Retry-д анхны key-г хадгал. scene бүрийн ravs_generation_status COMPLETED ба медиа URL-ийг шалга. '+
+    'Монгол дуу хэрэгтэй бол rainy_voice_prepare_script, rainy_voice_quote_tts / rainy_voice_create_tts / rainy_voice_job_status-аар хийнэ. '+
+    'Кадр бүрийн duration/frame integrity болон төлөвийг шалга. Дүр ба бүтээгдэхүүний үнэн зөв байдлын QA-г AI үнэлсэн гэж 100% баталж болохгүй. '+
+    'Бүх scene бэлэн болмогц Voice-д movie tools байгаа эсэхийг шалга. Байхгүй бол бодит CDN host/холболт баталгаажаагүй гэсэн үг: MP4 бэлэн гэж бүү мэдэгд, Video болон Voice-ийн тусдаа үр дүн, job ID-г үзүүл. Tool байвал rainy_voice_movie_quote-аар CDN ба кредитийг шалгаж, зөвхөн баталсан төсвийн хүрээнд rainy_voice_create_movie, '+
+    'rainy_voice_movie_status дуудан эцсийн MP4 татах холбоосыг өг. Төлөв queued/running бол бэлэн гэж бүү хэл. '+
+    'Энэ урсгал ChatGPT/Claude MCP клиент нээлттэй ажиллаж байхыг шаардана; 1 цагийн бүтээлийг ганц request-ээр фонтойгоо үүсгэнэ гэж бүү амла. '+
+    'Хэрэв хэт олон генерац, төсөв, серверийн лимитээс болж дуусахгүй бол төлөвийг үнэн зөв мэдээл, бүх сцен ба output-ыг алдахгүй хадгал.'}}]}));
   server.registerPrompt('rainy_video_voice_campaign', {
     title: 'RAINY хоёр студи: видео + Монгол дуу',
     description: 'Тусдаа RAVS ба Voice MCP-ээр баталгаатай, хоёр талын кредиттэй бүтээл төлөвлөх',

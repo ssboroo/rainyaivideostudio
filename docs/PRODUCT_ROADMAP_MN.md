@@ -47,3 +47,21 @@
 - Байгаа боломж ба хийхээр төлөвлөсөн боломжийг UI дээр тодорхой ялга.
 - Automated workflow ≠ automatic production: нэгтгэсэн MP4 export хараахан байхгүй.
 - Фото/хүний дууг клондох үед эрх, зөвшөөрөл, файл устгах сонголтыг баримтжуул.
+
+## 2026-10-10 — One-Prompt Movie чанарын шинэ загвар
+
+**Шинээр хөгжүүлсэн:**
+- `ravs_long_movie_plan` — нэг prompt, хүссэн 4–3600 сек, баталгаажсан text-to-video model, aspect, resolution, `cinematic / balanced / fast` profile ашиглан 1–120 сцен болгон хуваах.
+- Director continuity bible: хүний дүр, хувцас, орчин, гэрэл, өнгөний нэгдсэн гарын авлага.
+- Scene бүр story beat (`setup`, `inciting`, `escalation`, `turning-point`, `climax`, `resolution`), camera shot, transition, duration, per-scene credit.
+- `rainy_one_prompt_movie` MCP prompt — ChatGPT/Claude-д Video + Voice хоёр тусдаа connector-ийг дараалуулан ашиглах storyboard→quote→human authorization→scene generation→Voice TTS→FFmpeg MP4 bridge workflow.
+- Voice талд тусдаа preview MP4 backend FFmpeg render worker, structure QA, явцын статус, filename, credit, retry key, fail-closed CDN allowlist нэмсэн боловч live feature gate **анхнаасаа унтраалттай**.
+
+**Өндөр чанарын одоогийн бодит хязгаар:**
+- Prompt→clip model-ийн семантик болон дүрийн continuity 100% баталгаатай биш.
+- Backend durable RAVS scene queue, media cross-site ownership attestation, video QA scorer, failed scene-only rework, consent management, rerender budget/strategy **дараагийн ажил**.
+- ChatGPT/Claude MCP олон дуудлага хийхдээ хэрэглэгч зөвшөөрсөн budget, idempotency-г дагах ёстой; хэрэглэгч салсан үед backend өөрөө 120 клип генерэйт хийж дуусгах боломж хараахан байхгүй.
+- 3600 секундээс урт бүтээлд chunked chapters, chapter stitching, per-project asset vault ба queue/failover шаардлагатай.
+- Төгс/алдаагүй output гэж рекламдаж болохгүй. Эцсийн бүтэц QA болон хүний creative review салангид.
+
+**Дараагийн хамгийн чухал P0 зорилго:** RAVS Postgres-д MovieProject/MovieScene durable state machine, non-blocking background task scheduler, partial failures, per-project budget reservations, explicit start/stop/resume, Stripe/QPay/Wire credit policies, signed media grants, chapter export. Дараа нь AI Director-ийн дүр/брэнд consistency reference images болон кадр бүрийн QA→rework.
