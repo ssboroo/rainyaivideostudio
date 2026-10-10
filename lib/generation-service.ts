@@ -55,7 +55,7 @@ export function createGenerationService(deps: typeof defaults = defaults) {
     try { input = buildProviderInput(model, raw); } catch (error) { throw new GenerationServiceError(error instanceof Error ? error.message : "Оролт буруу байна.", 400); }
     let cost: number;
     try {
-      if(["genjutsu-motion","genjutsu-restyle"].includes(model.slug)&&input.video_url) {
+      if(["genjutsu-motion","genjutsu-object","genjutsu-restyle"].includes(model.slug)&&input.video_url) {
         // The client cannot claim a duration: user, exact source URL and TTL
         // are verified from the server-signed proof before reserving credits.
         const seconds=readClipProof(raw.clipToken,userId,input.video_url);
