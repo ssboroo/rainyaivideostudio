@@ -2,7 +2,7 @@ import { expireUserCredits } from "@/lib/credit-expiry";
 import { createHash } from "node:crypto";
 import { Generation, GenerationStatus, Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import { env } from "@/lib/env";
+import { env, higgsfieldKeyConfigured } from "@/lib/env";
 import { getModel, estimateCredits, buildProviderInput } from "@/lib/models";
 import {readClipProof} from "@/lib/clip-proof";
 import { reserveCredits, refundGeneration, markTerminalAndRefund } from "@/lib/credits";
@@ -74,7 +74,7 @@ export function createGenerationService(deps: typeof defaults = defaults) {
     }
     const replay = await existing();
     if (replay) return replay;
-    if (!/^[^:\s]+:[^:\s]+$/.test(deps.env.higgsfieldCredentials())) throw new GenerationServiceError("Үүсгэх үйлчилгээ түр бэлтгэгдэж байна.", 503);
+    if (!higgsfieldKeyConfigured(deps.env.higgsfieldCredentials())) throw new GenerationServiceError("Үүсгэх үйлчилгээ түр бэлтгэгдэж байна.", 503);
     const recent = await deps.db.generation.count({ where: { userId, createdAt: { gte: new Date(Date.now() - 60000) } } });
     if (recent >= deps.env.generationRateLimit()) throw new GenerationServiceError("Хэт олон хүсэлт. 1 минутын дараа оролдоно уу.", 429);
     let generation: Generation;
