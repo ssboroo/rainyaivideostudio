@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
         { key: "X-Frame-Options", value: "DENY" },
         { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-        { key: "Content-Security-Policy", value: "default-src 'self'; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://api.higgsfield.ai https://api.wire.mn https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self' data:;" }
+        { key: "Content-Security-Policy", value: "default-src 'self'; img-src 'self' data: blob: https:; media-src 'self' blob: https:; frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'self' https://api.higgsfield.ai https://api.wire.mn https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self' data:;" }
       ]
     }];
   }

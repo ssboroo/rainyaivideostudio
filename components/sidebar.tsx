@@ -42,6 +42,7 @@ const groups = [
     items: [
       ["/cinema", "Кино студи", Film],
       ["/studio?group=Genjutsu", "Genjutsu", WandSparkles],
+      ["/studio?model=genjutsu-motion&source=youtube", "YouTube → Genjutsu", CirclePlay],
       ["/marketing", "Маркетинг", Megaphone],
       ["/influencer", "AI дүр бүтээх", ScanFace],
       ["/apps", "Эффект ба хэрэгсэл", Sparkles],
