@@ -38,3 +38,15 @@ test('unsafe environment packages cannot undercut minimum credit value',()=>{
   process.env.CREDIT_PACKAGES_JSON=JSON.stringify([{id:'ok',name:'OK',priceMnt:10000,credits:1000,validityMonths:1}]);assert.equal(getCreditPackages()[0].credits,1000);
  } finally {if(previous===undefined)delete process.env.CREDIT_PACKAGES_JSON;else process.env.CREDIT_PACKAGES_JSON=previous;}
 });
+
+test('published standard-rate Kling families quote only documented modes',()=>{
+ const base={duration:5};
+ assert.equal(providerCostUsd('kling-video/o3/first-last-frame',{...base,mode:'pro'}),.112*5);
+ assert.equal(providerCostUsd('kling-video/o3/image-reference',{...base,mode:'std'}),.084*5);
+ assert.equal(providerCostUsd('kling-video/o3/video-reference',{...base,mode:'pro'}),.168*5);
+ assert.equal(providerCostUsd('kling-video/omni/video-reference',{...base,mode:'pro'}),.168*5);
+ assert.equal(providerCostUsd('kling-video/v2.5-turbo/pro/text-to-video',base),.07*5);
+ assert.equal(providerCostUsd('kling-video/v2.5-turbo/pro/image-to-video',base),.07*5);
+ assert.throws(()=>providerCostUsd('kling-video/o3/first-last-frame',{...base,mode:'4k'}));
+ assert.throws(()=>providerCostUsd('kling-video/o3/image-reference',{...base,mode:'pro'}));
+});
