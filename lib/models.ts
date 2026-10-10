@@ -207,7 +207,7 @@ function enrichModel(model:RavsModel):RavsModel {
  const fields=spec?.parameters||[];
  const field=(name:string)=>fields.find(f=>f.name===name);
  const duration=field("duration");
- const maxReferences=model.modelId.startsWith("marketing-studio/")?16:model.slug==="genjutsu-restyle"?5:model.slug==="qwen-image-3-edit"?3:model.maxReferences||8;
+ const maxReferences=model.modelId.startsWith("marketing-studio/")?16:model.slug==="ai-influencer"?3:model.slug==="genjutsu-restyle"?5:model.slug==="qwen-image-3-edit"?3:model.maxReferences||8;
  const ordered=(f:HfParameter|undefined,fallback:string[])=>f?.options?[(String(f.default)),...f.options].filter((x,i,a)=>f.options!.includes(x)&&a.indexOf(x)===i):typeof f?.default==="string"?[f.default]:fallback;
  return {...model,maxReferences,apiVerified:!!spec?.verified,badge:spec?.verified?model.badge:"API ШАЛГАЖ БАЙНА",apiReason:spec?.verified?"":"Энэ хувилбарын API баримт эсвэл холболтын шаардлага бүрэн баталгаажаагүй. Параметртэй өөр хувилбар сонгоно уу.",apiSource:spec?.source,parameters:fields,
   resolutions:ordered(field("resolution"),["auto"]),aspectRatios:ordered(field("aspect_ratio"),["auto"]),
@@ -216,7 +216,7 @@ function enrichModel(model:RavsModel):RavsModel {
   durationOptions:duration?.options?.map(Number),
   supportsImage:fields.some(f=>["image_url","image_urls","first_frame_url","start_image_url"].includes(f.name)),
   supportsVideo:fields.some(f=>["video_url","video_urls"].includes(f.name)),
-  supportsMultipleReferences:fields.some(f=>["image_urls","video_urls","reference_urls"].includes(f.name)),
+  supportsMultipleReferences:fields.some(f=>["image_urls","item_image_urls","video_urls","reference_urls"].includes(f.name)),
   supportsAudio:fields.some(f=>["generate_audio","sound","keep_original_sound"].includes(f.name)),
   requiresPrompt:field("prompt")?.required||false};
 }
@@ -295,6 +295,8 @@ export function buildProviderInput(model:RavsModel,raw:Record<string,unknown>){
   first_frame_url:image,start_image_url:image,
   generate_audio:raw.generateAudio,sound:raw.generateAudio===undefined?undefined:raw.generateAudio?"on":"off",keep_original_sound:raw.generateAudio===undefined?undefined:raw.generateAudio?"yes":"no",
   preset_id:raw.presetId||undefined,
+  brief:model.slug==="ai-influencer"&&typeof raw.prompt==="string"?raw.prompt.trim().slice(0,4000):undefined,
+  item_image_urls:model.slug==="ai-influencer"?refs:undefined,
  };
  const input:Record<string,unknown>={};
  for(const field of model.parameters||[]){
