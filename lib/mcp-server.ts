@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { createLongMoviePlan } from './long-movie-plan.ts';
 import { reviewStoryboard } from './storyboard-quality.ts';
+import { createMovie, movieStatus, cancelMovie, movieEnabled } from './movie-producer.ts';
 import { models, getModel, buildProviderInput, estimateCredits } from './models.ts';
 import { modelGuide, parameterLabel, parameterHelp, durationLabel, resolutionLabel, aspectLabel } from './model-guides.ts';
 
@@ -60,6 +61,36 @@ export function createRavsMcpServer(identity: McpIdentity, services: McpServices
   server.registerPrompt('mongolian_campaign', { title: 'Монгол кампанит ажил', description: 'RAVS хэрэгслээр санаанаас нийтлэх контент хүртэл төлөвлөх', argsSchema: { brand: z.string().max(150), goal: z.string().max(1000), audience: z.string().max(500) } }, async ({ brand, goal, audience }) => ({ messages: [{ role: 'user', content: { type: 'text', text: `${brand} брэндэд Монгол хэлээр бүтэн контент бэлд. Зорилго: ${goal}. Үзэгчид: ${audience}. Эхлээд ravs_list_models, сонгосон ravs_model_guide ашигла. 3 санаа, storyboard, кадр бүрийн prompt/тохиргоо, caption, hook, CTA, нийтлэх төлөвлөгөө гарга. ravs_estimate ашиглаж кредитийг харуул. Миний тусдаа зөвшөөрөлгүйгээр төлбөртэй үүсгэлт бүү хий. Хүсэлт эхэлсэн бол ravs_generation_status-аар шалгаж, зөвхөн COMPLETED ба URL байвал бэлэн гэж хэл.` } }] }));
   // This tool and prompt coordinate two independently authorized MCP servers.
   // No Voice credentials, accounts, audio, or payment operations cross this boundary.
+  server.registerTool('ravs_movie_status',{
+    title:'Кино үйлдвэрлэлийн бодит төлөв',
+    description:'ChatGPT хаагдсан ч PostgreSQL-д ажиллаж буй movie scheduler scene бүрийн төлөв, кредит, медиа холбоосыг өгнө.',
+    inputSchema:{movieId:z.string().regex(/^[a-f0-9]{40}$/)},annotations:readAnnotations
+  },async ({movieId})=>guarded('ravs:read',async()=>movieEnabled()?movieStatus(identity.userId,movieId):{enabled:false,message:'Movie Producer production flag унтраалттай.'}));
+  if(identity.scopes.includes('ravs:generate')){
+    server.registerTool('ravs_create_movie',{
+      title:'Нэг зөвшөөрөлтэй урт кино эхлүүлэх',
+      description:'Зөвшөөрсөн нийт видео кредитийн хүрээнд scene-үүдийг сервер дээр дарааллуулж эхлүүлнэ. Асинхрон; Voice үнэ ба MP4 export ТУСДАА.',
+      inputSchema:{
+        prompt:z.string().min(12).max(6000),
+        targetSeconds:z.number().int().min(4).max(3600),
+        modelSlug:z.string().min(1).max(100),
+        aspectRatio:z.enum(['9:16','16:9','1:1']),
+        resolution:z.enum(['480p','720p','1080p']),
+        generateAudio:z.boolean(),
+        qualityProfile:z.enum(['cinematic','balanced','fast']).default('cinematic'),
+        styleBible:z.string().max(2000).optional(),
+        confirmGeneration:z.literal(true),
+        maxVideoCredits:z.number().int().min(1).max(1000000),
+        idempotencyKey:z.string().min(16).max(128).regex(/^[A-Za-z0-9_-]+$/)
+      },annotations:{readOnlyHint:false,destructiveHint:false,idempotentHint:true,openWorldHint:true}
+    },async (input)=>guarded('ravs:generate',async()=>movieEnabled()?createMovie(identity.userId,input):{enabled:false,message:'Movie Producer production flag унтраалттай.'}));
+    server.registerTool('ravs_cancel_movie',{
+      title:'Дараагийн кадруудыг зогсоох',
+      description:'Хүлээгдэж буй movie scheduler ажлыг зогсооно. Эхэлсэн paid provider generation-ийг хүчингүй болгохгүй.',
+      inputSchema:{movieId:z.string().regex(/^[a-f0-9]{40}$/),confirmCancel:z.literal(true)},
+      annotations:{readOnlyHint:false,destructiveHint:true,idempotentHint:true,openWorldHint:true}
+    },async({movieId})=>guarded('ravs:generate',async()=>movieEnabled()?cancelMovie(identity.userId,movieId):{enabled:false,message:'Producer идэвхгүй.'}));
+  }
   server.registerTool('ravs_storyboard_quality_check',{
     title:'Сторибордын чанарын шалгалт',
     description:'Кадр давтагдсан, хугацаа зөрсөн, дүр continuity reference дутуу зэрэг алдааг төлбөргүй шалгана. Текстийн QA болохоос AI видеоны дүрсний чанарын баталгаа биш.',
@@ -169,7 +200,7 @@ export function createRavsMcpServer(identity: McpIdentity, services: McpServices
     'Кадр бүрийн duration/frame integrity болон төлөвийг шалга. Дүр ба бүтээгдэхүүний үнэн зөв байдлын QA-г AI үнэлсэн гэж 100% баталж болохгүй. '+
     'Бүх scene бэлэн болмогц Voice-д movie tools байгаа эсэхийг шалга. Байхгүй бол бодит CDN host/холболт баталгаажаагүй гэсэн үг: MP4 бэлэн гэж бүү мэдэгд, Video болон Voice-ийн тусдаа үр дүн, job ID-г үзүүл. Tool байвал rainy_voice_movie_quote-аар CDN ба кредитийг шалгаж, зөвхөн баталсан төсвийн хүрээнд rainy_voice_create_movie, '+
     'rainy_voice_movie_status дуудан эцсийн MP4 татах холбоосыг өг. Төлөв queued/running бол бэлэн гэж бүү хэл. '+
-    'Энэ урсгал ChatGPT/Claude MCP клиент нээлттэй ажиллаж байхыг шаардана; 1 цагийн бүтээлийг ганц request-ээр фонтойгоо үүсгэнэ гэж бүү амла. '+
+    'Хэрэв ravs_create_movie идэвхтэй бол нийт төсвөө батлуулж durable scheduler эхлүүл, movie_status-аар төлөв шалга. Movie Producer flag унтраалттай бол ChatGPT/Claude клиент нээлттэй байх шаардлагатай, бүрэн автоном гэж бүү амла. '+
     'Хэрэв хэт олон генерац, төсөв, серверийн лимитээс болж дуусахгүй бол төлөвийг үнэн зөв мэдээл, бүх сцен ба output-ыг алдахгүй хадгал.'}}]}));
   server.registerPrompt('rainy_video_voice_campaign', {
     title: 'RAINY хоёр студи: видео + Монгол дуу',
