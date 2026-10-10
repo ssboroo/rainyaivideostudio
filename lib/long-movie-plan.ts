@@ -6,6 +6,8 @@ export class MoviePlanError extends Error {
 export type LongMoviePlanInput={
   prompt:string; targetSeconds:number; modelSlug:string;
   aspectRatio:string; resolution:string; generateAudio:boolean;
+  qualityProfile?:"cinematic"|"balanced"|"fast";
+  styleBible?:string;
 };
 export function createLongMoviePlan(input:LongMoviePlanInput) {
   if(typeof input.prompt!=="string" || input.prompt.trim().length<12 || input.prompt.length>6000)
@@ -21,13 +23,23 @@ export function createLongMoviePlan(input:LongMoviePlanInput) {
     throw new MoviePlanError("Сонгосон харьцаа дэмжигдээгүй.");
   if(input.generateAudio && !model.supportsAudio)
     throw new MoviePlanError("Энэ модель native audio дэмжихгүй.");
-  const parts=Math.ceil(input.targetSeconds/model.maxDuration);
+  const quality=input.qualityProfile || "cinematic";
+  const preferredClip=quality==="cinematic"?8:quality==="balanced"?15:model.maxDuration;
+  const minimumScenes=Math.ceil(input.targetSeconds/model.maxDuration);
+  const desiredScenes=Math.ceil(input.targetSeconds/Math.min(preferredClip,model.maxDuration));
+  const maximumFeasibleScenes=Math.floor(input.targetSeconds/model.minDuration);
+  const parts=Math.max(minimumScenes,Math.min(desiredScenes,120,maximumFeasibleScenes));
   if(parts>120)
     throw new MoviePlanError("Энэ модель болон хугацаанд 120-оос олон кадр хэрэгтэй. Төслийг бүлгүүдэд хуваана уу.");
   const base=Math.floor(input.targetSeconds/parts);
   const extra=input.targetSeconds%parts;
   if(base<model.minDuration)
     throw new MoviePlanError("Хүссэн хугацааг тухайн моделийн клипийн хамгийн бага хугацаанд тааруулах боломжгүй.");
+  const shotTypes=["Establishing wide shot","Medium tracking shot","Intimate close-up","Detailed insert","Over-the-shoulder","Dynamic low-angle","Character reaction","Slow dolly movement"];
+  const beatFor=(position:number)=>position<0.12?"setup":position<0.26?"inciting":position<0.64?"escalation":position<0.79?"turning-point":position<0.93?"climax":"resolution";
+  const bible=typeof input.styleBible==="string"&&input.styleBible.trim()
+    ?input.styleBible.trim().slice(0,2000)
+    : "Director must extract and freeze: character face, hair, outfit, ethnicity when provided, prop shapes, brand logo, location, lighting, lens, color grade and time of day from user input. Never invent a user-provided face reference.";
   let time=0,totalCredits=0;
   const scenes=Array.from({length:parts},(_,i)=>{
     const duration=base+(i<extra?1:0);
@@ -41,8 +53,11 @@ export function createLongMoviePlan(input:LongMoviePlanInput) {
     if(!Number.isSafeInteger(totalCredits)) throw new MoviePlanError("Нийт кредит буруу байна.");
     const scene={
       number:i+1,startSeconds:time,endSeconds:time+duration,duration,
+      beat:beatFor((i+0.5)/parts),
+      shotType:shotTypes[i%shotTypes.length],
+      transition:i===0?"fade-in":i===parts-1?"ending":i%5===0?"motivated-cut":"match-action",
       modelSlug:model.slug,templateInput:inputPayload,
-      instructions:"AI Director: нэг ерөнхий санааг үргэлжлэлтэй, өөр өөр үйл явдал, камер, орон зайтай тусгай scene prompt болгон өргөжүүл. Дүр, хувцас, бүтээгдэхүүн, логоны жишиг тайлбарыг хадгал.",
+      instructions:"AI Director: build an independent original cinematic scene prompt. Preserve the style bible, identity and physical continuity. Use different camera blocking, composition, visual rhythm and action per shot; do not repeat the base prompt verbatim. Read narrative beat and shot type. A text-only reference cannot guarantee face identity.",
       credits,
     };
     time+=duration;
@@ -54,6 +69,15 @@ export function createLongMoviePlan(input:LongMoviePlanInput) {
     plannedSeconds:time,
     scenes,
     sceneCount:parts,
+    qualityProfile:quality,
+    continuityBible:bible,
+    productionQualityGates:[
+      "Timeline timing, video codec, frame rate, resolution and aspect ratio match delivery profile",
+      "Visual references and identity consistency are manually reviewable; AI semantic QA is fallible",
+      "No black frames, frozen shots, broken files or silent audio unless deliberately scripted",
+      "Use short scene-specific prompts and verify camera direction, pacing and narrative continuity",
+      "Check Mongolian voice and subtitle alignment before calling the final MP4 ready"
+    ],
     totalVideoCredits:totalCredits,
     voiceCreditsIncluded:false,
     assemblyCreditsIncluded:false,
