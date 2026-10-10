@@ -582,11 +582,16 @@ export const hfModelSpecs:HfModelSpec[] = [
   },
   {
     "id": "higgsfield/genjutsu/object-swap/v1.0",
-    "name": "genjutsu-object",
+    "name": "Genjutsu Object Swap",
     "source": "https://open.higgsfield.ai/models/higgsfield/genjutsu/object-swap/v1.0/api-reference",
-    "parameters": [],
-    "verified": false,
-    "reason": "Загварын API баримт одоогоор баталгаажаагүй."
+    "parameters": [
+      {"name":"prompt","type":"string","required":false,"default":"","maxLength":10000},
+      {"name":"video_url","type":"string (URL)","required":true,"minLength":1,"maxLength":2083},
+      {"name":"image_urls","type":"array[string]","required":true},
+      {"name":"resolution","type":"string","required":false,"default":"720p","options":["480p","720p","1080p"]}
+    ],
+    "verified": true,
+    "reason": ""
   },
   {
     "id": "higgsfield/genjutsu/restyle/v1.0",
