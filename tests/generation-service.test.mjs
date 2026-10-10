@@ -34,7 +34,7 @@ test('all three Genjutsu models require user-bound source clip proof before rese
     clipToken:issueClipProof('user-a',videoUrl,6),
    };
    const opts={idempotencyKey:'clip-'+slug+'-123456',maxCredits:10000};
-   await assert.rejects(f.service.create('user-a',{...input,clipToken:'invalid'},opts),e=>e.status===503);
+   await assert.rejects(f.service.create('user-a',{...input,clipToken:'invalid'},opts),e=>e.status===422);
    assert.equal(f.calls.reserves,0,slug);
    const generated=await f.service.create('user-a',input,opts);
    assert.equal(generated.generation.modelSlug,slug);
