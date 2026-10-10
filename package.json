@@ -15,7 +15,8 @@
     "check": "prisma validate && tsc --noEmit",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
     "test": "node --test tests/*.test.mjs",
-    "hf:example": "node --import tsx index.ts"
+    "hf:example": "node --import tsx index.ts",
+    "movie:worker": "node --import tsx scripts/movie-worker.mjs"
   },
   "dependencies": {
     "@higgsfield/client": "0.2.6",
@@ -27,13 +28,13 @@
     "prisma": "6.19.3",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.5",
+    "tsx": "^4.23.15"
   },
   "devDependencies": {
     "@types/node": "22.18.6",
     "@types/react": "19.2.0",
     "@types/react-dom": "19.2.0",
-    "tsx": "^4.23.15",
     "typescript": "5.9.3"
   },
   "overrides": {
