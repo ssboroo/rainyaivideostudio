@@ -11,11 +11,11 @@ function fixture(scopes=['ravs:read','ravs:generate']) {
  return{server,calls};
 }
 async function connected(scopes){const f=fixture(scopes);const [clientTransport,serverTransport]=InMemoryTransport.createLinkedPair();const client=new Client({name:'test-client',version:'1.0.0'});await f.server.connect(serverTransport);await client.connect(clientTransport);return{...f,client,close:async()=>{await client.close();await f.server.close()}};}
-test('SDK advertises all eleven tools and a Mongolian campaign prompt',async()=>{
- const f=await connected();try{const tools=await f.client.listTools();assert.equal(tools.tools.length,11);assert.ok(tools.tools.every(t=>t.description));assert.ok(tools.tools.some(t=>t.name==='ravs_voice_workflow_plan'));assert.equal((await f.client.listPrompts()).prompts[0].name,'mongolian_campaign');const res=await f.client.callTool({name:'ravs_model_guide',arguments:{modelSlug:'seedance-2-5'}});const guide=JSON.parse(res.content[0].text);assert.equal(guide.name,'Seedance 2.5');assert.ok(guide.parameters.some(p=>p.name==='duration'));}finally{await f.close()}
+test('SDK advertises all twelve tools and a Mongolian campaign prompt',async()=>{
+ const f=await connected();try{const tools=await f.client.listTools();assert.equal(tools.tools.length,12);assert.ok(tools.tools.every(t=>t.description));assert.ok(tools.tools.some(t=>t.name==='ravs_voice_workflow_plan'));assert.equal((await f.client.listPrompts()).prompts[0].name,'mongolian_campaign');const res=await f.client.callTool({name:'ravs_model_guide',arguments:{modelSlug:'seedance-2-5'}});const guide=JSON.parse(res.content[0].text);assert.equal(guide.name,'Seedance 2.5');assert.ok(guide.parameters.some(p=>p.name==='duration'));}finally{await f.close()}
 });
 test('read-only grant hides mutations and own account identity is server controlled',async()=>{
- const f=await connected(['ravs:read']);try{const names=(await f.client.listTools()).tools.map(t=>t.name);assert.equal(names.length,9);assert.ok(!names.includes('ravs_create_generation'));await f.client.callTool({name:'ravs_account',arguments:{userId:'another-user'}});assert.equal(f.calls[0][1],'own-user');const r=await f.client.callTool({name:'ravs_create_generation',arguments:{}});assert.equal(r.isError,true);assert.equal(f.calls.length,1);}finally{await f.close()}
+ const f=await connected(['ravs:read']);try{const names=(await f.client.listTools()).tools.map(t=>t.name);assert.equal(names.length,10);assert.ok(!names.includes('ravs_create_generation'));await f.client.callTool({name:'ravs_account',arguments:{userId:'another-user'}});assert.equal(f.calls[0][1],'own-user');const r=await f.client.callTool({name:'ravs_create_generation',arguments:{}});assert.equal(r.isError,true);assert.equal(f.calls.length,1);}finally{await f.close()}
 });
 test('cross-studio workflow is read-only, costs zero, and preserves independent account boundaries',async()=>{
  const f=await connected(['ravs:read']);try{
@@ -25,6 +25,26 @@ test('cross-studio workflow is read-only, costs zero, and preserves independent 
   assert.equal(guide.scenes,3);
   assert.ok(guide.caution.includes('нэг хэрэглэгчийн'));
   assert.equal(f.calls.length,0);
+ }finally{await f.close()}
+});
+test('one-prompt movie plan splits 61 seconds into 3 valid scenes and requires no paid calls',async()=>{
+ const f=await connected(['ravs:read']);try{
+  const r=await f.client.callTool({name:'ravs_long_movie_plan',arguments:{
+    prompt:'An epic Mongolian cinematic journey through the Gobi desert, with consistent hero and sunset.',
+    targetSeconds:61,modelSlug:'seedance-2-5',resolution:'720p',aspectRatio:'9:16',generateAudio:true}});
+  assert.notEqual(r.isError,true,JSON.stringify(r));
+  const p=JSON.parse(r.content[0].text);
+  assert.equal(p.plannedSeconds,61);
+  assert.equal(p.sceneCount,3);
+  assert.equal(p.scenes.reduce((s,x)=>s+x.duration,0),61);
+  assert.ok(p.scenes.every(x=>x.duration>=4&&x.duration<=30));
+  assert.ok(p.totalVideoCredits>0);
+  assert.equal(p.readyToGenerate,false);
+  assert.equal(f.calls.length,0);
+  const tooLong=await f.client.callTool({name:'ravs_long_movie_plan',arguments:{
+    prompt:'An epic Mongolian cinematic journey through the Gobi desert, with consistent hero and sunset.',
+    targetSeconds:3601,modelSlug:'seedance-2-5'}});
+  assert.equal(tooLong.isError,true);
  }finally{await f.close()}
 });
 test('batch estimate validates every scene and never charges a provider',async()=>{
@@ -52,6 +72,6 @@ test('estimate validates real model schema and does not call a paid provider',as
 });
 test('WebStandard stateless transport handles initialize and tools/list in independent requests',async()=>{
  for(const message of [{jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2025-11-25',capabilities:{},clientInfo:{name:'test',version:'1'}}},{jsonrpc:'2.0',id:2,method:'tools/list',params:{}}]){
- const {server}=fixture();const transport=new WebStandardStreamableHTTPServerTransport({enableJsonResponse:true,maxRequestBodySize:131072});await server.connect(transport);try{const r=await transport.handleRequest(new Request('https://example.com/mcp',{method:'POST',headers:{'content-type':'application/json',accept:'application/json, text/event-stream','mcp-protocol-version':'2025-11-25'},body:JSON.stringify(message)}));assert.equal(r.status,200);const data=await r.json();assert.ok(data.result);if(message.method==='tools/list')assert.equal(data.result.tools.length,11);}finally{await server.close()}
+ const {server}=fixture();const transport=new WebStandardStreamableHTTPServerTransport({enableJsonResponse:true,maxRequestBodySize:131072});await server.connect(transport);try{const r=await transport.handleRequest(new Request('https://example.com/mcp',{method:'POST',headers:{'content-type':'application/json',accept:'application/json, text/event-stream','mcp-protocol-version':'2025-11-25'},body:JSON.stringify(message)}));assert.equal(r.status,200);const data=await r.json();assert.ok(data.result);if(message.method==='tools/list')assert.equal(data.result.tools.length,12);}finally{await server.close()}
  }
 });
