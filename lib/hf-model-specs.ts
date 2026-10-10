@@ -274,11 +274,16 @@ export const hfModelSpecs:HfModelSpec[] = [
   },
   {
     "id": "kling-video/v3.0-turbo/text-to-video",
-    "name": "kling-3-turbo",
+    "name": "Kling 3.0 Turbo Text to Video",
     "source": "https://open.higgsfield.ai/models/kling-video/v3.0-turbo/text-to-video/api-reference",
-    "parameters": [],
-    "verified": false,
-    "reason": "Загварын API баримт одоогоор баталгаажаагүй."
+    "parameters": [
+      {"name":"prompt","type":"string","required":true,"minLength":1},
+      {"name":"duration","type":"integer","required":false,"default":5,"minimum":3,"maximum":15},
+      {"name":"resolution","type":"string","required":false,"default":"720p","options":["720p","1080p"]},
+      {"name":"aspect_ratio","type":"string","required":false,"default":"16:9","options":["16:9","9:16","1:1"]}
+    ],
+    "verified": true,
+    "reason": ""
   },
   {
     "id": "kling-video/v3.0/pro/image-to-video",
@@ -778,11 +783,22 @@ export const hfModelSpecs:HfModelSpec[] = [
   },
   {
     "id": "higgsfield/ai-influencer",
-    "name": "ai-influencer",
+    "name": "AI Influencer",
     "source": "https://open.higgsfield.ai/models/higgsfield/ai-influencer/api-reference",
-    "parameters": [],
-    "verified": false,
-    "reason": "Загварын API баримт одоогоор баталгаажаагүй."
+    "parameters": [
+      {"name":"tier","type":"string","required":false,"default":"normal","options":["normal","freak","total","insects","frogs","cats","dogs","capybaras","birds"]},
+      {"name":"brief","type":"string","required":false,"default":"","maxLength":4000},
+      {"name":"seed","type":"integer","required":false,"minimum":1,"maximum":1000000},
+      {"name":"image_url","type":"string (URL)","required":false},
+      {"name":"selection","type":"object","required":false,"default":{}},
+      {"name":"item_image_urls","type":"array[string]","required":false,"default":[]},
+      {"name":"variation_index","type":"integer","required":false,"default":0,"minimum":0},
+      {"name":"body_color","type":"string","required":false},
+      {"name":"pinned_species","type":"string","required":false},
+      {"name":"trait_variants","type":"object","required":false}
+    ],
+    "verified": true,
+    "reason": ""
   },
   {
     "id": "higgsfield-ai/soul/v2/standard",
