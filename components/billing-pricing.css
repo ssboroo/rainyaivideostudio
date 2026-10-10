@@ -31,3 +31,14 @@
 @media(max-width:920px){.planHowGrid{grid-template-columns:1fr}}
 @media(max-width:640px){.planTrustStrip{grid-template-columns:1fr;gap:8px}.planTrustStrip span{min-height:45px}.billingPage .revampedPlanGrid{grid-template-columns:1fr}.billingPage .revampedPlanGrid .priceCard{padding:21px}.planHowPricingWorks{padding:17px}.planHowPricingWorks h2{font-size:19px}}
 @media(prefers-reduced-motion:reduce){.billingPage .revampedPlanGrid *{scroll-behavior:auto}}
+
+/* Real model-derived video capacity labels — responsive even on small phones. */
+.videoCapacity{display:grid;gap:8px;padding:13px;border:1px solid #555039;border-radius:12px;background:#191b15;margin:13px 0 18px;min-width:0}
+.videoCapacity>strong{font-size:12px;color:#f2e3a1;line-height:1.35}
+.videoCapacity>small{font-size:10px;color:#babba9;line-height:1.4}
+.videoCapacityRow{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid #ffffff16;padding-top:8px}
+.videoCapacityRow>span{display:grid;gap:2px;min-width:0;font-size:11px;color:#e9e8db}
+.videoCapacityRow>span small{font-size:10px;color:#aeb19f}
+.videoCapacityRow>b{font-size:12px;color:#ffe77a;white-space:nowrap;font-variant-numeric:tabular-nums}
+.videoCapacity>p{color:#bfc0b1;font-size:11px;line-height:1.5}
+@media(max-width:420px){.videoCapacity{padding:11px}.videoCapacityRow{align-items:flex-start}.videoCapacityRow>span{overflow-wrap:anywhere}}

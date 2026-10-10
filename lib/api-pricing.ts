@@ -3,6 +3,9 @@
 // Reviewed against official provider catalog 2026-10-11; no promotional prices assumed.
 export const pricingPolicy = {
  usdMnt: 3900, markup: 1.15, minCreditMnt: 100000 / 12000,
+ // Target: at least 70% cost markup AFTER the planning reserves below.
+ // A 70% cost markup is not a 70% sales margin.
+ minimumNetCostMarkup: .70,
  reviewedAt: '2026-10-11',
  // Cost-reserve assumptions for scenario stress tests; not published Wire fees or tax advice.
  fxStress: .10, paymentFeeReserve: .04, taxReserve: .10,
@@ -20,9 +23,15 @@ export function estimatePackContribution(priceMnt:number,credits:number) {
  const unit=priceMnt/credits;
  const providerCostPerCredit=pricingPolicy.minCreditMnt*(1+pricingPolicy.fxStress)/(1+pricingPolicy.markup);
  const reserves=pricingPolicy.paymentFeeReserve+pricingPolicy.taxReserve+pricingPolicy.infrastructureReserve;
- const margin=(unit-providerCostPerCredit-unit*reserves)/unit;
- return {unitMnt:unit,providerCostPerCredit,estimatedContributionMargin:margin,
-  guardPassed:unit>=pricingPolicy.minimumPackMntPerCredit && margin>=pricingPolicy.minContribution};
+ const netSalesPerCredit=unit*(1-reserves);
+ const margin=(netSalesPerCredit-providerCostPerCredit)/unit;
+ const netCostMarkup=(netSalesPerCredit/providerCostPerCredit)-1;
+ return {unitMnt:unit,providerCostPerCredit,netSalesPerCredit,
+   netCostMarkup,minimumNetCostMarkup:pricingPolicy.minimumNetCostMarkup,
+   estimatedContributionMargin:margin,
+   guardPassed:unit>=pricingPolicy.minimumPackMntPerCredit &&
+     margin>=pricingPolicy.minContribution &&
+     netCostMarkup+1e-10>=pricingPolicy.minimumNetCostMarkup};
 }
 export class PricingUnavailableError extends Error {}
 const unavailable = () => { throw new PricingUnavailableError('Энэ тохиргооны API өртгийг баталгаажуулж байна. Өөр загвар сонгоно уу.'); };

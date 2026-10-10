@@ -90,9 +90,9 @@ test("Studio lets all Genjutsu models prepare signed clips before quoting credit
  assert.match(studio, /"Клип бэлтгэнэ үү"/);
  assert.match(studio, /clipGenjutsu && model\.apiVerified &&/);
  assert.match(studio, /!clipPending && !!model\.apiVerified/);
- assert.match(studio,/__verifiedClipSeconds: clipGenjutsu && clipToken/);
- assert.match(generation,/\["genjutsu-motion","genjutsu-object","genjutsu-restyle"\]\.includes\(model\.slug\)/);
- assert.match(generation,/readClipProof\(raw\.clipToken,userId,input\.video_url\)/);
+ assert.match(studio,/quoteKey=JSON.stringify\(quoteInput\)/);
+ assert.match(generation,/quoteValidatedGeneration\(userId,model,input,raw.clipToken\)/);
+ assert.match(read("lib/generation-credit-quote.ts"),/readClipProof\(clipToken,userId,video\)/);
  assert.match(studio,/Энэ Genjutsu хувилбарт хамгийн багадаа 4 секундын эх видео шаардлагатай/);
 });
 
@@ -112,7 +112,7 @@ test("YouTube is used ONLY as official embed: FFmpeg accepts only user-uploaded 
  assert.match(ui,/\/api\/clips\/prepare/);
  assert.match(studio,/<YouTubeGenjutsuSource/);
  assert.match(studio,/clipToken/);
- assert.match(service,/readClipProof\(raw.clipToken,userId,input.video_url\)/);
+ assert.match(read("lib/generation-credit-quote.ts"),/readClipProof\(clipToken,userId,video\)/);
  assert.match(csp,/frame-src 'self' https:\/\/www.youtube-nocookie.com/);
 });
 

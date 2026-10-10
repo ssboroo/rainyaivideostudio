@@ -26,11 +26,11 @@ test("verified Genjutsu Motion quotes after preparing a signed 1-30 second clip"
 });
 test("Studio does not quote unsupported models or present a clipped-video prerequisite as an API outage",()=>{
  assert.match(studio,/const apiNotReady = !model\.apiVerified/);
- assert.match(studio,/if\(!apiNotReady && !clipPending\)/);
+ assert.match(studio,/const pricingPending=!apiNotReady&&!clipPending&&!quoteCurrent/);
  assert.match(studio,/apiNotReady \? "API бэлэн биш"/);
  assert.match(studio,/clipPending \? "Клип бэлтгэнэ үү"/);
  assert.match(studio,/Genjutsu Motion Transfer сонгох/);
- assert.match(studio,/model\.name\+" \("\+resolution/);
+ assert.match(studio,/fetch\("\/api\/pricing\/quote"/);
  assert.match(studio,/!clipPending && !!model\.apiVerified/);
 });
 

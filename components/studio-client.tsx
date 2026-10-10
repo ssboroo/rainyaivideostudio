@@ -32,7 +32,7 @@ import { ModelFamilies } from "@/components/model-families";
 import { modelFamilyName, modelVariantLabel } from "@/lib/model-families";
 import { ModelExamples } from "@/components/model-examples";
 import { YouTubeGenjutsuSource } from "@/components/youtube-genjutsu-source";
-import { buildProviderInput, estimateCredits, getModel, models, type ModelKind, type RavsModel } from "@/lib/models";
+import { buildProviderInput, getModel, models, type ModelKind, type RavsModel } from "@/lib/models";
 
 type User = {
   id: string;
@@ -118,21 +118,37 @@ export function StudioClient() {
   const clipGenjutsu = ["genjutsu-motion","genjutsu-object","genjutsu-restyle"].includes(model.slug);
   const clipPending = clipGenjutsu && (!videoUrl || clipSeconds===null || !clipToken);
   const apiNotReady = !model.apiVerified;
-  let cost = 0;
-  let pricingError = "";
-  // Never attempt to quote an API model whose endpoint has not been verified.
-  // An incomplete Genjutsu clip is a preparation step, not a price error.
-  if(!apiNotReady && !clipPending) {
-    try {
-      cost = estimateCredits(model, duration, { ...modelOptions, resolution, aspect_ratio: aspect, sound: audio ? "on" : "off", generate_audio: audio, video_url: videoUrl || undefined,
-        __verifiedClipSeconds: clipGenjutsu && clipToken ? clipSeconds ?? undefined : undefined });
-    } catch (error) {
-      const detail=error instanceof Error ? error.message : "";
-      pricingError=detail.startsWith("Энэ тохиргооны API өртгийг баталгаажуулж байна")
-        ? model.name+" ("+resolution+") загварын API үнэ одоогоор баталгаажаагүй. Кредит зарцуулахгүй."
-        : detail || "API үнэ баталгаажаагүй. Кредит зарцуулахгүй.";
-    }
-  }
+  // The price shown to the customer must be computed by the SAME backend code
+  // that reserves credits, using the SAME complete model input.
+  const quoteInput={modelSlug:selected,prompt,duration,resolution,aspectRatio:aspect,
+    generateAudio:audio,imageUrl,videoUrl,referenceUrls:refs,presetId,modelOptions,clipToken};
+  const quoteKey=JSON.stringify(quoteInput);
+  const [confirmedQuote,setConfirmedQuote]=useState<{key:string;credits:number;error:string}|null>(null);
+  const quoteCurrent=confirmedQuote?.key===quoteKey;
+  const cost=quoteCurrent?confirmedQuote.credits:0;
+  const pricingError=quoteCurrent?confirmedQuote.error:"";
+  const pricingPending=!apiNotReady&&!clipPending&&!quoteCurrent;
+  useEffect(()=>{
+    if(apiNotReady||clipPending)return;
+    const controller=new AbortController();
+    const handle=setTimeout(async()=>{
+      try{
+        const response=await fetch("/api/pricing/quote",{
+          method:"POST",headers:{"content-type":"application/json"},
+          credentials:"same-origin",cache:"no-store",body:quoteKey,signal:controller.signal,
+        });
+        const result=await response.json();
+        if(controller.signal.aborted)return;
+        if(!response.ok || !Number.isSafeInteger(result.credits) || result.credits<=0)
+          setConfirmedQuote({key:quoteKey,credits:0,error:result.error||"Тохиргооны үнэ баталгаажаагүй. Кредит суутгахгүй."});
+        else setConfirmedQuote({key:quoteKey,credits:result.credits,error:""});
+      }catch{
+        if(!controller.signal.aborted)
+          setConfirmedQuote({key:quoteKey,credits:0,error:"Серверийн үнийг шалгаж чадсангүй. Кредит суутгахгүй."});
+      }
+    },350);
+    return()=>{clearTimeout(handle);controller.abort();};
+  },[quoteKey,apiNotReady,clipPending]);
   const group = params.get("group");
 
   const visibleModels = useMemo(() => {
@@ -279,7 +295,7 @@ export function StudioClient() {
   const hasInput = Boolean(model.slug==="ai-influencer" || prompt.trim() || imageUrl || videoUrl || refs.length || Object.values(modelOptions).some(value=>value!==undefined&&value!==null&&value!==""));
   let inputError="";
   try {buildProviderInput(model,{prompt,imageUrl,videoUrl,referenceUrls:refs,presetId,duration,resolution,aspectRatio:aspect,generateAudio:audio,modelOptions});}catch(e){inputError=e instanceof Error?e.message:"Оролтоо шалгана уу.";}
-  const canSubmit = !busy && !uploading && !clipPending && !!model.apiVerified && hasInput && !inputError && !pricingError && !!user && user.credits>=cost && providerHealth==="ready";
+  const canSubmit = !busy && !uploading && !clipPending && !!model.apiVerified && hasInput && !inputError && !pricingPending && !pricingError && cost>0 && !!user && user.credits>=cost && providerHealth==="ready";
 
   async function submit() {
     if (!user || !canSubmit || submitLock.current) return;
@@ -393,7 +409,7 @@ export function StudioClient() {
                 <h1>{model.name}</h1>
                 <p>{model.description}</p>
               </div>
-              <div className="estimateBadge"><span>Кредитийн тооцоо</span><b>{apiNotReady ? "API бэлэн биш" : clipPending ? "Клип бэлтгэнэ үү" : pricingError ? "Үнэ баталгаажаагүй" : `${cost} кредит`}</b></div>
+              <div className="estimateBadge"><span>Кредитийн тооцоо</span><b>{apiNotReady ? "API бэлэн биш" : clipPending ? "Клип бэлтгэнэ үү" : pricingPending ? "Сервер үнэ бодож байна…" : pricingError ? "Үнэ баталгаажаагүй" : `${cost.toLocaleString("mn-MN")} кредит`}</b></div>
             </div>
 
             <div className="composerPanel">
@@ -515,16 +531,16 @@ export function StudioClient() {
                 <button className="generateButton" disabled={!canSubmit} onClick={submit}>
                   {busy ? <LoaderCircle className="spin" size={17} /> : <ArrowUp size={17} />}
                   <span>{busy ? "Илгээж байна" : "Үүсгэх"}</span>
-                  <b>{apiNotReady ? "API баталгаажаагүй" : clipPending ? "Клип шаардлагатай" : pricingError ? "Үнэ баталгаажаагүй" : `${cost} кредит`}</b>
+                  <b>{apiNotReady ? "API баталгаажаагүй" : clipPending ? "Клип шаардлагатай" : pricingPending ? "Үнэ шалгаж байна…" : pricingError ? "Үнэ баталгаажаагүй" : `${cost.toLocaleString("mn-MN")} кредит`}</b>
                 </button>
               </div>
 
-              {!pricingError && cost>0 && <p className="serviceState">{model.kind === "video" ? (cost<=300 ? "Хэмнэлттэй" : cost<=800 ? "Стандарт" : "Премиум") : "Зураг / Workflow"} · Нэг бүтээл {cost.toLocaleString()} кредит{user ? ` · Үлдэгдлээр ${Math.floor(user.credits/cost)} бүтээл` : ""}. Үнэ сонгосон тохиргооноос хамаарна.</p>}
+              {!pricingError && !pricingPending && cost>0 && <p className="serviceState">{model.kind === "video" ? (cost<=300 ? "Хэмнэлттэй" : cost<=800 ? "Стандарт" : "Премиум") : "Зураг / Workflow"} · Нэг бүтээл {cost.toLocaleString()} кредит{user ? ` · Үлдэгдлээр ${Math.floor(user.credits/cost)} бүтээл` : ""}. Үнэ сонгосон тохиргооноос хамаарна.</p>}
               {model.kind === "video" && cost>800 && <p className="serviceState">Хэмнэх бол <Link href={`/studio?model=${models.find(m=>m.modelId==="minimax/hailuo-2.3/standard/text-to-video")?.slug || ""}`}>Hailuo 2.3 · 6 секунд →</Link></p>}
               {inputError&&hasInput&&<p className="serviceState">{inputError}</p>}
               {providerHealth==="missing"&&<div className="accountNotice"><Sparkles size={20}/><div>Үүсгэх үйлчилгээ бэлтгэгдэж байна. Одоогоор жишээ үзэж, санаа болон тохиргоогоо бэлдээрэй. <Link href="/video-guide">Гарын авлага үзэх →</Link></div></div>}
               {pricingError&&<p className="serviceState" role="alert">{pricingError} {model.group==="Genjutsu" && <Link href="/studio?model=genjutsu-motion&source=youtube">Motion Transfer сонгох →</Link>}</p>}
-              {user&&user.credits<cost&&<p className="serviceState">Энэ бүтээлд {cost} кредит хэрэгтэй. Таны үлдэгдэл {user.credits}. <Link href="/billing">Кредитийн багц үзэх →</Link></p>}
+              {user&&cost>0&&user.credits<cost&&<p className="serviceState">Энэ бүтээлд {cost} кредит хэрэгтэй. Таны үлдэгдэл {user.credits}. <Link href="/billing">Кредитийн багц үзэх →</Link></p>}
               {message && <div className={"studioMessage " + (message.includes("алдаа") || message.includes("дутуу") ? "error" : "")}>{message}</div>}
             </div>
 
@@ -609,7 +625,7 @@ export function StudioClient() {
               <small>CHECKLIST</small>
               <ul className="checkList">
                 <li className={hasInput ? "done" : ""}><i /> Тайлбар эсвэл жишиг</li>
-                <li className={user && user.credits >= cost ? "done" : ""}><i /> {cost} кредит</li>
+                <li className={user && cost>0 && !pricingPending && user.credits >= cost ? "done" : ""}><i /> {pricingPending?"Үнийг шалгаж байна":cost.toLocaleString("mn-MN")} кредит</li>
                 <li className={providerHealth === "ready" ? "done" : ""}><i /> Үүсгэх үйлчилгээ</li>
               </ul>
             </div>

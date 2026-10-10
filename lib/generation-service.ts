@@ -3,8 +3,8 @@ import { createHash } from "node:crypto";
 import { Generation, GenerationStatus, Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { env, higgsfieldKeyConfigured } from "@/lib/env";
-import { getModel, estimateCredits, buildProviderInput } from "@/lib/models";
-import {readClipProof} from "@/lib/clip-proof";
+import { getModel, buildProviderInput } from "@/lib/models";
+import {quoteValidatedGeneration} from "@/lib/generation-credit-quote";
 import { reserveCredits, refundGeneration, markTerminalAndRefund } from "@/lib/credits";
 import { submitGeneration, getGenerationStatus, cancelGeneration, mapProviderStatus } from "@/lib/higgsfield";
 import { mediaFrom } from "@/lib/generation-media";
@@ -53,18 +53,8 @@ export function createGenerationService(deps: typeof defaults = defaults) {
     if (!model) throw new GenerationServiceError("Загвар олдсонгүй.", 404);
     let input: Record<string, unknown>;
     try { input = buildProviderInput(model, raw); } catch (error) { throw new GenerationServiceError(error instanceof Error ? error.message : "Оролт буруу байна.", 400); }
-    let cost: number;
-    try {
-      if(["genjutsu-motion","genjutsu-object","genjutsu-restyle"].includes(model.slug)&&input.video_url) {
-        // The client cannot claim a duration: user, exact source URL and TTL
-        // are verified from the server-signed proof before reserving credits.
-        const seconds=readClipProof(raw.clipToken,userId,input.video_url);
-        if(seconds===null)throw new Error("Genjutsu-д эх MP4-г клип таслах хэсгээр бэлтгэж хугацааг баталгаажуулна уу. Клипийн баталгаа 24 цаг хүчинтэй.");
-        cost=estimateCredits(model,Number(input.duration),{...input,__verifiedClipSeconds:seconds});
-      } else cost=estimateCredits(model, Number(input.duration), input);
-    }
-    catch (error) { throw new GenerationServiceError(error instanceof Error ? error.message : "Үнэ баталгаажуулж байна.", 503); }
-    if (cost > options.maxCredits) throw new GenerationServiceError(`Энэ үүсгэлт ${cost} кредит шаардлагатай. Дээд хэмжээг дахин зөвшөөрнө үү.`, 409);
+    // Replay is checked BEFORE repricing. Existing job keys never get charged
+    // twice if a new provider tariff becomes active after the first submission.
     const externalRequestKey = createHash("sha256").update(JSON.stringify([userId, options.idempotencyKey])).digest("hex");
     async function existing() {
       const row = await deps.db.generation.findFirst({ where: { userId, externalRequestKey } });
@@ -74,6 +64,13 @@ export function createGenerationService(deps: typeof defaults = defaults) {
     }
     const replay = await existing();
     if (replay) return replay;
+    let cost: number;
+    try {
+      cost = quoteValidatedGeneration(userId,model,input,raw.clipToken).credits;
+    } catch(error) {
+      throw new GenerationServiceError(error instanceof Error ? error.message : "Үнэ баталгаажаагүй. Кредит суутгаагүй.", 422);
+    }
+    if (cost > options.maxCredits) throw new GenerationServiceError(`Энэ үүсгэлт ${cost} кредит шаардлагатай. Дээд хэмжээг дахин зөвшөөрнө үү.`, 409);
     if (!higgsfieldKeyConfigured(deps.env.higgsfieldCredentials())) throw new GenerationServiceError("Үүсгэх үйлчилгээ түр бэлтгэгдэж байна.", 503);
     const recent = await deps.db.generation.count({ where: { userId, createdAt: { gte: new Date(Date.now() - 60000) } } });
     if (recent >= deps.env.generationRateLimit()) throw new GenerationServiceError("Хэт олон хүсэлт. 1 минутын дараа оролдоно уу.", 429);

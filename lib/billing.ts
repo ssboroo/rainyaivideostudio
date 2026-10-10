@@ -9,10 +9,11 @@ export type CreditPackage={
  * No "unlimited", no provider-web subscription credit resale.
  */
 const defaults:CreditPackage[]=[
- {id:"starter",name:"Starter",priceMnt:24900,credits:2500,validityMonths:1},
+ {id:"starter",name:"Starter Video",priceMnt:29900,credits:3000,validityMonths:1},
  {id:"creator",name:"Creator",priceMnt:69900,credits:7400,validityMonths:1},
  {id:"pro",name:"Pro",priceMnt:179000,credits:19000,popular:true,validityMonths:1},
  {id:"studio",name:"Studio",priceMnt:449000,credits:48000,validityMonths:1},
+ {id:"agency",name:"Agency",priceMnt:899000,credits:95000,validityMonths:1},
 ];
 function validatePack(p:unknown,seen:Set<string>):asserts p is CreditPackage{
  if(!p || typeof p!=="object"||Array.isArray(p))throw new Error("Кредитийн багцын формат буруу.");
@@ -27,7 +28,7 @@ function validatePack(p:unknown,seen:Set<string>):asserts p is CreditPackage{
     throw new Error("Кредитийн багц буруу эсвэл давхардсан.");
  const audit=estimatePackContribution(pkg.priceMnt,pkg.credits);
  if(!audit.guardPassed)
-   throw new Error("Ашгийн хамгаалалт: багц нь MNT/кредитийн доод үнэ болон зардлын стресс тестийг хангахгүй байна.");
+   throw new Error("Ашгийн хамгаалалт: багц 70%-ийн цэвэрлэсэн өртгийн markup болон нөөцийн стресс тестийг хангахгүй байна.");
  seen.add(pkg.id);
 }
 export function getCreditPackages():CreditPackage[]{
@@ -51,6 +52,7 @@ export function getPricingScenario() {
   forecastUsdMnt:pricingPolicy.usdMnt,
   apiMarkupMultiplier:1+pricingPolicy.markup,
   minCreditMnt:pricingPolicy.minimumPackMntPerCredit,
+   minimumNetCostMarkup:pricingPolicy.minimumNetCostMarkup,
   scenarioReserves:{
    fxStress:pricingPolicy.fxStress,paymentFee:pricingPolicy.paymentFeeReserve,
    tax:pricingPolicy.taxReserve,infrastructure:pricingPolicy.infrastructureReserve,
