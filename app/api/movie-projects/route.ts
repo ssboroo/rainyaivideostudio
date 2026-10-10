@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/http";
-import { createMovie, listOwnMovies, MovieError } from "@/lib/movie-producer";
+import { createMovie, listOwnMovies, MovieError } from "@/lib/movie-producer-v2";
 export const dynamic="force-dynamic";
 const createSchema=z.object({
   title:z.string().max(120).optional(),
