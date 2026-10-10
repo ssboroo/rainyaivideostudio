@@ -2390,9 +2390,16 @@ export const hfModelSpecs:HfModelSpec[] = [
     "id": "alibaba/wan-3.0/image-to-video",
     "name": "Wan 3.0 Image to Video",
     "source": "https://open.higgsfield.ai/models/alibaba/wan-3.0/image-to-video/api-reference",
-    "parameters": [],
-    "verified": false,
-    "reason": "Загварын API баримт одоогоор баталгаажаагүй."
+    "parameters": [
+      {"name":"prompt","type":"string","required":true,"minLength":1},
+      {"name":"image_url","type":"string (URL)","required":true},
+      {"name":"duration","type":"integer","required":false,"default":5,"minimum":2,"maximum":30},
+      {"name":"resolution","type":"string","required":false,"default":"720p","options":["480p","720p","1080p"]},
+      {"name":"aspect_ratio","type":"string","required":false,"default":"adaptive","options":["adaptive","16:9","9:16","1:1"]},
+      {"name":"seed","type":"integer","required":false,"minimum":0,"maximum":2147483647}
+    ],
+    "verified": true,
+    "reason": ""
   },
   {
     "id": "alibaba/wan-3.0/reference-to-video",
