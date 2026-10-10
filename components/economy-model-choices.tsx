@@ -27,7 +27,7 @@ export function EconomyModelChoices({modelSlug,currentCredits,duration,resolutio
   },450);
   return()=>{controller.abort();clearTimeout(timer);};
  },[open,duration,resolution,aspectRatio,generateAudio,prompt]);
- const candidates=items.filter(item=>item.slug!==modelSlug);
+ const candidates=items.filter(item=>item.slug!==modelSlug && item.credits<currentCredits);
  return <section className="ravsEconomy" aria-label="Хямд AI видео загварууд">
   <button type="button" className="ravsEconomyToggle" aria-expanded={open} onClick={()=>setOpen(v=>!v)}>
    <span><ArrowDown size={16}/> Кредит хэмнэх — ижил тохиргоотой загварууд</span><SlidersHorizontal size={16}/>
@@ -36,7 +36,7 @@ export function EconomyModelChoices({modelSlug,currentCredits,duration,resolutio
    <p>Ижил хугацаа ({duration} сек), нягтаршил ({resolution}), харьцаа, дууны шаардлагатай өөр моделийн кредитийг харьцуулна. Үр дүнгийн чанар нь өөр байж болно.</p>
    {loading&&<p role="status">Баталгаажсан API үнийн хувилбаруудыг тооцож байна…</p>}
    {error&&<p role="status">{error}</p>}
-   {!loading&&!error&&!candidates.length&&<p>Энэ тохиргоотой өөр баталгаатай үнэ олдсонгүй. Хугацаа эсвэл нягтаршлаа багасгаж дахин үзнэ үү.</p>}
+   {!loading&&!error&&!candidates.length&&<p>Энэ тохиргоотой хямд баталгаатай хувилбар олдсонгүй. Хугацаа эсвэл нягтаршлаа багасгаж дахин үзнэ үү.</p>}
    {!!candidates.length&&<div className="ravsEconomyCards">{candidates.map(item=><Link key={item.modelId} className="ravsEconomyChoice"
       href={"/studio?model="+encodeURIComponent(item.slug)+"&duration="+duration+"&resolution="+encodeURIComponent(resolution)+"&aspect="+encodeURIComponent(aspectRatio)}>
      <span><b>{item.name}</b><small>{item.duration} сек · {item.resolution}{currentCredits>item.credits?" · "+Math.round((1-item.credits/currentCredits)*100)+"% бага кредит":""}</small></span>
