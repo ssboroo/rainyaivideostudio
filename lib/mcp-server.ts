@@ -129,12 +129,12 @@ export function createRavsMcpServer(identity: McpIdentity, services: McpServices
     title:'One-Prompt Movie төслүүд',
     description:'Server-side Railway scheduler дээр хадгалагдсан өөрийн урт киноны төслүүдийг үзэх.',
     inputSchema:{},annotations:readAnnotations
-  },async()=>guarded('ravs:read',()=>listDurableMovies(identity.userId)));
+  },async()=>guarded('ravs:read',()=>process.env.MOVIE_SCHEDULER_ENABLED==='true'?listDurableMovies(identity.userId):Promise.resolve({enabled:false,projects:[],message:'Movie Producer v2 туршилтын төлөвтэй.'})));
   server.registerTool('ravs_movie_v2_status',{
     title:'Movie Producer ажлын төлөв',
     description:'ChatGPT хаалттай байсан ч PostgreSQL-ээс scene бүрийн ажил, QA, provider generation ID-г авна.',
     inputSchema:{projectId:z.string().min(10).max(80)},annotations:readAnnotations
-  },async({projectId})=>guarded('ravs:read',()=>getDurableMovie(identity.userId,projectId)));
+  },async({projectId})=>guarded('ravs:read',()=>process.env.MOVIE_SCHEDULER_ENABLED==='true'?getDurableMovie(identity.userId,projectId):Promise.resolve({enabled:false,message:'Movie Producer v2 идэвхгүй.'})));
   if(identity.scopes.includes('ravs:generate')) {
   server.registerTool('ravs_movie_v2_submit',{
     title:'One-Prompt Movie эхлүүлэх',
