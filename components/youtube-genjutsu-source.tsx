@@ -51,6 +51,28 @@ export function YouTubeGenjutsuSource({onPrepared,onSourceChange,onProcessing}:P
   resetPrepared();
   setFile(candidate);
  }
+ async function downloadClip(){
+  if(busy||!file||!rights||!validTimes)return;
+  setBusy(true);setMessage("MP4 файлыг тайрч, татахад бэлтгэж байна…");
+  try{
+   const data=new FormData();
+   data.append("file",file);data.append("start",String(from));data.append("end",String(to));data.append("confirmRights","true");
+   const response=await fetch("/api/clips/export",{method:"POST",body:data,credentials:"same-origin"});
+   if(!response.ok){
+    const problem=await response.json().catch(()=>({error:"MP4 бэлтгэж чадсангүй."}));
+    throw new Error(problem.error||"MP4 бэлтгэж чадсангүй.");
+   }
+   if(!response.headers.get("content-type")?.includes("video/mp4"))throw new Error("Серверээс MP4 файл ирсэнгүй.");
+   const blob=await response.blob();
+   if(blob.size<1024)throw new Error("Үүссэн клипийн хэмжээ буруу байна.");
+   const localURL=URL.createObjectURL(blob);
+   const a=document.createElement("a");a.href=localURL;a.download="rainy-clip-"+Math.floor(from)+"-"+Math.ceil(to)+".mp4";
+   document.body.appendChild(a);a.click();a.remove();
+   window.setTimeout(()=>URL.revokeObjectURL(localURL),30000);
+   setMessage("Бэлэн! Тайрсан MP4 файл татагдлаа. Үргэлжлүүлж Genjutsu-д оруулж болно.");
+  }catch(e){setMessage(e instanceof Error?e.message:"MP4 тайрахад алдаа гарлаа.");}
+  finally{setBusy(false);}
+ }
  async function prepare(){
   if(busy||!file||!rights||!validTimes)return;
   setBusy(true);setMessage("Эх файлын сонгосон хэсгийг тайрч, Genjutsu-д бэлтгэж байна…");
@@ -62,7 +84,7 @@ export function YouTubeGenjutsuSource({onPrepared,onSourceChange,onProcessing}:P
    if(!response.ok)throw new Error(result.error||"Клип бэлтгэж чадсангүй.");
    if(typeof result.videoUrl!=="string"||typeof result.clipToken!=="string"||typeof result.duration!=="number")throw new Error("Бэлэн клипийн мэдээлэл буруу байна.");
    onPrepared(result.videoUrl,result.duration,result.clipToken);
-   setMessage("Бэлэн! Хөдөлгөөн шилжүүлэх жишиг зураг, prompt-оо нэмээд зардлаа шалгаж үүсгэнэ.");
+   setMessage("Бэлэн! Клип Genjutsu-д байршуулсан. Жишиг зураг, prompt-оо оруулж кредитээ шалгана.");
   }catch(e){setMessage(e instanceof Error?e.message:"Клипийн боловсруулалт амжилтгүй.");}
   finally{setBusy(false);}
  }
@@ -97,11 +119,16 @@ export function YouTubeGenjutsuSource({onPrepared,onSourceChange,onProcessing}:P
    <label className="ytGenjutsuUpload"><span>2 · Genjutsu-д ашиглах эх MP4 файл (80MB хүртэл)</span><input ref={fileRef} type="file" accept="video/mp4" onChange={e=>updateFile(e.target.files?.[0]||null)}/><small><Upload size={14}/> {file?file.name:"Эх видео сонгох"}</small></label>
    {localPreview&&<div className="ytGenjutsuLocal"><video ref={videoRef} src={localPreview} controls playsInline preload="metadata" onTimeUpdate={e=>{const v=e.currentTarget;if(v.currentTime>=to&&!v.paused)v.pause();}}/><button type="button" className="ghost" onClick={previewLocal} disabled={!validTimes}><Play size={13}/> Эх файлын сонгосон хэсэг</button></div>}
    <label className="ytGenjutsuConsent"><input type="checkbox" checked={rights} onChange={e=>{setRights(e.target.checked);resetPrepared();}}/><span>Энэ файлыг боловсруулах болон өөрчилсөн хувилбар бүтээх эрх надад бий.</span></label>
-   <button type="button" className="ytGenjutsuProcess" disabled={!file||!rights||!validTimes||busy} onClick={()=>void prepare()}>
-    {busy?<LoaderCircle size={16} className="spin"/>:<Scissors size={16}/>} {busy?"Клип бэлтгэж байна…":"3 · Клип тайрч Genjutsu-д бэлтгэх"}
-   </button>
+   <div className="ytClipOutputActions">
+    <button type="button" className="ytGenjutsuProcess" disabled={!file||!rights||!validTimes||busy} onClick={()=>void downloadClip()}>
+      {busy?<LoaderCircle size={16} className="spin"/>:<Scissors size={16}/>} {busy?"MP4 боловсруулж байна…":"3 · MP4 тайрч татах"}
+    </button>
+    <button type="button" className="ytClipToGenjutsu" disabled={!file||!rights||!validTimes||busy} onClick={()=>void prepare()}>
+      {busy?<LoaderCircle size={16} className="spin"/>:<Clapperboard size={16}/>} Genjutsu-д бэлтгэх
+    </button>
+   </div>
    {message&&<p className="ytGenjutsuMessage" role="status">{message.includes("Бэлэн!")?<CheckCircle2 size={16}/>:<Clapperboard size={15}/>} {message}</p>}
-   <p className="ytGenjutsuFootnote"><Film size={13}/> Клип бэлтгэхэд AI кредит зарцуулахгүй. Genjutsu-ийн үнийг дараа нь бодит клипийн хугацаанд үндэслэн үзүүлнэ.</p>
+   <p className="ytGenjutsuFootnote"><Film size={13}/> MP4 тайрч татахад AI кредит зарцуулахгүй. Genjutsu-д илгээх үед клипийн бодит хугацаанд үндэслэн үнэ тооцно.</p>
   </div>
  </section>;
 }
