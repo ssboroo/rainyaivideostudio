@@ -115,10 +115,12 @@ export function StudioClient() {
   const attempt = useRef<GenerationAttempt | null>(null);
 
   const model = getModel(selected) || models[0];
+  const clipGenjutsu = ["genjutsu-motion","genjutsu-restyle"].includes(model.slug);
+  const clipPending = clipGenjutsu && (!videoUrl || clipSeconds===null || !clipToken);
   let cost = 0;
   let pricingError = "";
   try { cost = estimateCredits(model, duration, { ...modelOptions, resolution, aspect_ratio: aspect, sound: audio ? "on" : "off", generate_audio: audio, video_url: videoUrl || undefined,
-     __verifiedClipSeconds: model.slug==="genjutsu-motion" ? clipSeconds ?? undefined : undefined }); }
+     __verifiedClipSeconds: clipGenjutsu && clipToken ? clipSeconds ?? undefined : undefined }); }
   catch (error) { pricingError = error instanceof Error ? error.message : "Үнэ баталгаажуулж байна."; }
   const group = params.get("group");
 
@@ -266,7 +268,7 @@ export function StudioClient() {
   const hasInput = Boolean(prompt.trim() || imageUrl || videoUrl || refs.length || Object.values(modelOptions).some(value=>value!==undefined&&value!==null&&value!==""));
   let inputError="";
   try {buildProviderInput(model,{prompt,imageUrl,videoUrl,referenceUrls:refs,presetId,duration,resolution,aspectRatio:aspect,generateAudio:audio,modelOptions});}catch(e){inputError=e instanceof Error?e.message:"Оролтоо шалгана уу.";}
-  const canSubmit = !busy && !uploading && hasInput && !inputError && !pricingError && !!user && user.credits>=cost && providerHealth==="ready";
+  const canSubmit = !busy && !uploading && !clipPending && !!model.apiVerified && hasInput && !inputError && !pricingError && !!user && user.credits>=cost && providerHealth==="ready";
 
   async function submit() {
     if (!user || !canSubmit || submitLock.current) return;
@@ -380,7 +382,7 @@ export function StudioClient() {
                 <h1>{model.name}</h1>
                 <p>{model.description}</p>
               </div>
-              <div className="estimateBadge"><span>Кредитийн тооцоо</span><b>{pricingError ? "Үнэ баталгаажуулж байна" : `${cost} кредит`}</b></div>
+              <div className="estimateBadge"><span>Кредитийн тооцоо</span><b>{clipPending ? "Клип бэлтгэнэ үү" : pricingError ? "Үнэ түр боломжгүй" : `${cost} кредит`}</b></div>
             </div>
 
             <div className="composerPanel">
@@ -418,7 +420,7 @@ export function StudioClient() {
                     />
                   </label>
                 )}
-                {model.supportsVideo && (
+                {model.supportsVideo && !clipGenjutsu && (
                   <label className={"referenceSlot " + (videoUrl ? "filled" : "")}>
                     <Video size={17} />
                     <span>{videoUrl ? "Эх видео бэлэн" : "Эх видео"}</span>
@@ -447,14 +449,15 @@ export function StudioClient() {
                 )}
               </div>
 
-              {(model.slug==="genjutsu-motion"||model.slug==="genjutsu-object"||model.slug==="genjutsu-restyle")&&(
+              {clipGenjutsu && model.apiVerified &&(
                 <YouTubeGenjutsuSource
                   onPrepared={(url,seconds,proof)=>{setVideoUrl(url);setClipSeconds(seconds);setClipToken(proof);setMessage("Genjutsu эх видео бэлэн.");}}
                   onSourceChange={()=>{setVideoUrl("");setClipToken("");setClipSeconds(null);}}
                   onProcessing={setUploading}
                 />
               )}
-              {model.slug==="genjutsu-motion"&&videoUrl&&!clipToken&&<p className="serviceState">Genjutsu Motion-д клипийн хугацааг серверээр баталгаажуулах шаардлагатай. Дээрх тайрах хэсгийг ашиглаарай.</p>}
+              {clipGenjutsu && videoUrl && !clipToken && <p className="serviceState" role="status">Энэ эх видео Genjutsu-д бэлэн болоогүй. Эх MP4-гээ дээрх хэсгээр тайрч хугацааг серверээр баталгаажуулна уу.</p>}
+              {model.slug==="genjutsu-object" && !model.apiVerified && <div className="accountNotice"><WandSparkles size={18}/><div>Object Swap API-ийн параметрүүд хараахан баталгаажаагүй тул энэ загварын үүсгэлт түр хаалттай. <Link href="/studio?model=genjutsu-motion&source=youtube">Genjutsu Motion Transfer руу шилжих →</Link></div></div>}
               {presetError&&<p className="serviceState" role="status">{presetError}</p>}
               <div className="inputPreview">{[imageUrl,...refs].filter(Boolean).map((url,index)=><div key={url+index}><img src={url} alt={`Жишиг зураг ${index+1}`}/><button aria-label="Жишиг зураг хасах" onClick={()=>imageUrl===url?setImageUrl(""):setRefs(current=>current.filter(value=>value!==url))}><X size={12}/></button></div>)}{videoUrl&&<button className="ghost" onClick={()=>{setVideoUrl("");setClipToken("");setClipSeconds(null);}}><Video size={14}/> Жишиг видео хасах</button>}</div>
               {presets.length > 0 && (
