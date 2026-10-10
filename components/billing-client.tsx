@@ -2,7 +2,8 @@
 import { useEffect,useState } from "react";
 import { useRouter,useSearchParams } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
-import { Check,LoaderCircle,ExternalLink,RefreshCw } from "lucide-react";
+import { Check,LoaderCircle,ExternalLink,RefreshCw, ShieldCheck, CircleDollarSign, Clock3, Ban } from "lucide-react";
+import "./billing-pricing.css";
 type Pack={id:string;name:string;priceMnt:number;credits:number;popular?:boolean};
 export function BillingClient(){
   const router=useRouter(),params=useSearchParams();
@@ -33,13 +34,28 @@ export function BillingClient(){
       else{setNotice("Төлбөр Wire.mn дээр боловсруулагдаж байна. Төлсний дараа дахин шалгана уу.");if(auto)setTimeout(()=>check(id,false),2500)}
     }catch(e){setError(e instanceof Error?e.message:"Алдаа гарлаа.")}finally{setChecking(false)}
   }
-  return <main className="shell"><Sidebar/><section className="content"><header className="topbar"><div><b>Credit авах</b><span>Wire.mn secure hosted checkout</span></div></header><section className="billingPage">
-    <div className="sectionHead"><div><small>RAVS WALLET</small><h1>Бүтээлээ зогсолтгүй үргэлжлүүл</h1><p>Төлбөр баталгаажсанаас хойш 1 сарын хугацаатай. Сар бүр автоматаар төлбөр авахгүй.</p></div></div>
+  return <main className="shell"><Sidebar/><section className="content"><header className="topbar"><div><b>Сарын credit багц</b><span>Wire.mn • нэг удаагийн аюулгүй төлбөр</span></div></header><section className="billingPage">
+    <div className="sectionHead"><div><small>RAVS WALLET · PREPAID MONTHLY</small><h1>Хэрэглэсэн хэмжээгээр төл. <em>Ил тод үнэ.</em></h1><p>Нэг удаа төлөөд хуанлийн 1 сар ашиглах кредитийн багц. Бүх төрлийн модельд хугацаа, нягтаршил, тохиргооноос хамаарч өөр өөр кредит зарцуулна. Автомат renewal, нууц суутгал, «Unlimited» амлалт байхгүй.</p></div></div>
+    <div className="planTrustStrip"><span><ShieldCheck size={17}/> Генерацын үнийг эхлээд харна</span><span><CircleDollarSign size={17}/> API загвар бүрийн бодит өртгөөр</span><span><Clock3 size={17}/> 1 сарын хугацаатай</span><span><Ban size={17}/> Автомат төлбөргүй</span></div>
     {grants.length>0&&<div className="accountNotice"><div><b>Таны идэвхтэй багцууд</b>{grants.map(g=><p key={g.id}>{g.remaining.toLocaleString()} credit · Дуусах: {new Date(g.expiresAt).toLocaleString("mn-MN",{timeZone:"Asia/Ulaanbaatar"})}</p>)}</div></div>}
     {notice&&<div className="statusMsg center">{notice}</div>}{error&&<div className="formError center">{error}</div>}
     {returnedPaymentId&&<div style={{display:"flex",justifyContent:"center",margin:"12px 0 22px"}}><button className="ghost" disabled={checking} onClick={()=>check()}>{checking?<LoaderCircle className="spin" size={15}/>:<RefreshCw size={15}/>} Төлбөрийн төлөв шалгах</button></div>}
     {loading&&<div className="screenEmpty" role="status"><LoaderCircle className="spin"/><p>Кредитийн багц ачаалж байна…</p></div>}
     {!loading&&!available&&<div className="accountNotice"><RefreshCw size={20}/><div>Кредит худалдан авах үйлчилгээ бэлтгэгдэж байна. Төлбөр нээгдэх хүртэл жишээ, гарын авлага үзэж танилцаарай. <a href="/video-guide">Заавар үзэх →</a></div></div>}
-    <div className="pricingGrid">{packs.map(p=><article className={p.popular?"priceCard popular":"priceCard"} key={p.id}>{p.popular&&<span className="popularBadge">Хамгийн их сонголт</span>}<h3>{p.name}</h3><div className="bigPrice">{p.priceMnt.toLocaleString()}₮ <small>/ 1 сар</small></div><strong>{p.credits.toLocaleString()} credit</strong><ul><li><Check size={14}/>Үнэ баталгаажсан AI загварууд</li><li><Check size={14}/>Video / Image / Workflow</li><li><Check size={14}/>Төлбөрөөс хойш 1 сарын эрх</li></ul><button className="primary wide" disabled={!!busy||!available} onClick={()=>buy(p.id)}>{busy===p.id?<LoaderCircle className="spin"/>:<><ExternalLink size={15}/> {available?"Wire.mn-аар төлөх":"Төлбөр удахгүй нээгдэнэ"}</>}</button></article>)}</div>
+    <div className="pricingGrid revampedPlanGrid">{packs.map(p=><article className={p.popular?"priceCard popular":"priceCard"} key={p.id}>
+     {p.popular&&<span className="popularBadge">Хамгийн тохиромжтой</span>}
+     <div className="planCardIntro"><small>{p.id==="starter"?"ТУРШИХ, ТАНИЛЦАХ":p.id==="creator"?"КОНТЕНТ БҮТЭЭГЧ":p.id==="pro"?"ТОГТМОЛ БҮТЭЭЛ":p.id==="studio"?"СТУДИ, БАГ":"САРЫН БАГЦ"}</small><h3>{p.name}</h3></div>
+     <div className="bigPrice">{p.priceMnt.toLocaleString("mn-MN")}₮ <small>/ 1 сарын эрх</small></div>
+     <strong className="planCreditCount">{p.credits.toLocaleString("mn-MN")} кредит</strong>
+     <div className="planPerCredit">1 кредит ≈ {(p.priceMnt/p.credits).toFixed(2)}₮</div>
+     <ul><li><Check size={14}/>Үнэ баталгаажсан AI моделүүд</li><li><Check size={14}/>Видео, зураг, Genjutsu (дэмжигдвэл)</li><li><Check size={14}/>Алдаатай үүсгэлтийн кредит буцаалт</li><li><Check size={14}/>Хуанлийн 1 сарын хугацаатай</li></ul>
+     <button className="primary wide" disabled={!!busy||!available} onClick={()=>buy(p.id)}>{busy===p.id?<LoaderCircle className="spin" size={16}/>:<><ExternalLink size={15}/> {available?"Нэг удаа төлж идэвхжүүлэх":"Төлбөр түр хаалттай"}</>}</button>
+    </article>)}</div>
+    <section className="planHowPricingWorks" aria-label="Кредит ба subscription нөхцөл"><h2>Кредит хэрхэн зарцуулагддаг вэ?</h2>
+     <div className="planHowGrid"><div><strong>01 · Үнийг урьдчилж харна</strong><p>Studio-д модель, хугацаа, resolution сонгоход тухайн генерацын кредитийг харуулна. Баталгаажаагүй загвараар кредит суутгахгүй.</p></div>
+     <div><strong>02 · Гүйцэтгэлийн дараа</strong><p>Амжилтгүй эсвэл provider цуцалсан үүсгэлтийн кредитийг холбогдох төлөвөөр буцаана. Амжилттай видео, зураг бүр API өртөгтэй.</p></div>
+     <div><strong>03 · Сунгалт, хугацаа</strong><p>Энэ нь автоматаар сунгагддаг subscription биш. Дараагийн сард үргэлжлүүлэх бол шинэ багц авч болно. Үлдэгдэл кредитийн дуусах өдрийг дээрээс харна.</p></div></div>
+     <p className="planPolicyFootnote">Нийт үнэ Монгол төгрөгөөр. API-ийн өртөг, валютын зөрүү, шимтгэл, татвар болон серверийн нөөцийг RAINY үнийн хамгаалалтдаа тооцдог. Таны дансны татвар, баримтын шаардлагыг хүчин төгөлдөр нөхцөлөөр шийдвэрлэнэ; Higgsfield вебийн subscription RAINY-ийн багцад дагалдахгүй.</p>
+    </section>
   </section></section></main>
 }
