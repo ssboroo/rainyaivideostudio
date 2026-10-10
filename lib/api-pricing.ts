@@ -11,10 +11,11 @@ export function providerCostUsd(id: string, input: Record<string, unknown>): num
   // Higgsfield Genjutsu list rates: source-video seconds rounded UP. The
   // input duration can only come from a server-probed clip proof when charged.
   // Motion / Restyle price sources: official Higgsfield playground (2026-10-10).
-  const genjutsuSourceModel = [
-    "higgsfield/genjutsu/motion-transfer/v1.0",
-    "higgsfield/genjutsu/restyle/v1.0",
-  ].includes(id);
+  // Restyle does not publish an independently verifiable per-second rate;
+  // never silently reuse Motion Transfer's rate for that different endpoint.
+  const genjutsuSourceModel = id === "higgsfield/genjutsu/motion-transfer/v1.0";
+  if(id === "higgsfield/genjutsu/restyle/v1.0")
+    throw new PricingUnavailableError("Genjutsu Restyle-ийн API өртөг албан ёсоор баталгаажаагүй байна. Кредит зарцуулахгүй. Genjutsu Motion Transfer-ийг сонгоно уу.");
   if(genjutsuSourceModel && !input.video_url)
     throw new PricingUnavailableError("Genjutsu-ийн үнийг тооцоход эх видео хэрэгтэй. Доорх 'YouTube → Genjutsu' хэсэгт эрхтэй MP4-гээ оруулж 1–30 секундийн клип бэлтгэнэ үү.");
   if (input.video_url || (Array.isArray(input.video_urls) && input.video_urls.length)) {
@@ -22,7 +23,9 @@ export function providerCostUsd(id: string, input: Record<string, unknown>): num
       const verified = input.__verifiedClipSeconds;
       if(typeof verified !== "number" || !Number.isFinite(verified) || verified < 1 || verified > 30)
         throw new PricingUnavailableError("Клипийн хугацаа баталгаажаагүй байна. Эх MP4-гээ 'Клип тайрч Genjutsu-д бэлтгэх' товчоор боловсруулна уу.");
-      const rate=({"480p":.318,"720p":.681,"1080p":1.632} as Record<string,number>)[resolution];
+      // Public Motion Transfer playground confirms 480p and 720p rates.
+      // Avoid inventing a rate for 1080p until separately published.
+      const rate=({"480p":.318,"720p":.681} as Record<string,number>)[resolution];
       if(rate===undefined)return unavailable();
       return Math.ceil(verified)*rate;
     }
