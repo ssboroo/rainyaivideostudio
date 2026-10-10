@@ -60,7 +60,16 @@ export async function POST(request:Request){
    "-movflags","+faststart","-y",output],90000);
   const outputStat=await stat(output);
   if(outputStat.size<1000||outputStat.size>MAX_OUTPUT)return error("Клипийн хэмжээ хэт том байна. Богино хэсэг сонгоно уу.");
-  const clipDuration=end-start;
+  // Provider bills by actual media duration rounded up to the next second.
+  // Measure the rendered clip, not just the requested timeline interval.
+  const finalProbe=await new Promise<number>((resolve,reject)=>{
+    const probe=spawn("ffprobe",["-v","error","-show_entries","format=duration","-of","default=noprint_wrappers=1:nokey=1",output],{stdio:["ignore","pipe","ignore"],timeout:10000});
+    let buffer="";probe.stdout.on("data",(chunk:Buffer)=>buffer+=chunk.toString());
+    probe.on("error",()=>reject(new Error("Бэлэн клипийн хугацааг шалгаж чадсангүй.")));
+    probe.on("close",code=>code===0?resolve(Number(buffer.trim())):reject(new Error("Бэлэн клипийн хугацаа буруу.")));
+  });
+  if(!Number.isFinite(finalProbe)||finalProbe<0.8||finalProbe>30.05)return error("Гарсан клип 1–30 секундийн хязгаараас гарсан байна.");
+  const clipDuration=Math.max(end-start,finalProbe);
   const signed=await createSignedUpload("video/mp4");
   const uploadURL=new URL(String(signed.upload_url)),url=new URL(String(signed.public_url));
   if(uploadURL.protocol!=="https:"||url.protocol!=="https:"||uploadURL.username||url.username)throw Error("Provider upload URL буруу.");
