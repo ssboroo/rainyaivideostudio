@@ -16,6 +16,19 @@ test('resolution and image batch affect price',()=>{
 test('unknown metering is rejected before spending provider funds',()=>{
  for(const [id,input] of [['unknown',{}],['marketing-studio/image/sunburst',{}],['higgsfield/genjutsu/motion-transfer/v1.0',{video_url:'https://example.com/v.mp4'}],['bytedance/seedance-2.5/reference-to-video',{video_urls:['https://example.com/v.mp4']}],['recraft/v4.1/text-to-image',{resolution:'4k'}]]) assert.throws(()=>quoteApiCredits(id,input));
 });
+test('Genjutsu Motion and Restyle quote only an independently verified video duration',()=>{
+ for (const id of ['higgsfield/genjutsu/motion-transfer/v1.0','higgsfield/genjutsu/restyle/v1.0']) {
+  assert.throws(()=>quoteApiCredits(id,{resolution:'720p'}),/эх видео хэрэгтэй/);
+  assert.throws(()=>quoteApiCredits(id,{resolution:'720p',video_url:'https://example.com/input.mp4'}),/хугацаа баталгаажаагүй/);
+  const clip={video_url:'https://example.com/output.mp4',__verifiedClipSeconds:7.05};
+  assert.equal(providerCostUsd(id,{...clip,resolution:'480p'}),8*.318);
+  assert.equal(providerCostUsd(id,{...clip,resolution:'720p'}),8*.681);
+  assert.equal(providerCostUsd(id,{...clip,resolution:'1080p'}),8*1.632);
+  assert.ok(quoteApiCredits(id,{...clip,resolution:'720p'})>0);
+  for(const invalid of [0,31,NaN,undefined,'9'])assert.throws(()=>quoteApiCredits(id,{...clip,__verifiedClipSeconds:invalid,resolution:'720p'}));
+ }
+});
+
 test('unsafe environment packages cannot undercut minimum credit value',()=>{
  const previous=process.env.CREDIT_PACKAGES_JSON;
  try {

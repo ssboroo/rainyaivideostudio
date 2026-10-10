@@ -8,14 +8,20 @@ export function providerCostUsd(id: string, input: Record<string, unknown>): num
   const seconds = Number(input.duration || 5);
   const batch = Number(input.batch_size || input.num_images || 1);
   if (!Number.isFinite(seconds) || seconds <= 0 || !Number.isSafeInteger(batch) || batch < 1) return unavailable();
-  // Source-video duration must be established by a server-owned media probe.
-  // Do not trust a user-supplied duration or substitute a flat workflow price.
+  // Higgsfield Genjutsu list rates: source-video seconds rounded UP. The
+  // input duration can only come from a server-probed clip proof when charged.
+  // Motion / Restyle price sources: official Higgsfield playground (2026-10-10).
+  const genjutsuSourceModel = [
+    "higgsfield/genjutsu/motion-transfer/v1.0",
+    "higgsfield/genjutsu/restyle/v1.0",
+  ].includes(id);
+  if(genjutsuSourceModel && !input.video_url)
+    throw new PricingUnavailableError("Genjutsu-ийн үнийг тооцоход эх видео хэрэгтэй. Доорх 'YouTube → Genjutsu' хэсэгт эрхтэй MP4-гээ оруулж 1–30 секундийн клип бэлтгэнэ үү.");
   if (input.video_url || (Array.isArray(input.video_urls) && input.video_urls.length)) {
-    // Strictly server-verified clip duration. Never price an arbitrary video
-    // URL on a client-provided duration or from a flat workflow placeholder.
-    if (id === "higgsfield/genjutsu/motion-transfer/v1.0") {
+    if(genjutsuSourceModel){
       const verified = input.__verifiedClipSeconds;
-      if(typeof verified !== "number" || !Number.isFinite(verified) || verified < 1 || verified > 30) return unavailable();
+      if(typeof verified !== "number" || !Number.isFinite(verified) || verified < 1 || verified > 30)
+        throw new PricingUnavailableError("Клипийн хугацаа баталгаажаагүй байна. Эх MP4-гээ 'Клип тайрч Genjutsu-д бэлтгэх' товчоор боловсруулна уу.");
       const rate=({"480p":.318,"720p":.681,"1080p":1.632} as Record<string,number>)[resolution];
       if(rate===undefined)return unavailable();
       return Math.ceil(verified)*rate;

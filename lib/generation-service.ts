@@ -55,9 +55,11 @@ export function createGenerationService(deps: typeof defaults = defaults) {
     try { input = buildProviderInput(model, raw); } catch (error) { throw new GenerationServiceError(error instanceof Error ? error.message : "Оролт буруу байна.", 400); }
     let cost: number;
     try {
-      if(model.slug==="genjutsu-motion"&&input.video_url) {
+      if(["genjutsu-motion","genjutsu-restyle"].includes(model.slug)&&input.video_url) {
+        // The client cannot claim a duration: user, exact source URL and TTL
+        // are verified from the server-signed proof before reserving credits.
         const seconds=readClipProof(raw.clipToken,userId,input.video_url);
-        if(seconds===null)throw new Error("Genjutsu-д зөвшөөрөлтэй эх MP4-г клип таслах хэсгээр байршуулна уу. Клипийн баталгаа 24 цаг хүчинтэй.");
+        if(seconds===null)throw new Error("Genjutsu-д эх MP4-г клип таслах хэсгээр бэлтгэж хугацааг баталгаажуулна уу. Клипийн баталгаа 24 цаг хүчинтэй.");
         cost=estimateCredits(model,Number(input.duration),{...input,__verifiedClipSeconds:seconds});
       } else cost=estimateCredits(model, Number(input.duration), input);
     }
