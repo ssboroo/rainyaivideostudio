@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
-import { tickMovieProducer } from "@/lib/movie-producer";
+import { tickMovieProducer } from "@/lib/movie-producer-v2";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 function validToken(request:NextRequest){
