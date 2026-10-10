@@ -133,3 +133,37 @@ test("YouTube is used ONLY as official embed: FFmpeg accepts only user-uploaded 
  assert.match(service,/readClipProof\(raw.clipToken,userId,input.video_url\)/);
  assert.match(csp,/frame-src 'self' https:\/\/www.youtube-nocookie.com/);
 });
+
+test("reusable YouTube segment is preview-only with strict duration and official iframe",()=>{
+ const id="dQw4w9WgXcQ";
+ const path=youtubeClipSharePath(id,5,17);
+ assert.match(path,/^\/clip\?v=dQw4w9WgXcQ&start=5&end=17$/);
+ assert.throws(()=>youtubeClipSharePath(id,0,31));
+ assert.throws(()=>youtubeClipSharePath("invalid",1,5));
+ const page=read("app/clip/page.tsx");
+ assert.match(page,/youtubeClipEmbed\(v,startValue,endValue\)/);
+ assert.match(page,/MP4 файл биш/);
+ assert.match(page,/youtube\.com\/watch/);
+});
+
+test("owned MP4 is trimmed into downloadable video with optional audio",()=>{
+ const code=read("app/api/clips/export/route.ts");
+ const ui=read("components/youtube-genjutsu-source.tsx");
+ assert.match(code,/await request\.formData\(\)/);
+ assert.match(code,/confirmRights/);
+ assert.match(code,/video\/mp4/);
+ assert.match(code,/ffprobe/);
+ assert.match(code,/ffmpeg/);
+ assert.match(code,/0:a:0\?/);
+ assert.match(code,/Content-Disposition/);
+ assert.match(code,/private, no-store/);
+ assert.match(code,/return new Response\(new Uint8Array\(bytes\)/);
+ assert.doesNotMatch(code,/youtu\.be|youtube\.com|yt-dlp|ytdl|https?:\/\//);
+ assert.match(ui,/fetch\("\/api\/clips\/export"/);
+ assert.match(ui,/response\.blob\(\)/);
+ assert.match(ui,/a\.download=/);
+ assert.match(ui,/Бэлдсэн үзэх клипийг нээх/);
+ assert.match(ui,/Клипийн холбоос хуулах/);
+ assert.match(ui,/MP4 файл үүсээгүй/);
+ assert.match(ui,/Genjutsu-д бэлтгэх/);
+});
