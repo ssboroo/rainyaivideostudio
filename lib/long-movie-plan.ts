@@ -1,0 +1,68 @@
+import { getModel, buildProviderInput, estimateCredits } from "./models.ts";
+
+export class MoviePlanError extends Error {
+  constructor(message: string) { super(message); this.name="MoviePlanError"; }
+}
+export type LongMoviePlanInput={
+  prompt:string; targetSeconds:number; modelSlug:string;
+  aspectRatio:string; resolution:string; generateAudio:boolean;
+};
+export function createLongMoviePlan(input:LongMoviePlanInput) {
+  if(typeof input.prompt!=="string" || input.prompt.trim().length<12 || input.prompt.length>6000)
+    throw new MoviePlanError("Киноны санаа 12–6000 тэмдэгттэй байх ёстой.");
+  if(!Number.isInteger(input.targetSeconds) || input.targetSeconds<4 || input.targetSeconds>3600)
+    throw new MoviePlanError("Энэ хувилбарт 4–3600 секундийн кино төлөвлөнө.");
+  const model=getModel(input.modelSlug);
+  if(!model || !model.apiVerified || model.kind!=="video" || !model.maxDuration || !model.minDuration || model.supportsImage)
+    throw new MoviePlanError("Зөвхөн API баталгаажсан text-to-video модель дэмжинэ.");
+  if(model.resolutions.length && !model.resolutions.includes(input.resolution))
+    throw new MoviePlanError("Сонгосон нягтаршил дэмжигдээгүй.");
+  if(model.aspectRatios.length && !model.aspectRatios.includes(input.aspectRatio))
+    throw new MoviePlanError("Сонгосон харьцаа дэмжигдээгүй.");
+  if(input.generateAudio && !model.supportsAudio)
+    throw new MoviePlanError("Энэ модель native audio дэмжихгүй.");
+  const parts=Math.ceil(input.targetSeconds/model.maxDuration);
+  if(parts>120)
+    throw new MoviePlanError("Энэ модель болон хугацаанд 120-оос олон кадр хэрэгтэй. Төслийг бүлгүүдэд хуваана уу.");
+  const base=Math.floor(input.targetSeconds/parts);
+  const extra=input.targetSeconds%parts;
+  if(base<model.minDuration)
+    throw new MoviePlanError("Хүссэн хугацааг тухайн моделийн клипийн хамгийн бага хугацаанд тааруулах боломжгүй.");
+  let time=0,totalCredits=0;
+  const scenes=Array.from({length:parts},(_,i)=>{
+    const duration=base+(i<extra?1:0);
+    const inputPayload={prompt:input.prompt.trim(),duration,resolution:input.resolution,
+      aspectRatio:input.aspectRatio,generateAudio:input.generateAudio};
+    const provider=buildProviderInput(model,inputPayload);
+    const credits=estimateCredits(model,duration,provider);
+    if(!Number.isSafeInteger(credits) || credits<=0)
+      throw new MoviePlanError("Энэ кадрын үнэ баталгаажаагүй байна.");
+    totalCredits+=credits;
+    if(!Number.isSafeInteger(totalCredits)) throw new MoviePlanError("Нийт кредит буруу байна.");
+    const scene={
+      number:i+1,startSeconds:time,endSeconds:time+duration,duration,
+      modelSlug:model.slug,templateInput:inputPayload,
+      instructions:"AI Director: нэг ерөнхий санааг үргэлжлэлтэй, өөр өөр үйл явдал, камер, орон зайтай тусгай scene prompt болгон өргөжүүл. Дүр, хувцас, бүтээгдэхүүн, логоны жишиг тайлбарыг хадгал.",
+      credits,
+    };
+    time+=duration;
+    return scene;
+  });
+  return {
+    project:"RAINY One-Prompt Movie",
+    requestedSeconds:input.targetSeconds,
+    plannedSeconds:time,
+    scenes,
+    sceneCount:parts,
+    totalVideoCredits:totalCredits,
+    voiceCreditsIncluded:false,
+    assemblyCreditsIncluded:false,
+    confirmedPrice:false,
+    readyToGenerate:false,
+    status:"PLANNED",
+    requires:"ChatGPT эсвэл Claude кадр тус бүрийн зохиол, prompt-ыг эхний санаанаас боловсруулж, хэрэглэгчийн нийт төсвийн зөвшөөрлийн дараа л үүсгэнэ.",
+    limitations:["Seedance/Kling нэг клипийн API хугацааны хязгаартай.",
+      "Олон scene-ийн дараалал, дүрийн нэгэн төрлийн байдлыг AI Director сайжруулах боловч 100% баталгаагүй.",
+      "Энэ нь зөвхөн үнэ, кадрын төлөвлөгөө; backend multi-scene queue болон final MP4 одоогоор нэг товчоор автоматаар ажиллахгүй."],
+  };
+}
