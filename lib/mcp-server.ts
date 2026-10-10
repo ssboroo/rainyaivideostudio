@@ -2,7 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { createLongMoviePlan } from './long-movie-plan.ts';
 import { reviewStoryboard } from './storyboard-quality.ts';
-import { createMovie, movieStatus, cancelMovie, movieEnabled } from './movie-producer.ts';
+import { createMovie, movieStatus, cancelMovie, retryMovieScene, movieEnabled } from './movie-producer.ts';
 import { models, getModel, buildProviderInput, estimateCredits } from './models.ts';
 import { modelGuide, parameterLabel, parameterHelp, durationLabel, resolutionLabel, aspectLabel } from './model-guides.ts';
 
@@ -84,6 +84,21 @@ export function createRavsMcpServer(identity: McpIdentity, services: McpServices
         idempotencyKey:z.string().min(16).max(128).regex(/^[A-Za-z0-9_-]+$/)
       },annotations:{readOnlyHint:false,destructiveHint:false,idempotentHint:true,openWorldHint:true}
     },async (input)=>guarded('ravs:generate',async()=>movieEnabled()?createMovie(identity.userId,input):{enabled:false,message:'Movie Producer production flag унтраалттай.'}));
+    server.registerTool('ravs_retry_movie_scene',{
+      title:'Алдаатай кадрыг дахин үүсгэх',
+      description:'AI QA эсвэл хүний шалгалтад тэнцээгүй scene-д тусдаа зөвшөөрөгдсөн нэмэлт төсвөөр нэг шинэ prompt үүсгэнэ. Хамгийн ихдээ 2 revision. Нэг retry key-г давтан хэрэглэ.',
+      inputSchema:{
+        movieId:z.string().regex(/^[a-f0-9]{40}$/),
+        sceneNumber:z.number().int().min(1).max(120),
+        newPrompt:z.string().min(50).max(6000),
+        maxAdditionalCredits:z.number().int().min(1).max(1000000),
+        idempotencyKey:z.string().min(16).max(128).regex(/^[A-Za-z0-9_-]+$/),
+        confirmGeneration:z.literal(true)
+      },annotations:{readOnlyHint:false,destructiveHint:false,idempotentHint:true,openWorldHint:true}
+    },async({movieId,sceneNumber,newPrompt,maxAdditionalCredits,idempotencyKey})=>
+      guarded('ravs:generate',async()=>movieEnabled()?
+        retryMovieScene(identity.userId,movieId,sceneNumber,newPrompt,maxAdditionalCredits,true,idempotencyKey):
+        {enabled:false,message:'Producer идэвхгүй.'}));
     server.registerTool('ravs_cancel_movie',{
       title:'Дараагийн кадруудыг зогсоох',
       description:'Хүлээгдэж буй movie scheduler ажлыг зогсооно. Эхэлсэн paid provider generation-ийг хүчингүй болгохгүй.',
