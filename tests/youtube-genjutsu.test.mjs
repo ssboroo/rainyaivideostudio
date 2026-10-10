@@ -5,6 +5,7 @@ import {tsImport} from "tsx/esm/api";
 const {parseYouTubeVideo,youtubeClipEmbed,youtubeClipSharePath}=await tsImport("../lib/youtube-clip.ts",{parentURL:import.meta.url});
 const {providerCostUsd,quoteApiCredits}=await tsImport("../lib/api-pricing.ts",{parentURL:import.meta.url});
 const {issueClipProof,readClipProof}=await tsImport("../lib/clip-proof.ts",{parentURL:import.meta.url});
+const {validClipSourceType,validClipWindow}=await tsImport("../lib/clip-media.ts",{parentURL:import.meta.url});
 const read=(path)=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 
 test("official YouTube URL parser accepts only valid video IDs and clean HTTPS hosts",()=>{
@@ -73,6 +74,29 @@ test("selected YouTube time range produces only a reusable official-player link"
  assert.match(page,/youtubeClipEmbed/);
  assert.match(page,/MP4 татахгүй/);
  assert.doesNotMatch(page,/yt-dlp|ytdl|fetch\(/);
+});
+
+test("iPhone MOV and desktop MP4 originals are supported and clip window is bounded",()=>{
+ assert.equal(validClipSourceType("capture.MOV","video/quicktime"),true);
+ assert.equal(validClipSourceType("iphone.mov",""),true);
+ assert.equal(validClipSourceType("product.mp4","video/mp4"),true);
+ assert.equal(validClipSourceType("session.m4v","video/x-m4v"),true);
+ assert.equal(validClipSourceType("clip.exe","video/mp4"),false);
+ assert.equal(validClipSourceType("clip.mp4","text/html"),false);
+ for(const [a,b] of [[0,1],[12.5,35.5],[3570,3600]]) assert.equal(validClipWindow(a,b),true);
+ for(const [a,b] of [[0,0],[1,32],[3599,3630],[-1,2],[0,Infinity],[NaN,4]]) assert.equal(validClipWindow(a,b),false);
+ const exporter=read("app/api/clips/export/route.ts");
+ const preparer=read("app/api/clips/prepare/route.ts");
+ for(const route of [exporter,preparer]){
+  assert.match(route,/validClipSourceType/);
+  assert.match(route,/validClipWindow/);
+  assert.match(route,/if\(origin\)/);
+  assert.match(route,/!form\.has\("start"\)/);
+  assert.match(route,/ffprobe/);
+ }
+ const picker=read("components/youtube-genjutsu-source.tsx");
+ assert.match(picker,/\.mov,\.m4v/);
+ assert.match(picker,/validClipSourceType\(candidate\.name,candidate\.type\)/);
 });
 
 test("verified Genjutsu 1-30 second clip metering is distinct from unverified arbitrary URLs",()=>{
