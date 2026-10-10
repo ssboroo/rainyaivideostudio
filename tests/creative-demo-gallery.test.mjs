@@ -32,7 +32,7 @@ test("trends and five tool sections share a playable in-site video player with p
  assert.match(gallery,/return null/);
 });
 test("new trending official concepts are clearly distinct from verified playable clips",()=>{
- for(const id of ["bullet-time","fallen-angel","urban-cuts","product-asmr","recast"])
+ for(const id of ["bullet-time","fallen-angel","agamemnon","cyclope","pearl-earring","monet-muse","argus","lost-in-a-book","dolphin-ride","penguin-ride","puffin-ride","skatedog","pigeons","urban-cuts","product-asmr","recast"])
   assert.ok(library.includes('id:"'+id+'"'),id);
  assert.match(gallery,/Яг таарсан видео файл баталгаажаагүй/);
  assert.match(gallery,/Кредит зөвхөн Studio дээр баталсан генерацад/);
