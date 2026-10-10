@@ -31,6 +31,7 @@ import { Sidebar } from "@/components/sidebar";
 import { ModelFamilies } from "@/components/model-families";
 import { modelFamilyName, modelVariantLabel } from "@/lib/model-families";
 import { ModelExamples } from "@/components/model-examples";
+import { YouTubeGenjutsuSource } from "@/components/youtube-genjutsu-source";
 import { buildProviderInput, estimateCredits, getModel, models, type ModelKind, type RavsModel } from "@/lib/models";
 
 type User = {
@@ -95,6 +96,8 @@ export function StudioClient() {
   const [audio, setAudio] = useState(true);
   const [imageUrl, setImageUrl] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  const [clipToken,setClipToken]=useState("");
+  const [clipSeconds,setClipSeconds]=useState<number|null>(null);
   const [refs, setRefs] = useState<string[]>([]);
   const [modelOptions,setModelOptions]=useState<Record<string,unknown>>({});
   const [presetId, setPresetId] = useState("");
@@ -114,7 +117,8 @@ export function StudioClient() {
   const model = getModel(selected) || models[0];
   let cost = 0;
   let pricingError = "";
-  try { cost = estimateCredits(model, duration, { ...modelOptions, resolution, aspect_ratio: aspect, sound: audio ? "on" : "off", generate_audio: audio, video_url: videoUrl || undefined }); }
+  try { cost = estimateCredits(model, duration, { ...modelOptions, resolution, aspect_ratio: aspect, sound: audio ? "on" : "off", generate_audio: audio, video_url: videoUrl || undefined,
+     __verifiedClipSeconds: model.slug==="genjutsu-motion" ? clipSeconds ?? undefined : undefined }); }
   catch (error) { pricingError = error instanceof Error ? error.message : "Үнэ баталгаажуулж байна."; }
   const group = params.get("group");
 
@@ -159,6 +163,8 @@ export function StudioClient() {
     setModelOptions({});
     setImageUrl("");
     setVideoUrl("");
+    setClipToken("");
+    setClipSeconds(null);
     setRefs([]);
     setPresetId("");
     setPresets([]);
@@ -248,7 +254,7 @@ export function StudioClient() {
     const publicUrl = signedData.public_url;
     if(typeof publicUrl!=="string"||!publicUrl.startsWith("https://"))throw new Error("Файлын холбоос буруу байна.");
     if (kind === "image") setImageUrl(publicUrl);
-    else if (kind === "video") setVideoUrl(publicUrl);
+    else if (kind === "video") { setVideoUrl(publicUrl); setClipToken(""); setClipSeconds(null); }
     else {
       const max = model.maxReferences || 16;
       setRefs((current) => [...current, publicUrl].slice(0, max));
@@ -268,7 +274,7 @@ export function StudioClient() {
     setBusy(true);
     setMessage("");
     try {
-      const input = { modelSlug: selected, prompt, duration, resolution, aspectRatio: aspect, generateAudio: audio, imageUrl, videoUrl, referenceUrls: refs, presetId, modelOptions };
+      const input = { modelSlug: selected, prompt, duration, resolution, aspectRatio: aspect, generateAudio: audio, imageUrl, videoUrl, clipToken, referenceUrls: refs, presetId, modelOptions };
       let storage: Storage | undefined;
       try { storage = window.sessionStorage; } catch { /* In-memory retry ID remains available. */ }
       attempt.current = await generationAttempt(user.id, JSON.stringify(input), attempt.current, storage);
@@ -441,8 +447,16 @@ export function StudioClient() {
                 )}
               </div>
 
+              {(model.slug==="genjutsu-motion"||model.slug==="genjutsu-object"||model.slug==="genjutsu-restyle")&&(
+                <YouTubeGenjutsuSource
+                  onPrepared={(url,seconds,proof)=>{setVideoUrl(url);setClipSeconds(seconds);setClipToken(proof);setMessage("Genjutsu эх видео бэлэн.");}}
+                  onSourceChange={()=>{setVideoUrl("");setClipToken("");setClipSeconds(null);}}
+                  onProcessing={setUploading}
+                />
+              )}
+              {model.slug==="genjutsu-motion"&&videoUrl&&!clipToken&&<p className="serviceState">Genjutsu Motion-д клипийн хугацааг серверээр баталгаажуулах шаардлагатай. Дээрх тайрах хэсгийг ашиглаарай.</p>}
               {presetError&&<p className="serviceState" role="status">{presetError}</p>}
-              <div className="inputPreview">{[imageUrl,...refs].filter(Boolean).map((url,index)=><div key={url+index}><img src={url} alt={`Жишиг зураг ${index+1}`}/><button aria-label="Жишиг зураг хасах" onClick={()=>imageUrl===url?setImageUrl(""):setRefs(current=>current.filter(value=>value!==url))}><X size={12}/></button></div>)}{videoUrl&&<button className="ghost" onClick={()=>setVideoUrl("")}><Video size={14}/> Жишиг видео хасах</button>}</div>
+              <div className="inputPreview">{[imageUrl,...refs].filter(Boolean).map((url,index)=><div key={url+index}><img src={url} alt={`Жишиг зураг ${index+1}`}/><button aria-label="Жишиг зураг хасах" onClick={()=>imageUrl===url?setImageUrl(""):setRefs(current=>current.filter(value=>value!==url))}><X size={12}/></button></div>)}{videoUrl&&<button className="ghost" onClick={()=>{setVideoUrl("");setClipToken("");setClipSeconds(null);}}><Video size={14}/> Жишиг видео хасах</button>}</div>
               {presets.length > 0 && (
                 <select className="fullSelect" value={presetId} onChange={(event) => setPresetId(event.target.value)}>
                   <option value="">{model.slug === "genjutsu-restyle"?"Видео хэв маяг сонгох":"Зарын хэв маяг · сайжруулалтын горимд"}</option>
