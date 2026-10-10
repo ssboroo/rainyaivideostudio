@@ -5,6 +5,7 @@ import {tsImport} from "tsx/esm/api";
 const {parseYouTubeVideo,youtubeClipEmbed,youtubeClipSharePath}=await tsImport("../lib/youtube-clip.ts",{parentURL:import.meta.url});
 const {providerCostUsd,quoteApiCredits}=await tsImport("../lib/api-pricing.ts",{parentURL:import.meta.url});
 const {issueClipProof,readClipProof}=await tsImport("../lib/clip-proof.ts",{parentURL:import.meta.url});
+const {validClipSourceType,validClipWindow}=await tsImport("../lib/clip-media.ts",{parentURL:import.meta.url});
 const read=(path)=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 
 test("official YouTube URL parser accepts only valid video IDs and clean HTTPS hosts",()=>{
@@ -56,12 +57,54 @@ test("YouTube-only segment becomes a replayable, non-downloadable share link",()
  assert.match(editor,/support.google.com\/youtube\/answer\/56100/);
  assert.match(editor,/confirmRights/);
 });
+test("selected YouTube time range produces only a reusable official-player link",()=>{
+ const id="dQw4w9WgXcQ";
+ const shared=youtubeClipSharePath(id,6.5,11.5);
+ assert.ok(shared.startsWith("/clip?v="+id+"&start=6&end=12"));
+ assert.throws(()=>youtubeClipSharePath(id,1,60));
+ assert.throws(()=>youtubeClipSharePath("not-video",0,5));
+ const embed=youtubeClipEmbed(id,1.2,31.2);
+ const params=new URL(embed).searchParams;
+ assert.equal(Number(params.get("end"))-Number(params.get("start")),30);
+ const component=read("components/youtube-genjutsu-source.tsx");
+ const page=read("app/clip/page.tsx");
+ assert.match(component,/youtubeClipSharePath/);
+ assert.match(component,/navigator\.clipboard\.writeText/);
+ assert.match(component,/MP4 видео файл үүсээгүй/);
+ assert.match(page,/youtubeClipEmbed/);
+ assert.match(page,/MP4 татахгүй/);
+ assert.doesNotMatch(page,/yt-dlp|ytdl|fetch\(/);
+});
+
+test("iPhone MOV and desktop MP4 originals are supported and clip window is bounded",()=>{
+ assert.equal(validClipSourceType("capture.MOV","video/quicktime"),true);
+ assert.equal(validClipSourceType("iphone.mov",""),true);
+ assert.equal(validClipSourceType("product.mp4","video/mp4"),true);
+ assert.equal(validClipSourceType("session.m4v","video/x-m4v"),true);
+ assert.equal(validClipSourceType("clip.exe","video/mp4"),false);
+ assert.equal(validClipSourceType("clip.mp4","text/html"),false);
+ for(const [a,b] of [[0,1],[12.5,35.5],[3570,3600]]) assert.equal(validClipWindow(a,b),true);
+ for(const [a,b] of [[0,0],[1,32],[3599,3630],[-1,2],[0,Infinity],[NaN,4]]) assert.equal(validClipWindow(a,b),false);
+ const exporter=read("app/api/clips/export/route.ts");
+ const preparer=read("app/api/clips/prepare/route.ts");
+ for(const route of [exporter,preparer]){
+  assert.match(route,/validClipSourceType/);
+  assert.match(route,/validClipWindow/);
+  assert.match(route,/if\(origin\)/);
+  assert.match(route,/!form\.has\("start"\)/);
+  assert.match(route,/ffprobe/);
+ }
+ const picker=read("components/youtube-genjutsu-source.tsx");
+ assert.match(picker,/\.mov,\.m4v/);
+ assert.match(picker,/validClipSourceType\(candidate\.name,candidate\.type\)/);
+});
+
 test("verified Genjutsu 1-30 second clip metering is distinct from unverified arbitrary URLs",()=>{
  const id="higgsfield/genjutsu/motion-transfer/v1.0",video_url="https://owned.example/video.mp4";
  assert.throws(()=>providerCostUsd(id,{resolution:"720p",video_url,duration:10}));
  assert.equal(providerCostUsd(id,{resolution:"480p",video_url,__verifiedClipSeconds:5.25}),Math.ceil(5.25)*.318);
  assert.equal(providerCostUsd(id,{resolution:"720p",video_url,__verifiedClipSeconds:8}),8*.681);
- assert.throws(()=>providerCostUsd(id,{resolution:"1080p",video_url,__verifiedClipSeconds:6}));
+ assert.equal(providerCostUsd(id,{resolution:"1080p",video_url,__verifiedClipSeconds:6}),6*1.632);
  assert.ok(quoteApiCredits(id,{resolution:"720p",video_url,__verifiedClipSeconds:8})>0);
  for(const value of [0,-1,31,NaN,"8"])assert.throws(()=>providerCostUsd(id,{resolution:"720p",video_url,__verifiedClipSeconds:value}));
 });
@@ -113,4 +156,38 @@ test("YouTube is used ONLY as official embed: FFmpeg accepts only user-uploaded 
  assert.match(studio,/clipToken/);
  assert.match(service,/readClipProof\(raw.clipToken,userId,input.video_url\)/);
  assert.match(csp,/frame-src 'self' https:\/\/www.youtube-nocookie.com/);
+});
+
+test("reusable YouTube segment is preview-only with strict duration and official iframe",()=>{
+ const id="dQw4w9WgXcQ";
+ const path=youtubeClipSharePath(id,5,17);
+ assert.match(path,/^\/clip\?v=dQw4w9WgXcQ&start=5&end=17$/);
+ assert.throws(()=>youtubeClipSharePath(id,0,31));
+ assert.throws(()=>youtubeClipSharePath("invalid",1,5));
+ const page=read("app/clip/page.tsx");
+ assert.match(page,/youtubeClipEmbed\(v,startValue,endValue\)/);
+ assert.match(page,/MP4 файл биш/);
+ assert.match(page,/youtube\.com\/watch/);
+});
+
+test("owned MP4 is trimmed into downloadable video with optional audio",()=>{
+ const code=read("app/api/clips/export/route.ts");
+ const ui=read("components/youtube-genjutsu-source.tsx");
+ assert.match(code,/await request\.formData\(\)/);
+ assert.match(code,/confirmRights/);
+ assert.match(code,/video\/mp4/);
+ assert.match(code,/ffprobe/);
+ assert.match(code,/ffmpeg/);
+ assert.match(code,/0:a:0\?/);
+ assert.match(code,/Content-Disposition/);
+ assert.match(code,/private, no-store/);
+ assert.match(code,/return new Response\(new Uint8Array\(bytes\)/);
+ assert.doesNotMatch(code,/youtu\.be|youtube\.com|yt-dlp|ytdl|https?:\/\//);
+ assert.match(ui,/fetch\("\/api\/clips\/export"/);
+ assert.match(ui,/response\.blob\(\)/);
+ assert.match(ui,/a\.download=/);
+ assert.match(ui,/Бэлдсэн үзэх клипийг нээх/);
+ assert.match(ui,/Клипийн холбоос хуулах/);
+ assert.match(ui,/MP4 файл үүсээгүй/);
+ assert.match(ui,/Genjutsu-д бэлтгэх/);
 });
