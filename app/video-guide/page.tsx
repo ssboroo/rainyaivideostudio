@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {CreativeDemoGallery} from "@/components/creative-demo-gallery";
 import { ArrowRight, Clapperboard } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
 import { VideoShowcase } from "@/components/video-showcase";
@@ -21,6 +22,7 @@ export default function VideoGuidePage() {
           </p>
         </section>
         <VideoShowcase />
+        <CreativeDemoGallery surface="video-guide" compact/>
       </section>
     </main>
   );

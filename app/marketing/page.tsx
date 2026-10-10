@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {CreativeDemoGallery} from "@/components/creative-demo-gallery";
 import { ArrowRight, BadgeDollarSign, Image, LayoutTemplate, Megaphone, ShoppingBag } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
 
@@ -25,6 +26,7 @@ export default function MarketingPage() {
           <div className="laneGrid">{lanes.map(([Icon,title,desc])=><Link href={"/studio?model=marketing-studio&prompt="+encodeURIComponent(title+" — premium commercial creative")} className="laneCard" key={title}><Icon/><div><b>{title}</b><p>{desc}</p></div><ArrowRight size={15}/></Link>)}</div>
           <div className="featureCallout"><div><small>RAVS ADVANTAGE</small><h2>Монгол UI + ₮ credit + Wire.mn</h2><p>Нэг дансаар хэрэгслүүдээ ашиглаж, бүтээл бүрийн кредитийг үүсгэхээс өмнө харна. Кредит худалдан авах үйлчилгээ нээгдэх үед ₮-өөр төлөх боломжтой.</p></div><Link href="/billing" className="ghost">Credit авах</Link></div>
         </section>
+        <CreativeDemoGallery surface="marketing" compact/>
       </section>
     </main>
   );

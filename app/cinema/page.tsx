@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {CreativeDemoGallery} from "@/components/creative-demo-gallery";
 import { Aperture, ArrowRight, Clock3, Film, Layers3, SlidersHorizontal } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
 
@@ -26,6 +27,7 @@ export default function CinemaPage() {
           <div className="featureGrid">{features.map(([Icon,title,desc])=><div className="featureCell" key={title}><Icon/><b>{title}</b><p>{desc}</p></div>)}</div>
           <div className="featureCallout"><div><small>WORKFLOW</small><h2>Жишиг материал → Найруулга → Бүтээл → Шинэ хувилбар</h2><p>Бүтээлийн түүхээс үр дүнгээ үзэж, татаж хадгал. Гадаад файлын хадгалалтын хугацаа хязгаартай тул бэлэн бүтээлээ өөртөө татаж аваарай.</p></div><Link href="/studio?model=cinema-studio-4" className="primary">Эхлэх <ArrowRight size={15}/></Link></div>
         </section>
+        <CreativeDemoGallery surface="cinema" compact/>
       </section>
     </main>
   );
