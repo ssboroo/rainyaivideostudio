@@ -11,8 +11,8 @@ export function inspectModelApi():ApiAuditItem[]{
  return models.map(model=>{
   const base={slug:model.slug,name:model.name,modelId:model.modelId,kind:model.kind,group:model.group,endpointDocumented:!!model.apiVerified};
   if(!model.apiVerified)return{...base,pricing:"unsupported_endpoint" as const,note:"API параметр эсвэл endpoint баталгаажаагүй"};
-  if(model.slug==="genjutsu-motion")return{...base,pricing:"source_clip_required" as const,note:"Бодит 1–30 секундын MP4 тайрч баталгаажуулсны дараа 480p/720p үнэлнэ"};
-  if(model.slug==="genjutsu-restyle")return{...base,pricing:"pricing_unavailable" as const,note:"Restyle-ийн албан API тариф тусдаа баталгаажаагүй"};
+  if(["genjutsu-motion","genjutsu-object","genjutsu-restyle"].includes(model.slug))
+   return{...base,pricing:"source_clip_required" as const,note:"Эх MP4-г серверээр тайрч баталгаажуулсны дараа 480p / 720p / 1080p-ийн албан үнээр тооцно. API account эрхийг генерацгүйгээр батлах боломжгүй."};
   const sample={
    duration:model.durationOptions?.[0]||model.minDuration||5,
    resolution:model.resolutions.find(s=>s!=="auto"&&s!=="default")||model.resolutions[0]||"720p",
