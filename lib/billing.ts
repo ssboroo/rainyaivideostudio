@@ -28,7 +28,7 @@ function validatePack(p:unknown,seen:Set<string>):asserts p is CreditPackage{
     throw new Error("Кредитийн багц буруу эсвэл давхардсан.");
  const audit=estimatePackContribution(pkg.priceMnt,pkg.credits);
  if(!audit.guardPassed)
-   throw new Error("Ашгийн хамгаалалт: багц 70%-ийн цэвэрлэсэн өртгийн markup болон нөөцийн стресс тестийг хангахгүй байна.");
+   throw new Error("Ашгийн хамгаалалт: багцын цэвэрлэсэн өртгийн доод нэмэгдэл болон валют/шимтгэлийн стресс тестийг хангахгүй байна.");
  seen.add(pkg.id);
 }
 export function getCreditPackages():CreditPackage[]{
@@ -51,6 +51,7 @@ export function getPricingScenario() {
   reviewedAt:pricingPolicy.reviewedAt,
   forecastUsdMnt:pricingPolicy.usdMnt,
   apiMarkupMultiplier:1+pricingPolicy.markup,
+  estimatedQuoteReductionVsPrior:1-(1+pricingPolicy.markup)/2.15,
   minCreditMnt:pricingPolicy.minimumPackMntPerCredit,
    minimumNetCostMarkup:pricingPolicy.minimumNetCostMarkup,
   scenarioReserves:{
