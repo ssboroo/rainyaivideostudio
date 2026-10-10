@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {CreativeDemoGallery} from "@/components/creative-demo-gallery";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { WorkflowIcon } from "@/components/workflow-icon";
 import { Sidebar } from "@/components/sidebar";
@@ -33,6 +34,7 @@ export default function AppsPage() {
 
           <div className="featureCallout"><div><small>АЛХАМЧИЛСАН ЗААВАР</small><h2>Эхний бүтээлээ хамтдаа эхлүүлье</h2><p>Хэрэгсэл бүрийн оролт, тохиргоо, үр дүнг тайлбарласан Монгол заавартай танилцаарай.</p></div><Link className="primary" href="/video-guide">Заавар үзэх <ArrowRight size={15}/></Link></div>
         </section>
+        <CreativeDemoGallery surface="apps" compact/>
       </section>
     </main>
   );
