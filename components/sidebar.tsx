@@ -33,6 +33,7 @@ const groups = [
       ["/studio", "Бүтээх студи", Clapperboard],
       ["/explore", "Хэрэгсэл үзэх", Compass],
       ["/video-guide", "Видео гарын авлага", CirclePlay],
+      ["/youtube", "YouTube видео татах", Film],
       ["/trends", "Тренд видео", TrendingUp],
       ["/community", "Бүтээлчдийн сан", UsersRound],
     ],
