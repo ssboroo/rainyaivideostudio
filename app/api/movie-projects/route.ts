@@ -21,6 +21,7 @@ const createSchema=z.object({
 export async function GET(){
   const user=await requireUser();
   if(!user) return NextResponse.json({error:"Нэвтрэх шаардлагатай."},{status:401});
+  if(process.env.MOVIE_SCHEDULER_ENABLED!=="true") return NextResponse.json({enabled:false,projects:[],message:"Movie Producer v2 QA туршилт хүлээж байна."},{status:503});
   return NextResponse.json({projects:await listOwnMovies(user.id)},{headers:{"Cache-Control":"private, no-store"}});
 }
 export async function POST(request:NextRequest){
