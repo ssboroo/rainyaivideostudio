@@ -104,7 +104,7 @@ test("verified Genjutsu 1-30 second clip metering is distinct from unverified ar
  assert.throws(()=>providerCostUsd(id,{resolution:"720p",video_url,duration:10}));
  assert.equal(providerCostUsd(id,{resolution:"480p",video_url,__verifiedClipSeconds:5.25}),Math.ceil(5.25)*.318);
  assert.equal(providerCostUsd(id,{resolution:"720p",video_url,__verifiedClipSeconds:8}),8*.681);
- assert.equal(providerCostUsd(id,{resolution:"1080p",video_url,__verifiedClipSeconds:6}),6*1.632);
+ assert.throws(()=>providerCostUsd(id,{resolution:"1080p",video_url,__verifiedClipSeconds:6}),/API өртгийг баталгаажуулж байна/);
  assert.ok(quoteApiCredits(id,{resolution:"720p",video_url,__verifiedClipSeconds:8})>0);
  for(const value of [0,-1,31,NaN,"8"])assert.throws(()=>providerCostUsd(id,{resolution:"720p",video_url,__verifiedClipSeconds:value}));
 });
@@ -188,6 +188,6 @@ test("owned MP4 is trimmed into downloadable video with optional audio",()=>{
  assert.match(ui,/a\.download=/);
  assert.match(ui,/Бэлдсэн үзэх клипийг нээх/);
  assert.match(ui,/Клипийн холбоос хуулах/);
- assert.match(ui,/MP4 файл үүсээгүй/);
+ assert.match(ui,/MP4 видео файл үүсээгүй/);
  assert.match(ui,/Genjutsu-д бэлтгэх/);
 });
