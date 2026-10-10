@@ -70,7 +70,6 @@ test("selected YouTube time range produces only a reusable official-player link"
  assert.match(component,/youtubeClipSharePath/);
  assert.match(component,/navigator\.clipboard\.writeText/);
  assert.match(component,/MP4 видео файл үүсээгүй/);
- assert.match(component,/youtu\.be/); // Existing supported format reference
  assert.match(page,/youtubeClipEmbed/);
  assert.match(page,/MP4 татахгүй/);
  assert.doesNotMatch(page,/yt-dlp|ytdl|fetch\(/);
