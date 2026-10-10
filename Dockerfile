@@ -7,7 +7,8 @@ RUN npm install
 FROM node:22-alpine AS prod-deps
 WORKDIR /app
 COPY package*.json ./
-RUN npm install --omit=dev
+COPY prisma ./prisma
+RUN npm install --omit=dev && npx prisma generate
 
 FROM node:22-alpine AS builder
 WORKDIR /app
@@ -29,7 +30,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/lib ./lib
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
 USER nextjs
 EXPOSE 3000
 ENV HOSTNAME=0.0.0.0
-CMD ["sh","-c","PORT=${PORT:-3000} node server.js"]
+CMD ["sh","-c","node --import tsx scripts/movie-worker.mjs & worker=$!; PORT=${PORT:-3000} node server.js & web=$!; trap 'kill $web $worker 2>/dev/null || true' TERM INT; wait $web; rc=$?; kill $worker 2>/dev/null || true; wait $worker 2>/dev/null || true; exit $rc"]

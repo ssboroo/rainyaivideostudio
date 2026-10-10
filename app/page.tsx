@@ -142,6 +142,11 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="bottomCta"><div><small>NEW · RAINY MOVIE PRODUCER BETA</small>
+          <h2>Нэг prompt. Олон кадр. Нэг cinematic төсөл.</h2>
+          <p>ChatGPT / Claude-аас удирдах persistent scene scheduler, AI storyboard QA, Монгол voice-over ба FFmpeg export roadmap. Туршилтын боломж, бодит лимит болон идэвхжүүлэлтийн төлөвтэй танилц.</p></div>
+          <Link href="/movie" className="primary large">Movie Producer <ArrowRight size={17}/></Link>
+        </section>
         <section className="bottomCta">
           <div>
             <small>БҮТЭЭЛЧ ОРЧИН</small>
