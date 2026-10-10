@@ -3,6 +3,7 @@ import {useEffect,useRef,useState} from "react";
 import {CheckCircle2,Clapperboard,ClipboardCopy,ExternalLink,Film,LoaderCircle,Play,Scissors,ShieldCheck,Upload, Youtube} from "lucide-react";
 import {useSearchParams} from "next/navigation";
 import {parseYouTubeVideo,youtubeClipEmbed,youtubeClipSharePath} from "@/lib/youtube-clip";
+import {validClipSourceType} from "@/lib/clip-media";
 import "./youtube-genjutsu.css";
 
 type Props={onPrepared:(videoUrl:string,seconds:number,proof:string)=>void;onSourceChange:()=>void;onProcessing:(active:boolean)=>void};
@@ -49,6 +50,14 @@ export function YouTubeGenjutsuSource({onPrepared,onSourceChange,onProcessing}:P
  }
  function updateFile(candidate:File|null){
   resetPrepared();
+  if(candidate&&!validClipSourceType(candidate.name,candidate.type)){
+   setFile(null);
+   setMessage("MP4, MOV эсвэл M4V файл сонгоно уу. Утасны Camera-аар авсан MOV видеог дэмжинэ.");
+   return;
+  }
+  if(candidate&&candidate.size>80*1024*1024){
+   setFile(null);setMessage("Эх видео 80MB-аас бага байна. Богино хувилбараа сонгоно уу.");return;
+  }
   setFile(candidate);
  }
  async function downloadClip(){
@@ -116,7 +125,7 @@ export function YouTubeGenjutsuSource({onPrepared,onSourceChange,onProcessing}:P
     <a href={"https://www.youtube.com/watch?v="+youtube.id} target="_blank" rel="noopener noreferrer" className="ytGenjutsuSource">YouTube эх сурвалж <ExternalLink size={12}/></a>
    </div>}
    <div className="ytGenjutsuNotice"><ShieldCheck size={19}/><p>YouTube холбоосоор <b>хэсэгчилсэн preview клип</b> тоглуулж, холбоосоор хуваалцаж болно. YouTube видеог MP4 болгон шууд татах албан API байхгүй. Genjutsu-д бодит клип хэрэгтэй тул зөвшөөрөлтэй эх файлыг доор оруулна. <a href="https://support.google.com/youtube/answer/56100" target="_blank" rel="noopener noreferrer">Өөрийн YouTube бичлэгийг татах албан заавар ↗</a></p></div>
-   <label className="ytGenjutsuUpload"><span>2 · Genjutsu-д ашиглах эх MP4 файл (80MB хүртэл)</span><input ref={fileRef} type="file" accept="video/mp4" onChange={e=>updateFile(e.target.files?.[0]||null)}/><small><Upload size={14}/> {file?file.name:"Эх видео сонгох"}</small></label>
+   <label className="ytGenjutsuUpload"><span>2 · Genjutsu-д ашиглах эх MP4/MOV файл (80MB хүртэл)</span><input ref={fileRef} type="file" accept=".mp4,.mov,.m4v,video/mp4,video/quicktime,video/x-m4v" onChange={e=>updateFile(e.target.files?.[0]||null)}/><small><Upload size={14}/> {file?file.name:"Эх видео сонгох (iPhone MOV дэмжинэ)"}</small></label>
    {localPreview&&<div className="ytGenjutsuLocal"><video ref={videoRef} src={localPreview} controls playsInline preload="metadata" onTimeUpdate={e=>{const v=e.currentTarget;if(v.currentTime>=to&&!v.paused)v.pause();}}/><button type="button" className="ghost" onClick={previewLocal} disabled={!validTimes}><Play size={13}/> Эх файлын сонгосон хэсэг</button></div>}
    <label className="ytGenjutsuConsent"><input type="checkbox" checked={rights} onChange={e=>{setRights(e.target.checked);resetPrepared();}}/><span>Энэ файлыг боловсруулах болон өөрчилсөн хувилбар бүтээх эрх надад бий.</span></label>
    <div className="ytClipOutputActions">
