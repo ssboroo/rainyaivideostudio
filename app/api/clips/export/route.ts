@@ -4,6 +4,7 @@ import {mkdtemp,readFile,rm,stat,writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {spawn} from "node:child_process";
+import {validClipSourceType,validClipWindow} from "@/lib/clip-media";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -37,8 +38,8 @@ export async function POST(request:Request){
   const form=await request.formData();
   if(form.get("confirmRights")!=="true")return fail("Ашиглах эрхээ баталгаажуулна уу.");
   const input=form.get("file"),start=Number(form.get("start")),end=Number(form.get("end"));
-  if(!(input instanceof File)||input.type!=="video/mp4"||input.size===0||input.size>80*1024*1024)return fail("80MB хүртэлх эх MP4 сонгоно уу.",413);
-  if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end-start<1||end-start>30||end>3600)return fail("1–30 секундын хэсэг сонгоно уу.");
+  if(!(input instanceof File)||!validClipSourceType(input.name,input.type)||input.size===0||input.size>80*1024*1024)return fail("80MB хүртэлх эх MP4 сонгоно уу.",413);
+  if(!form.has("start")||!form.has("end")||!validClipWindow(start,end))return fail("1–30 секундын хэсэг сонгоно уу.");
   folder=await mkdtemp(join(tmpdir(),"rainy-export-"));
   const source=join(folder,"input.mp4"),output=join(folder,"output.mp4");
   await writeFile(source,Buffer.from(await input.arrayBuffer()));

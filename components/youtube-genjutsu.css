@@ -50,3 +50,10 @@
 .ytGenjutsuNotice a{color:#f2df96;text-decoration:underline}
 .ytGenjutsuNotice a:focus-visible,.ytClipShareActions a:focus-visible{outline:3px solid #f8dc65;outline-offset:3px}
 @media(max-width:570px){.ytClipShareActions{display:grid;grid-template-columns:minmax(0,1fr)}.ytClipShareActions>*{width:100%!important;justify-content:center!important}.ytClipPreviewDisclaimer{font-size:11px}}
+/* The same locally owned clip can be downloaded or used for Genjutsu. */
+.ytClipOutputActions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:stretch}
+.ytClipOutputActions .ytGenjutsuProcess{width:100%;min-width:0}
+.ytClipToGenjutsu{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:49px;padding:12px;border-radius:11px;border:1px solid #d9c65b;background:#24251a;color:#f9e29b;font-size:12px;font-weight:900;cursor:pointer}
+.ytClipToGenjutsu:hover:not(:disabled){background:#353420}
+.ytClipToGenjutsu:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:570px){.ytClipOutputActions{grid-template-columns:minmax(0,1fr)}}
