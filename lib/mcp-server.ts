@@ -135,6 +135,7 @@ export function createRavsMcpServer(identity: McpIdentity, services: McpServices
     description:'ChatGPT хаалттай байсан ч PostgreSQL-ээс scene бүрийн ажил, QA, provider generation ID-г авна.',
     inputSchema:{projectId:z.string().min(10).max(80)},annotations:readAnnotations
   },async({projectId})=>guarded('ravs:read',()=>getDurableMovie(identity.userId,projectId)));
+  if(identity.scopes.includes('ravs:generate')) {
   server.registerTool('ravs_movie_v2_submit',{
     title:'One-Prompt Movie эхлүүлэх',
     description:'Баталсан кредитийн дээд хязгаар дотор нэг удаа серверийн киноны ажил эхлүүлнэ. Movie scheduler flag идэвхтэй үед л төлбөртэй генерац queue-д орно.',
@@ -161,6 +162,7 @@ export function createRavsMcpServer(identity: McpIdentity, services: McpServices
     inputSchema:{projectId:z.string().min(10).max(80),confirmResume:z.literal(true)},
     annotations:{readOnlyHint:false,destructiveHint:false,idempotentHint:true,openWorldHint:false}
   },async({projectId})=>guarded('ravs:generate',()=>resumeDurableMovie(identity.userId,projectId)));
+  }
   server.registerTool('ravs_long_movie_plan', {
     title:'Ганц санаанаас урт кино төлөвлөх',
     description:'4 секундээс 60 минут хүртэл урт кинонд API хязгаарын дагуу scene хувааж, видео кредитийг автоматаар нэгтгэх. Энэ нь 100% үнэгүй, зөвхөн төлөвлөлт бөгөөд видео/voice/MP4 экспорт эхлүүлэхгүй.',
