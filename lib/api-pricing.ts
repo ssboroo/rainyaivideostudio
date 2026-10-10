@@ -75,8 +75,14 @@ export function providerCostUsd(id: string, input: Record<string, unknown>): num
   if (id.startsWith('kling-video/v3.0-turbo/')) return perSecond({'720p':.112,'1080p':.14});
   // Conservative non-discounted rate caps from official Kling playgrounds;
   // do not assume temporary 2026 launch promotions or account discounts.
-  if (id === 'kling-video/o3/first-last-frame') return .112 * seconds;
-  if (id === 'kling-video/o3/image-reference') return .084 * seconds;
+  if (id === 'kling-video/o3/first-last-frame') {
+    if(input.mode === '4k')return unavailable(); // 4K mode has a distinct undisclosed price
+    return .112 * seconds;
+  }
+  if (id === 'kling-video/o3/image-reference') {
+    if(input.mode !== undefined && input.mode !== 'std')return unavailable();
+    return .084 * seconds;
+  }
   if (id === 'kling-video/o3/video-reference') return .168 * seconds;
   if (id === 'kling-video/omni/image-reference' || id === 'kling-video/omni/first-last-frame') return .112 * seconds;
   if (id === 'kling-video/omni/video-reference') return .168 * seconds;
