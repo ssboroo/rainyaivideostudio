@@ -109,14 +109,14 @@ const existingModels: RavsModel[] = [
   },
   {
     slug: "genjutsu-motion", name: "Genjutsu Motion Transfer", provider: "Higgsfield API", maker: "Higgsfield",
-    modelId: "higgsfiled/genjutsu/motion-transfer/v1.0", kind: "workflow", group: "Genjutsu", badge: "EXCLUSIVE",
+    modelId: "higgsfield/genjutsu/motion-transfer/v1.0", kind: "workflow", group: "Genjutsu", badge: "EXCLUSIVE",
     description: "Хөдөлгөөн, камерын хэмнэлийг хадгалж дүрслэлийг өөрчилнө.", pricingType: "flat", creditRate: 840,
     resolutions: ["480p","720p"], aspectRatios: ["auto"], supportsImage: true, supportsVideo: true, supportsMultipleReferences: true,
     maxReferences: 8, requiresPrompt: false, capabilities: ["Motion","8 refs","Transform"], featured: true, tone: "rose",
   },
   {
     slug: "genjutsu-object", name: "Genjutsu Object Swap", provider: "Higgsfield API", maker: "Higgsfield",
-    modelId: "higgsfiled/genjutsu/object-swap/v1.0", kind: "workflow", group: "Genjutsu", badge: "OBJECT SWAP",
+    modelId: "higgsfield/genjutsu/object-swap/v1.0", kind: "workflow", group: "Genjutsu", badge: "OBJECT SWAP",
     description: "Видеоны дүр, хувцас, бүтээгдэхүүн зэрэг объектыг солино.", pricingType: "flat", creditRate: 840,
     resolutions: ["480p","720p"], aspectRatios: ["auto"], supportsImage: true, supportsVideo: true, supportsMultipleReferences: true,
     maxReferences: 8, requiresPrompt: false, capabilities: ["Swap","Video ref","Image refs"], tone: "rose",
