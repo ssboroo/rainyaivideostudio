@@ -47,7 +47,7 @@ export async function createMovie(userId:string,args:{prompt:string;targetSecond
  if(plan.totalVideoCredits>args.maxVideoCredits)throw new Error("Нийт видео кредитийн зөвшөөрсөн хэмжээнээс хэтэрсэн.");
  await ensureMovieTables();
  const id=createHash("sha256").update(userId+"\0"+args.idempotencyKey).digest("hex").slice(0,40);
- const payload:Payload={prompt:args.prompt,sceneCount:plan.sceneCount,targetSeconds:plan.targetSeconds,
+ const payload:Payload={prompt:args.prompt,sceneCount:plan.sceneCount,targetSeconds:plan.requestedSeconds,
   aspectRatio:args.aspectRatio,qualityProfile:args.qualityProfile,videoCreditsQuoted:plan.totalVideoCredits,
   spentCredits:0,reference:createHash("sha256").update(JSON.stringify([args.prompt,args.targetSeconds,args.modelSlug,args.aspectRatio,args.resolution,args.generateAudio,args.qualityProfile,args.styleBible])).digest("hex"),
   scenes:plan.scenes.map(s=>({number:s.number,duration:s.duration,credits:s.credits,modelSlug:s.modelSlug,
