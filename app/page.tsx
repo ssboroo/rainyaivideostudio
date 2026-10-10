@@ -63,6 +63,10 @@ export default function Home() {
           </div>
         </section>
 
+        <Link href="/movie-producer" className="moviePromoHome" aria-label="AI Director / One-Prompt Movie">
+          <div><small>AI DIRECTOR · ONE-PROMPT MOVIE</small><h2>Нэг санаанаас олон кадрын кино.</h2><p>Киноны storyboard, scene чанарын QA, Монгол дуу, MP4 post-production, 1080p/4K экспортын боломж ба бодит төлөв.</p></div>
+          <span>Боломжуудыг харах →</span>
+        </Link>
         <section className="productSection">
           <div className="sectionTitleRow">
             <div>
