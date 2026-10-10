@@ -149,14 +149,12 @@ export default function Home() {
                 >
                   <EngineMark slug={model.slug} kind={model.kind} />
                   <div className="homeEngineDescription">
+                    <span className="homeEngineKind">{model.kind === "video" ? "ВИДЕО" : model.kind === "image" ? "ЗУРАГ" : "WORKFLOW"}</span>
                     <strong>{model.name}</strong>
                     <small>{model.maker || model.provider}</small>
                     <span className="homeEngineCapabilities">{(model.capabilities || []).slice(0, 2).map((capability) => <span key={capability}>{capability}</span>)}</span>
                   </div>
-                  <div className="homeEngineAside">
-                    <span className="homeEngineKind">{model.kind === "video" ? "ВИДЕО" : model.kind === "image" ? "ЗУРАГ" : "WORKFLOW"}</span>
-                    <EngineLaunch />
-                  </div>
+                  <div className="homeEngineAside"><EngineLaunch /></div>
                 </Link>
               ))}
             </div>
