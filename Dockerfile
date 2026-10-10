@@ -7,7 +7,8 @@ RUN npm install
 FROM node:22-alpine AS prod-deps
 WORKDIR /app
 COPY package*.json ./
-RUN npm install --omit=dev
+COPY prisma ./prisma
+RUN npm install --omit=dev && npx prisma generate
 
 FROM node:22-alpine AS builder
 WORKDIR /app
@@ -29,6 +30,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/lib ./lib
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
 USER nextjs
 EXPOSE 3000
 ENV HOSTNAME=0.0.0.0
