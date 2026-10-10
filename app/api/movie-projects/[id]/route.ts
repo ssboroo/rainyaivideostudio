@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/http";
-import { getOwnMovie } from "@/lib/movie-producer";
+import { getOwnMovie } from "@/lib/movie-producer-v2";
 export const dynamic="force-dynamic";
 export async function GET(_request:NextRequest,{params}:{params:Promise<{id:string}>}){
   const user=await requireUser();
