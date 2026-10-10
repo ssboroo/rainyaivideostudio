@@ -92,7 +92,7 @@ test("Studio lets all Genjutsu models prepare signed clips before quoting credit
  assert.match(studio,/__verifiedClipSeconds: clipGenjutsu && clipToken/);
  assert.match(generation,/\["genjutsu-motion","genjutsu-object","genjutsu-restyle"\]\.includes\(model\.slug\)/);
  assert.match(generation,/readClipProof\(raw\.clipToken,userId,input\.video_url\)/);
- assert.match(studio,/Genjutsu Motion Transfer руу шилжих/);
+ assert.match(studio,/Энэ Genjutsu хувилбарт хамгийн багадаа 4 секундын эх видео шаардлагатай/);
 });
 
 test("YouTube is used ONLY as official embed: FFmpeg accepts only user-uploaded MP4, generation validates clip proof",()=>{
