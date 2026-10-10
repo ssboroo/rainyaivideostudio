@@ -1,3 +1,8 @@
+export function higgsfieldKeyConfigured(key:string):boolean {
+ // Open Higgsfield now supports both a complete copied API key and legacy
+ // KEY_ID:KEY_SECRET. Neither format may contain the HTTP auth scheme.
+ return key.length >= 12 && !/\s/.test(key) && !key.startsWith("Key ");
+}
 function intEnv(name: string, fallback: number) {
   const value = Number(process.env[name]);
   return Number.isFinite(value) ? value : fallback;
