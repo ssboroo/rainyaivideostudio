@@ -138,7 +138,7 @@ export function createRavsMcpServer(identity: McpIdentity, services: McpServices
       seconds:z.string().max(12),
       aspectRatio:z.string().max(10),
     }
-  },async ({prompt,seconds,aspectRatio})=>({messages:[{role:'user',content:{type:'text':
+  },async ({prompt,seconds,aspectRatio})=>({messages:[{role:'user',content:{type:'text',text:
     'RAINY Video болон RAINY Voice MCP хоёрыг хэрэглэ. Миний НЭГ санаа: '+prompt+
     '. Хүссэн хугацаа (сек): '+seconds+', харьцаа: '+aspectRatio+
     '. Эхлээд ravs_long_movie_plan, scene бүрийн бие даасан кино зохиол, дүр, кадрын хөдөлгөөний prompt-ыг боловсруул. '+
