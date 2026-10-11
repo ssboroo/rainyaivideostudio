@@ -4,7 +4,7 @@ import Link from "next/link";
 import {Calculator,AlertTriangle,Coins,ArrowRight} from "lucide-react";
 
 type Model={slug:string;name:string;provider:string;kind:string;apiVerified:boolean;resolutions:string[];aspectRatios:string[];minDuration:number|null;maxDuration:number|null};
-type Quote={model:string;credits:number;apiCostUsd:number;apiCostMntScenario:number;customerMntByPlan:{planId:string;priceMnt:number}[]};
+type Quote={model:string;credits:number};
 const number=(v:number)=>v.toLocaleString("mn-MN");
 export function ModelPricingSimulator(){
  const [models,setModels]=useState<Model[]>([]);
@@ -37,7 +37,7 @@ export function ModelPricingSimulator(){
   return()=>{clearTimeout(timer);cancel.abort()};
  },[selected,resolution,duration,ratio,audio,model?.slug]);
  return <section className="subscriptionCalculator" aria-label="Моделийн кредит тооцоолуур">
-  <header><Calculator size={21}/><div><h2>Модель бүрийн кредит тооцоолуур</h2><p>Загвар, нягтаршил, секундээр жишиг өртөг болон credit тооцно.</p></div></header>
+  <header><Calculator size={21}/><div><h2>Модель бүрийн кредит тооцоолуур</h2><p>Үүсгэх загвар, нягтаршил, хугацаагаар шаардлагатай кредитийг урьдчилан тооцно.</p></div></header>
   <div className="subscriptionCalcGrid">
    <label><span>AI модель</span><select value={selected} onChange={e=>setSelected(e.target.value)}>{models.map(m=><option key={m.slug} value={m.slug}>{m.name}{m.apiVerified?"":" · API шалгаж байна"}</option>)}</select></label>
    <label><span>Resolution</span><select value={resolution} onChange={e=>setResolution(e.target.value)}>{(model?.resolutions||["720p"]).map(x=><option key={x} value={x}>{x}</option>)}</select></label>
@@ -47,11 +47,9 @@ export function ModelPricingSimulator(){
   </div>
   <div className="subscriptionCalcResult" role="status" aria-live="polite">
    {busy?<p><Coins size={16}/> Үнийг шалгаж байна…</p>:quote?<><div className="subscriptionCalcBig"><span>Нэг генерацад</span><strong>{number(quote.credits)} <small>кредит</small></strong></div>
-    <p className="subscriptionCalcCost">Нийтлэгдсэн API өртгийн жишиг: {"$"}{quote.apiCostUsd.toFixed(4)} · дотоод ханшаар ≈ {number(quote.apiCostMntScenario)}₮</p>
-    <div className="subscriptionCalcByPlan">{quote.customerMntByPlan.map(p=><span key={p.planId}>{p.planId}: ≈{number(p.priceMnt)}₮</span>)}</div>
     <Link href={"/studio?model="+encodeURIComponent(selected)}>Studio-д бүтээх <ArrowRight size={15}/></Link></>:
     <p className="subscriptionCalcWarn"><AlertTriangle size={17}/>{error||"Сонголтоо хийнэ үү."}</p>}
   </div>
-  <p className="subscriptionCalcDisclaimer">Энэ нь жишиг тооцоо. Provider-ийн токен, эх видео, нэмэлт параметрээс хамаарсан үнэ Studio-д баталгаажсаны дараа л төлбөртэй генерац эхэлнэ. Баталгаажаагүй моделийн үнийг зохиож харуулахгүй.</p>
+  <p className="subscriptionCalcDisclaimer">Энэ нь жишиг кредит юм. Үүсгэхээс өмнө таны сонгосон бүх тохиргоогоор сервер нийт кредитийг шалгана. Үнийн мэдээлэл баталгаажаагүй горимд генерац эхлэхгүй.</p>
  </section>;
 }
