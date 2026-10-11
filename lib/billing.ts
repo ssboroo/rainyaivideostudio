@@ -9,7 +9,7 @@ export type CreditPackage={
  * No "unlimited", no provider-web subscription credit resale.
  */
 const defaults:CreditPackage[]=[
- {id:"starter",name:"Starter Video",priceMnt:29900,credits:3000,validityMonths:1},
+ {id:"starter",name:"Starter Video",priceMnt:29900,credits:3150,validityMonths:1},
  {id:"creator",name:"Creator",priceMnt:69900,credits:7400,validityMonths:1},
  {id:"pro",name:"Pro",priceMnt:179000,credits:19000,popular:true,validityMonths:1},
  {id:"studio",name:"Studio",priceMnt:449000,credits:48000,validityMonths:1},
