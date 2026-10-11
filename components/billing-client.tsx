@@ -35,7 +35,16 @@ export function BillingClient(){
     try{
       const r=await fetch(`/api/billing/wire/status?paymentId=${encodeURIComponent(id)}`,{cache:"no-store"});
       const d=await r.json();if(!r.ok)throw new Error(d.error||"Төлөв шалгаж чадсангүй.");
-      if(d.status==="PAID"){setNotice(`Төлбөр амжилттай. Таны wallet: ${Number(d.credits||0).toLocaleString()} credit`);router.replace("/billing")}
+      if(d.status==="PAID"){
+        const [membership,balance]=await Promise.all([
+          fetch("/api/billing/subscription",{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null),
+          fetch("/api/billing/balance",{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null)
+        ]);
+        if(membership)setSubscription(membership);
+        if(balance?.grants)setGrants(balance.grants);
+        setNotice(`Төлбөр амжилттай. Таны wallet: ${Number(d.credits||0).toLocaleString()} credit`);
+        router.replace("/billing");
+      }
       else if(d.status==="FAILED"||d.status==="CANCELED")setError("Төлбөр амжилтгүй эсвэл цуцлагдсан байна.");
       else{setNotice("Төлбөр Wire.mn дээр боловсруулагдаж байна. Төлсний дараа дахин шалгана уу.");if(auto)setTimeout(()=>check(id,false),2500)}
     }catch(e){setError(e instanceof Error?e.message:"Алдаа гарлаа.")}finally{setChecking(false)}
