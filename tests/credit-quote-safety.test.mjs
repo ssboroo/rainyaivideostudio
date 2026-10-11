@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {getModel,buildProviderInput,estimateCredits} from "../lib/models.ts";
+import {getModel,buildProviderInput} from "../lib/models.ts";
+import {estimateCredits} from "../lib/model-credit-estimate.ts";
 import {quoteApiCredits} from "../lib/api-pricing.ts";
 
 test("cannot invent five seconds to price durationless self-timed video workflows",()=>{
