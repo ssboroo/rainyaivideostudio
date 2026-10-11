@@ -68,7 +68,10 @@ export function providerCostUsd(id: string, input: Record<string, unknown>): num
       if(rate===undefined)return unavailable();
       return Math.ceil(verified)*rate;
     }
-    return unavailable();
+    // Other reference-video models have an input-duration component that cannot
+    // be derived from the generated video length. Require a verified media meter
+    // and a reviewed provider tariff before opening customer-paid generation.
+    throw new PricingUnavailableError("Эх видеоны хугацаа болон API төлбөр бүрэн баталгаажаагүй. Энэ видео reference/засварлах горимд кредит суутгахгүй; баталгаажсан Genjutsu клип эсвэл text/image-to-video горим ашиглана уу.");
   }
   const perSecond = (rates: Record<string, number>) => {
     const rate = rates[resolution]; if (rate === undefined || !Number.isFinite(seconds) || seconds <= 0 || seconds > 3600) return unavailable();
