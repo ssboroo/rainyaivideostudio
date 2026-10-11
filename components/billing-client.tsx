@@ -48,7 +48,7 @@ export function BillingClient(){
         <p>{subscription.membership.status==="ACTIVE"?"Идэвхтэй":"Хугацаа дууссан"} · Сунгах өдөр: {new Date(subscription.membership.periodEnd).toLocaleDateString("mn-MN",{timeZone:"Asia/Ulaanbaatar"})} · Автоматаар төлбөр татахгүй.</p>
       </div><span><ArrowRightLeft size={14}/> Шинэ багц авбал шилжинэ</span>
     </section>}
-    {subscription?.history?.length>0&&<details className="subscriptionHistory"><summary>Subscription төлбөр ба сунгалтын түүх ({subscription.history.length})</summary>
+    {subscription&&subscription.history.length>0&&<details className="subscriptionHistory"><summary>Subscription төлбөр ба сунгалтын түүх ({subscription.history.length})</summary>
       <div>{subscription.history.map(item=><p key={item.paymentId}>{item.planId} · {item.amountMnt.toLocaleString("mn-MN")}₮ · +{item.credits.toLocaleString("mn-MN")} кредит · {new Date(item.startedAt).toLocaleDateString("mn-MN")}</p>)}</div>
     </details>}
     {grants.length>0&&<div className="accountNotice"><div><b>Таны идэвхтэй багцууд</b>{grants.map(g=><p key={g.id}>{g.remaining.toLocaleString()} credit · Дуусах: {new Date(g.expiresAt).toLocaleString("mn-MN",{timeZone:"Asia/Ulaanbaatar"})}</p>)}</div></div>}
