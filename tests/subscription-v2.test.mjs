@@ -63,6 +63,6 @@ test("unpriced API token/source-dependent variants fail closed and a public quot
  assert.match(route,/estimateCredits\(model,duration,input\)/);
  assert.match(route,/providerCostUsd\(model.modelId,input\)/);
  assert.match(route,/model.apiVerified/);
- assert.match(route,/customerMntByPlan/);
+ assert.doesNotMatch(route,/customerMntByPlan|apiCostUsd|apiCostMntScenario|fxStress|markup:pricingPolicy/);
  assert.doesNotMatch(route,/createGeneration|reserveCredits|createPaymentIntent/);
 });
