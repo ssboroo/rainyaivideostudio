@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { createSession, verifyPassword, hashPassword } from "@/lib/session";
 import { jsonError } from "@/lib/http";
 import { validateAuthInput, consumeAuthLimit } from "@/lib/auth-security";
+import { verificationEnabled } from "@/lib/transactional-email";
 const dummyHash = hashPassword("unusable-dummy-password");
 export async function POST(req: Request) {
  let input;
@@ -15,6 +16,7 @@ export async function POST(req: Request) {
   const user = await db.user.findUnique({where:{email:input.email}});
   const valid = verifyPassword(input.password,user?.passwordHash || dummyHash);
   if(!user || !valid) return jsonError("Имэйл эсвэл нууц үг буруу.",401);
+  if (verificationEnabled() && !user.emailVerifiedAt) return jsonError("Имэйлээ баталгаажуулна уу. Баталгаажуулах захидлыг дахин авах боломжтой.",403);
   await createSession(user.id);
   return NextResponse.json({user:{id:user.id,email:user.email,name:user.name,role:user.role,credits:user.credits}});
  } catch(e) {
