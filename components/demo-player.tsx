@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { RotateCcw, Video, LoaderCircle } from "lucide-react";
+import { RotateCcw, Video, LoaderCircle, ExternalLink } from "lucide-react";
 export function DemoPlayer({ source, src, poster, title }: { source: string; src?: string; poster?: string; title: string }) {
  const [ratio,setRatio]=useState("16 / 9");
  const viewportRef=useRef<HTMLDivElement>(null);
@@ -17,6 +17,9 @@ export function DemoPlayer({ source, src, poster, title }: { source: string; src
  return <div className="ravsDemoPlayer" ref={viewportRef} style={{aspectRatio:ratio}}>
  {active && url && state!=="error" ? <video key={url+retry} ref={ref} src={url} poster={image||undefined} controls playsInline preload="metadata" aria-label={title+" — жишээ видео"} onLoadedMetadata={(event)=>{const video=event.currentTarget;if(video.videoWidth&&video.videoHeight)setRatio(video.videoWidth+" / "+video.videoHeight);setState("ready");}} onError={()=>setState("error")} /> : image ? <img src={image} alt={title+" жишээ"} loading="lazy" /> : <div className="demoEmpty"><Video size={32}/></div>}
  {active && state==="loading" && <span className="demoLoading"><LoaderCircle size={15} className="spin"/> Жишээ ачаалж байна</span>}
- {state==="error" && <div className="demoError"><span>Жишээ видео одоогоор ачаалагдсангүй.</span><button type="button" onClick={()=>{setState("loading");setRetry(v=>v+1);}}><RotateCcw size={13}/> Дахин оролдох</button></div>}
+ {state==="error" && <div className="demoError"><span>Энэ жишээний видео хост одоогоор тоглуулахыг зөвшөөрөхгүй байна.</span>
+  <button type="button" onClick={()=>{setState("loading");setRetry(v=>v+1);}}><RotateCcw size={13}/> Дахин оролдох</button>
+  <a href={source} target="_blank" rel="noopener noreferrer"><ExternalLink size={13}/> Албан эх сурвалжаас үзэх</a>
+ </div>}
  </div>;
 }
