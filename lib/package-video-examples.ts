@@ -1,4 +1,5 @@
-import {getModel,buildProviderInput,estimateCredits} from "./models.ts";
+import {getModel,buildProviderInput} from "./models.ts";
+import {estimateCredits} from "./model-credit-estimate.ts";
 import type {CreditPackage} from "./billing.ts";
 
 /** Informational ONLY: same model parameters and API credit estimator as Studio.
