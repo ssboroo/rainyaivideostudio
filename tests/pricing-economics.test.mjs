@@ -61,9 +61,9 @@ test("admin-only scenario shows reservations, no automatic recurring payments",(
  const page=read("components/billing-client.tsx");
  const admin=read("components/admin-client.tsx");
  const server=read("app/api/admin/pricing-economics/route.ts");
- assert.match(page,/Автомат renewal/);
+ assert.match(page,/Автомат төлбөргүй/);
  assert.match(page,/Нэг удаа төлж идэвхжүүлэх/);
- assert.match(page,/subscription биш/);
+ assert.match(page,/автоматаар мөнгө татахгүй/);
  assert.match(page,/toFixed\(2\)/);
  assert.match(admin,/Сценарийн үлдэх хувь/);
  assert.match(server,/requireAdmin/);
