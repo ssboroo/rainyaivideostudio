@@ -9,11 +9,11 @@ export type CreditPackage={
  * No "unlimited", no provider-web subscription credit resale.
  */
 const defaults:CreditPackage[]=[
- {id:"starter",name:"Starter Video",priceMnt:29900,credits:3150,validityMonths:1},
- {id:"creator",name:"Creator",priceMnt:69900,credits:7400,validityMonths:1},
- {id:"pro",name:"Pro",priceMnt:179000,credits:19000,popular:true,validityMonths:1},
- {id:"studio",name:"Studio",priceMnt:449000,credits:48000,validityMonths:1},
- {id:"agency",name:"Agency",priceMnt:899000,credits:95000,validityMonths:1},
+ {id:"starter",name:"Starter Video",priceMnt:49900,credits:5200,validityMonths:1},
+ {id:"creator",name:"Creator",priceMnt:99900,credits:10600,validityMonths:1},
+ {id:"pro",name:"Pro",priceMnt:199000,credits:21100,popular:true,validityMonths:1},
+ {id:"studio",name:"Studio",priceMnt:499000,credits:53000,validityMonths:1},
+ {id:"agency",name:"Agency",priceMnt:999000,credits:105000,validityMonths:1},
 ];
 function validatePack(p:unknown,seen:Set<string>):asserts p is CreditPackage{
  if(!p || typeof p!=="object"||Array.isArray(p))throw new Error("Кредитийн багцын формат буруу.");
