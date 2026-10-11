@@ -5,6 +5,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {spawn} from "node:child_process";
 import {validClipSourceType,validClipWindow} from "@/lib/clip-media";
+import {isTrustedClipRequest} from "@/lib/clip-origin";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -24,10 +25,7 @@ export async function POST(request:Request){
  const user=await requireUser();
  if(!user)return fail("Нэвтрэх шаардлагатай.",401);
  // Authenticated cookie-based video processing must reject cross-site POSTs.
- const origin=request.headers.get("origin");
- if(origin){try{
-  if(new URL(origin).host!==new URL(request.url).host)return fail("Хүсэлтийн эх сурвалж зөвшөөрөгдөөгүй.",403);
- }catch{return fail("Хүсэлтийн эх сурвалж буруу.",403);}}
+ if(!isTrustedClipRequest(request))return fail("Хүсэлтийн эх сурвалж зөвшөөрөгдөөгүй.",403);
  if(processing)return fail("Видео боловсруулалт явагдаж байна.",429);
  if(!request.headers.get("content-type")?.startsWith("multipart/form-data"))return fail("Эх MP4 файл оруулна уу.");
  const length=Number(request.headers.get("content-length")||0);
