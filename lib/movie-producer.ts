@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { db } from "./db.ts";
 import { createLongMoviePlan } from "./long-movie-plan.ts";
-import {getModel,buildProviderInput,estimateCredits} from "./models.ts";
+import {getModel,buildProviderInput} from "./models.ts";
+import {estimateCredits} from "./model-credit-estimate.ts";
 import { createUserGeneration, getUserGeneration } from "./generation-service.ts";
 
 export type MovieScene={number:number;duration:number;credits:number;modelSlug:string;
