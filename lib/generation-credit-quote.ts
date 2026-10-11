@@ -1,4 +1,5 @@
-import {type RavsModel, estimateCredits} from "./models.ts";
+import type {RavsModel} from "./models.ts";
+import {estimateCredits} from "./model-credit-estimate.ts";
 import {readClipProof} from "./clip-proof.ts";
 import {PricingUnavailableError} from "./api-pricing.ts";
 
