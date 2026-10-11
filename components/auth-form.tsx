@@ -6,13 +6,22 @@ import { Eye, EyeOff, ShieldCheck, LoaderCircle, ArrowLeft, CheckCircle2 } from 
 import { RavsLogo } from "@/components/ravs-logo";
 export function AuthForm({mode,returnTo}:{mode:"login"|"register";returnTo?:string}){
  const register=mode==="register",router=useRouter();
- const[name,setName]=useState(""),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[confirm,setConfirm]=useState(""),[show,setShow]=useState(false),[error,setError]=useState(""),[busy,setBusy]=useState(false);
+ const[name,setName]=useState(""),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[confirm,setConfirm]=useState(""),[show,setShow]=useState(false),[error,setError]=useState(""),[busy,setBusy]=useState(false),[verificationMessage,setVerificationMessage]=useState(""),[resent,setResent]=useState(false);
  async function submit(e:FormEvent){
   e.preventDefault();if(busy)return;setError("");
   if(register&&password!==confirm){setError("Нууц үг давтан оруулсан утгатай таарахгүй байна.");return;}
   setBusy(true);
   try{const r=await fetch(`/api/auth/${mode}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name,email,password})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Үйлчилгээ түр боломжгүй байна.");if(register&&d.verificationRequired){setVerificationMessage(d.message||"Имэйлээ баталгаажуулна уу.");return;}router.replace(returnTo?.startsWith("/oauth/authorize?")?returnTo:"/studio");router.refresh();}
   catch(e){setError(e instanceof Error?e.message:"Сүлжээний холболтоо шалгаад дахин оролдоно уу.");}finally{setBusy(false);}
+ }
+ async function resendVerification(){
+  setBusy(true);setError("");
+  try{
+   const r=await fetch("/api/auth/resend-verification",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({email})});
+   const d=await r.json();if(!r.ok)throw new Error(d.error||"Алдаа");
+   setResent(true);
+  }catch(e){setError(e instanceof Error?e.message:"Алдаа");}
+  finally{setBusy(false);}
  }
  return <main className="authLayout">
   <aside className="authWelcome"><Link href="/" className="authBack"><ArrowLeft size={16}/> Нүүр хуудас</Link><RavsLogo showSubtitle/><div><small>RAVS • БҮТЭЭЛЧ СТУДИ</small><h2>Таны санаа.<br/><em>Таны бүтээл.</em></h2><p>Зураг, видео, дүр болон сурталчилгааны контентоо нэг студид бүтээ.</p><ul><li><CheckCircle2 size={17}/> Монгол хэл дээрх ойлгомжтой хэрэгслүүд</li><li><CheckCircle2 size={17}/> Жишээ видео ба алхамчилсан заавар</li><li><CheckCircle2 size={17}/> Таны хувийн бүтээлийн түүх</li></ul></div><span><ShieldCheck size={16}/> Нууц үг шифрлэгдсэн хэшээр хадгалагдана</span></aside>
