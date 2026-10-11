@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import {requireAdmin,jsonError} from "@/lib/http";
-import {models,estimateCredits} from "@/lib/models";
+import {models} from "@/lib/models";
+import {estimateCredits} from "@/lib/model-credit-estimate";
 import {hfModelSpecs} from "@/lib/hf-model-specs";
 import {getPricingScenario} from "@/lib/billing";
 export const dynamic="force-dynamic";
