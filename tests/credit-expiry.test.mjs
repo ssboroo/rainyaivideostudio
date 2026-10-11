@@ -37,6 +37,10 @@ test('monthly payment grants once and starts expiry at settlement',async()=>{
  const original=db.$transaction;const f=fixture();let granted=0;let grantData;
  const payment={id:'p',userId:'u',status:'PENDING',amountMnt:90000,credits:10000,validityMonths:1,packageId:'creator',providerData:null};
  f.tx.payment={findUnique:async()=>payment,updateMany:async({data})=>{if(payment.status==='PAID')return{count:0};Object.assign(payment,data);return{count:1};}};
- f.tx.creditGrant.create=async({data})=>{granted++;grantData=data;return data;};db.$transaction=async fn=>fn(f.tx);
- try {const intent={id:'intent',status:'succeeded',currency:'MNT',amount:90000};await confirmWirePayment('p',intent);await confirmWirePayment('p',intent);assert.equal(granted,1);assert.equal(f.user.credits,10090);assert.equal(grantData.remaining,10000);assert.ok(grantData.expiresAt>Date.now());}finally{db.$transaction=original;}
+ f.tx.creditGrant.create=async({data})=>{granted++;grantData=data;return data;};
+ let cycles=0,memberships=0;
+ f.tx.subscriptionCycle={create:async({data})=>{cycles++;assert.equal(data.paymentId,'p');assert.equal(data.planId,'creator');return data;}};
+ f.tx.subscription={upsert:async({create,update})=>{memberships++;assert.equal(create.renewalMode,'MANUAL');assert.equal(update.lastPaymentId,'p');return create;}};
+ db.$transaction=async fn=>fn(f.tx);
+ try {const intent={id:'intent',status:'succeeded',currency:'MNT',amount:90000};await confirmWirePayment('p',intent);await confirmWirePayment('p',intent);assert.equal(granted,1);assert.equal(cycles,1);assert.equal(memberships,1);assert.equal(f.user.credits,10090);assert.equal(grantData.remaining,10000);assert.ok(grantData.expiresAt>Date.now());}finally{db.$transaction=original;}
 });

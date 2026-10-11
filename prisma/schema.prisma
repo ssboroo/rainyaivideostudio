@@ -54,6 +54,8 @@ model User {
   oauthCodes   OAuthCode[]
   oauthGrants  OAuthGrant[]
   movieProjects MovieProject[]
+  subscription Subscription?
+  subscriptionCycles SubscriptionCycle[]
 }
 
 model Generation {
@@ -249,4 +251,36 @@ model MovieGenerationAttempt {
   quotedCredits  Int
   createdAt      DateTime @default(now())
   @@unique([sceneId, attempt])
+}
+
+/** Prepaid monthly membership, not an automatically recurring card mandate. */
+model Subscription {
+  id String @id @default(cuid())
+  userId String @unique
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  planId String
+  status String @default("ACTIVE")
+  renewalMode String @default("MANUAL")
+  startedAt DateTime
+  periodStart DateTime
+  periodEnd DateTime
+  lastPaymentId String @unique
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  @@index([status,periodEnd])
+}
+
+/** Immutable purchase periods to audit plan switches and renewal history. */
+model SubscriptionCycle {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  paymentId String @unique
+  planId String
+  amountMnt Int
+  credits Int
+  periodStart DateTime
+  periodEnd DateTime
+  createdAt DateTime @default(now())
+  @@index([userId,createdAt])
 }

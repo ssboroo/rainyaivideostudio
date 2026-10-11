@@ -42,3 +42,44 @@
 .videoCapacityRow>b{font-size:12px;color:#ffe77a;white-space:nowrap;font-variant-numeric:tabular-nums}
 .videoCapacity>p{color:#bfc0b1;font-size:11px;line-height:1.5}
 @media(max-width:420px){.videoCapacity{padding:11px}.videoCapacityRow{align-items:flex-start}.videoCapacityRow>span{overflow-wrap:anywhere}}
+
+/* RAINY subscription v2: manually renewed prepaid membership, no card mandates. */
+.subscriptionMemberStatus{display:flex;align-items:flex-start;gap:14px;border:1px solid #728e53;border-radius:13px;background:linear-gradient(110deg,#20301c,#121810);padding:17px;margin:0 0 15px;color:#e2f6c1}
+.subscriptionMemberStatus>svg{flex:none;color:#c9f18b;margin-top:3px}
+.subscriptionMemberStatus>div{flex:1;min-width:0}
+.subscriptionMemberStatus strong{font-size:14px}
+.subscriptionMemberStatus p{margin:6px 0 0;font-size:11px;color:#b9cfa7;line-height:1.7}
+.subscriptionMemberStatus>span{display:flex;align-items:center;gap:6px;font-size:11px;color:#d4e9af;white-space:nowrap}
+.subscriptionHistory{border:1px solid #3e4339;border-radius:11px;background:#141813;color:#c7d6b5;margin-bottom:18px;overflow:hidden}
+.subscriptionHistory summary{padding:14px 16px;font-size:12px;font-weight:750;cursor:pointer}
+.subscriptionHistory>div{padding:4px 17px 15px;border-top:1px solid #434a3b}
+.subscriptionHistory p{font-size:11px;color:#bac6b4;margin:10px 0}
+.subscriptionCalculator{border-radius:17px;border:1px solid #4d5539;padding:clamp(16px,2.5vw,24px);margin:13px 0 25px;background:linear-gradient(135deg,#172016,#10120f);max-width:100%;min-width:0}
+.subscriptionCalculator>header{display:flex;gap:12px;align-items:flex-start;margin-bottom:18px}
+.subscriptionCalculator>header svg{color:#d8f56d;flex:none;margin-top:3px}
+.subscriptionCalculator h2{font-size:clamp(19px,2.4vw,26px);margin:0 0 5px;letter-spacing:-.035em}
+.subscriptionCalculator header p{font-size:11px;line-height:1.7;color:#b5c7ad;margin:0}
+.subscriptionCalcGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end}
+.subscriptionCalcGrid label{display:grid;gap:8px;min-width:0}
+.subscriptionCalcGrid label>span{font-size:11px;color:#d8e5bc;font-weight:700}
+.subscriptionCalcGrid input:not([type=checkbox]),.subscriptionCalcGrid select{min-height:44px;min-width:0;width:100%;padding:10px 12px;border:1px solid #555e49;border-radius:9px;color:#f1efdc;background:#0e140e;font-size:12px}
+.subscriptionCalcGrid select option{background:#111b14;color:#f1efdc}
+.subscriptionCalcGrid input:focus-visible,.subscriptionCalcGrid select:focus-visible,.subscriptionCalcResult a:focus-visible{outline:3px solid #d8f56d;outline-offset:3px}
+.subscriptionCalcGrid .subscriptionAudio{display:flex;align-items:center;gap:9px;min-height:44px}
+.subscriptionAudio input{width:17px;height:17px;accent-color:#e3f777}
+.subscriptionCalcResult{margin-top:15px;padding:18px;border:1px solid #46573d;border-radius:11px;background:#0e150d;min-height:85px}
+.subscriptionCalcResult>p{font-size:11px;line-height:1.65;color:#c4d3b5;margin:0;display:flex;align-items:flex-start;gap:8px}
+.subscriptionCalcResult .subscriptionCalcWarn{color:#f6cf93}
+.subscriptionCalcResult svg{flex:none}
+.subscriptionCalcBig{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+.subscriptionCalcBig>span{font-size:11px;color:#bfcdb2;font-weight:850}
+.subscriptionCalcBig strong{font-size:clamp(26px,3.2vw,38px);letter-spacing:-.04em;color:#dafa72}
+.subscriptionCalcBig small{font-size:11px;letter-spacing:0}
+.subscriptionCalcResult .subscriptionCalcCost{color:#b5bd9e;margin:9px 0;font-size:11px}
+.subscriptionCalcByPlan{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}
+.subscriptionCalcByPlan span{border:1px solid #49553d;border-radius:7px;padding:6px 8px;background:#22301f;color:#e2edc5;font-size:10px;font-weight:750}
+.subscriptionCalcResult>a{display:inline-flex;align-items:center;gap:8px;color:#daed85;font-size:11px;font-weight:850;text-decoration:none;min-height:40px}
+.subscriptionCalcResult>a:hover{text-decoration:underline}
+.subscriptionCalcDisclaimer{font-size:10px;line-height:1.75;color:#adbaa0;margin:13px 0 0}
+@media(max-width:900px){.subscriptionCalcGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.subscriptionMemberStatus{flex-wrap:wrap}}
+@media(max-width:550px){.subscriptionCalcGrid{grid-template-columns:minmax(0,1fr)}.subscriptionMemberStatus>span{white-space:normal}.subscriptionCalcBig{align-items:flex-start;flex-direction:column;gap:3px}.subscriptionCalculator{padding:15px}.subscriptionCalcResult{padding:14px}}
