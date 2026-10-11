@@ -4,7 +4,8 @@ import { createLongMoviePlan } from './long-movie-plan.ts';
 import { createMovie as createDurableMovie, getOwnMovie as getDurableMovie, listOwnMovies as listDurableMovies, pauseOwnMovie as pauseDurableMovie, resumeOwnMovie as resumeDurableMovie } from './movie-producer-v2.ts';
 import { reviewStoryboard } from './storyboard-quality.ts';
 import { createMovie, movieStatus, cancelMovie, retryMovieScene, movieEnabled } from './movie-producer.ts';
-import { models, getModel, buildProviderInput, estimateCredits } from './models.ts';
+import { models, getModel, buildProviderInput } from './models.ts';
+import {estimateCredits} from './model-credit-estimate.ts';
 import { modelGuide, parameterLabel, parameterHelp, durationLabel, resolutionLabel, aspectLabel } from './model-guides.ts';
 
 export type McpIdentity = { userId: string; scopes: string[]; grantId: string };

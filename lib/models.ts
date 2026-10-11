@@ -1,4 +1,3 @@
-import { quoteApiCredits } from "./api-pricing.ts";
 import { hfModelSpecs, type HfParameter } from "./hf-model-specs.ts";
 export type ModelKind = "video" | "image" | "workflow";
 
@@ -228,21 +227,6 @@ export const models:RavsModel[]=[...existingModels.map(m=>({...m,modelId:m.slug=
  })].map(enrichModel);
 
 export const getModel = (slug: string) => models.find((model) => model.slug === slug);
-
-export function estimateCredits(model: RavsModel, duration?: number, options: Record<string, unknown> = {}) {
-  const defaults = Object.fromEntries((model.parameters || []).filter(p => p.default !== undefined).map(p => [p.name,p.default]));
-  const input:Record<string,unknown> = { ...defaults, ...options };
-  // Only add a duration if it is actually an input of this provider endpoint.
-  // Some workflows choose the output length themselves; inventing a 5-second
-  // duration used to charge customers for a request with unknown API cost.
-  // Images and Genjutsu source-video workflows legitimately have no duration.
-  if ((model.parameters || []).some(p => p.name === "duration")) {
-    input.duration = duration ?? input.duration ?? model.minDuration;
-  } else {
-    delete input.duration;
-  }
-  return quoteApiCredits(model.modelId, input);
-}
 
 function url(value: unknown) {
   if (typeof value !== "string") return undefined;

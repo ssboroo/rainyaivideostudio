@@ -64,7 +64,7 @@ test("admin-only scenario shows reservations, no automatic recurring payments",(
  assert.match(page,/Автомат төлбөргүй/);
  assert.match(page,/Нэг удаа төлж идэвхжүүлэх/);
  assert.match(page,/автоматаар мөнгө татахгүй/);
- assert.match(page,/toFixed\(2\)/);
+ assert.doesNotMatch(page,/net.cost.markup|contribution.margin|дотоод ханш|валютын зөрүү/i);
  assert.match(admin,/Сценарийн үлдэх хувь/);
  assert.match(server,/requireAdmin/);
  assert.match(server,/Cache-Control/);

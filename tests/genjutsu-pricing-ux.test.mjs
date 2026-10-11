@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {getModel,estimateCredits,buildProviderInput} from "../lib/models.ts";
+import {getModel,buildProviderInput} from "../lib/models.ts";
+import {estimateCredits} from "../lib/model-credit-estimate.ts";
 
 const studio=readFileSync(new URL("../components/studio-client.tsx",import.meta.url),"utf8");
 

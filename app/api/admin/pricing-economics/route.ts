@@ -2,7 +2,8 @@ import {NextResponse} from "next/server";
 import {requireAdmin} from "@/lib/http";
 import {getPricingScenario} from "@/lib/billing";
 import {quoteApiCredits,providerCostUsd,pricingPolicy} from "@/lib/api-pricing";
-import {models,estimateCredits} from "@/lib/models";
+import {models} from "@/lib/models";
+import {estimateCredits} from "@/lib/model-credit-estimate";
 
 export const dynamic="force-dynamic";
 const noStore={"Cache-Control":"no-store"};

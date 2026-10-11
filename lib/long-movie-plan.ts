@@ -1,4 +1,5 @@
-import { getModel, buildProviderInput, estimateCredits } from "./models.ts";
+import { getModel, buildProviderInput } from "./models.ts";
+import {estimateCredits} from "./model-credit-estimate.ts";
 
 export class MoviePlanError extends Error {
   constructor(message: string) { super(message); this.name="MoviePlanError"; }

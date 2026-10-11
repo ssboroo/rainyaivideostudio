@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
-import {models,estimateCredits,getModel} from "@/lib/models";
-import {providerCostUsd,pricingPolicy,PricingUnavailableError} from "@/lib/api-pricing";
-import {getCreditPackages} from "@/lib/billing";
+import {models,getModel} from "@/lib/models";
+import {estimateCredits} from "@/lib/model-credit-estimate";
+import {providerCostUsd,PricingUnavailableError} from "@/lib/api-pricing";
 
 export const dynamic="force-dynamic";
 const error=(message:string,status=400)=>NextResponse.json({error:message},{status,headers:{"Cache-Control":"no-store"}});
@@ -24,13 +24,10 @@ export function pricePreview(modelSlug:string, options:{duration?:number;resolut
  const costUsd=providerCostUsd(model.modelId,input);
  const credits=estimateCredits(model,duration,input);
  if(!Number.isFinite(costUsd)||!Number.isSafeInteger(credits)||credits<1)throw new Error("Үнэ баталгаажаагүй.");
- const costMntScenario=costUsd*pricingPolicy.usdMnt;
  return {modelSlug:model.slug,model:model.name,provider:model.maker||model.provider,kind:model.kind,
   duration:model.kind==="image"?null:duration,resolution,aspectRatio,
-  credits,apiCostUsd:Number(costUsd.toFixed(5)),apiCostMntScenario:Math.ceil(costMntScenario),
-  customerMntByPlan:getCreditPackages().map(pack=>({planId:pack.id,priceMnt:Math.ceil(credits*pack.priceMnt/pack.credits)})),
-  approximate:true,providerDiscountExcluded:true,
-  note:"Төсвийн дотоод ханш ашигласан жишиг тооцоо. Генерацын өмнө сонгосон бүх параметрээр сервер дахин үнийг тооцно. Эх видео/зураг, хөдөлгөөн, токен хэрэглэдэг хувилбарын үнэ баталгаагүй үед хаалттай."
+  credits,approximate:true,
+  note:"Кредит нь энэ тохиргооны жишиг тооцоо юм. Бүтээхээс өмнө сервер сонгосон параметрүүдээр баталгаажуулна. Үнэ нь баталгаажаагүй горимоор бүтээл эхлүүлэхгүй."
  };
 }
 export async function GET(req:Request){
@@ -41,8 +38,6 @@ export async function GET(req:Request){
     group:m.group,apiVerified:!!m.apiVerified,resolutions:m.resolutions,aspectRatios:m.aspectRatios,
     minDuration:m.minDuration||null,maxDuration:m.maxDuration||null,
     availabilityNote:m.apiVerified?"Үнийн тохиргоогоор тооцно":"API нээлт хараахан баталгаажаагүй"})),
-    policy:{usdMntAssumption:pricingPolicy.usdMnt,rateReviewedAt:pricingPolicy.reviewedAt,
-      markup:pricingPolicy.markup,fxStress:pricingPolicy.fxStress},
     note:"Моделиудын жагсаалт нь генерацын үнэ бүгд нээлттэй гэсэн үг биш."},
   {headers:{"Cache-Control":"no-store"}});
  }

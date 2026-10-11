@@ -50,8 +50,8 @@ export function BillingClient(){
     }catch(e){setError(e instanceof Error?e.message:"Алдаа гарлаа.")}finally{setChecking(false)}
   }
   return <main className="shell"><Sidebar/><section className="content"><header className="topbar"><div><b>Subscription & кредит</b><span>Сар бүр өөрөө сунгах · Wire.mn-ийн нэг удаагийн checkout</span></div></header><section className="billingPage">
-    <div className="sectionHead"><div><small>RAVS WALLET · PREPAID MONTHLY</small><h1>Хэрэглэсэн хэмжээгээр төл. <em>Ил тод үнэ.</em></h1><p>Starter → Creator → Pro → Studio → Agency гэсэн сарын subscription багцууд. Сар бүр шинээр төлж сунгана, хүссэн үедээ өөр багцад шилжинэ. API-ийн бүх баталгаажсан модельд нэг credit wallet-аар төлнө. Секунд, чанар, аудио, input видео, зураг, токен зэрэг нь бодит өртөгт нөлөөлнө. Автомат суутгал, «Unlimited» амлалт байхгүй.</p></div></div>
-    <div className="planTrustStrip"><span><ShieldCheck size={17}/> Генерацын үнийг эхлээд харна</span><span><CircleDollarSign size={17}/> API загвар бүрийн бодит өртгөөр</span><span><Clock3 size={17}/> 1 сарын хугацаатай</span><span><Ban size={17}/> Автомат төлбөргүй</span></div>
+    <div className="sectionHead"><div><small>RAVS WALLET · PREPAID MONTHLY</small><h1>Хэрэглэсэн хэмжээгээр төл. <em>Ил тод үнэ.</em></h1><p>Starter → Creator → Pro → Studio → Agency гэсэн сарын subscription багцууд. Сар бүр өөрөө төлж сунгана, хүссэн үедээ өөр багц сонгоно. Дэмжигдсэн видео, зургийн бүтээлүүдэд нэг credit wallet ашиглана. Үүсгэх загвар, хугацаа, чанар болон нэмэлт сонголтоос хэрэглэх кредит хамаарна. Автоматаар төлбөр татахгүй.</p></div></div>
+    <div className="planTrustStrip"><span><ShieldCheck size={17}/> Генерацын үнийг эхлээд харна</span><span><CircleDollarSign size={17}/> Хэрэглэх кредитээ урьдчилж мэднэ</span><span><Clock3 size={17}/> 1 сарын хугацаатай</span><span><Ban size={17}/> Автомат төлбөргүй</span></div>
     {subscription?.membership&&<section className="subscriptionMemberStatus" aria-label="Таны subscription төлөв">
       <CalendarDays size={22}/><div><strong>Таны багц: {subscription.membership.planId.toUpperCase()}</strong>
         <p>{subscription.membership.status==="ACTIVE"?"Идэвхтэй":"Хугацаа дууссан"} · Сунгах өдөр: {new Date(subscription.membership.periodEnd).toLocaleDateString("mn-MN",{timeZone:"Asia/Ulaanbaatar"})} · Автоматаар төлбөр татахгүй.</p>
@@ -71,8 +71,7 @@ export function BillingClient(){
      <div className="planCardIntro"><small>{p.id==="starter"?"ТУРШИХ, ТАНИЛЦАХ":p.id==="creator"?"КОНТЕНТ БҮТЭЭГЧ":p.id==="pro"?"ТОГТМОЛ БҮТЭЭЛ":p.id==="studio"?"СТУДИ, БАГ":p.id==="agency"?"АГЕНТЛАГ, БАГ":"САРЫН БАГЦ"}</small><h3>{p.name}</h3></div>
      <div className="bigPrice">{p.priceMnt.toLocaleString("mn-MN")}₮ <small>/ 1 сарын эрх</small></div>
      <strong className="planCreditCount">{p.credits.toLocaleString("mn-MN")} кредит</strong>
-     <div className="planPerCredit">1 кредит ≈ {(p.priceMnt/p.credits).toFixed(2)}₮</div>
-     <div className="videoCapacity" aria-label={p.name+" багцын видео бүтээх жишээ"}>
+      <div className="videoCapacity" aria-label={p.name+" багцын видео бүтээх жишээ"}>
        <strong>Энэ багцаар хэдэн видео вэ?</strong>
        <small>5 сек · 720p · босоо 9:16 · нэг удаагийн жишиг үнэ</small>
        {(p.examples||[]).map(example=><div className="videoCapacityRow" key={example.modelSlug}>
@@ -86,9 +85,9 @@ export function BillingClient(){
     </article>)}</div>
     <section className="planHowPricingWorks" aria-label="Кредит ба subscription нөхцөл"><h2>Кредит хэрхэн зарцуулагддаг вэ?</h2>
      <div className="planHowGrid"><div><strong>01 · Үнийг урьдчилж харна</strong><p>Studio-д модель, хугацаа, resolution сонгоход тухайн генерацын кредитийг харуулна. Баталгаажаагүй загвараар кредит суутгахгүй.</p></div>
-     <div><strong>02 · Гүйцэтгэлийн дараа</strong><p>Амжилтгүй эсвэл provider цуцалсан үүсгэлтийн кредитийг холбогдох төлөвөөр буцаана. Амжилттай видео, зураг бүр API өртөгтэй.</p></div>
+     <div><strong>02 · Үүсгэлтийн төлөв</strong><p>Бэлэн болсон бүтээлээ татаж авна. Амжилтгүй эсвэл цуцлагдсан үүсгэлтийн кредитийн буцаалтыг захиалгын нөхцөлөөр шийдвэрлэнэ.</p></div>
      <div><strong>03 · Сунгалт, хугацаа</strong><p>Subscription нь сарын кредиттэй урьдчилсан төлбөрийн эрх. Сунгахдаа дахин нэг удаагийн төлбөр хийнэ; давтан автоматаар мөнгө татахгүй. Багцаа хүссэн үедээ солиход хуучин кредит өөрийн дуусах өдөр хүртэл хүчинтэй, шинэ багц өөрийн сарын хугацаагаар эхэлнэ.</p></div></div>
-     <p className="planPolicyFootnote">Видео тоонууд нь бүтээх боломжийн ойролцоо жишээ бөгөөд сонгосон загвар, нягтаршил, хугацаа, нэмэлт параметрээс хамаарч өөрчлөгдөнө. Эцсийн кредитийг үүсгэхийн өмнө серверээр шалгана. Багцын өртгийн хамгаалалт нь төлөвлөлтийн ханш, нөөц зардал, суурь API үнийн дараах хамгийн багадаа 50% net cost markup болон 27% contribution margin-ын төлөвлөлтийн зорилт; бодит цэвэр ашгийн баталгаа биш. Нийт үнэ Монгол төгрөгөөр. API-ийн өртөг, валютын зөрүү, шимтгэл, татвар болон серверийн нөөцийг RAINY үнийн хамгаалалтдаа тооцдог. Таны дансны татвар, баримтын шаардлагыг хүчин төгөлдөр нөхцөлөөр шийдвэрлэнэ; Higgsfield вебийн subscription RAINY-ийн багцад дагалдахгүй.</p>
+     <p className="planPolicyFootnote">Видео бүтээх тоо нь ойролцоо жишээ юм. Бодит кредит сонгосон загвар, хугацаа, чанар, нэмэлт тохиргооноос хамаарна. Үүсгэхээс өмнө шаардагдах кредитийг баталгаажуулж харуулна. Багцын үнэ Монгол төгрөгөөр, хугацаа нэг сар бөгөөд автоматаар сунгагдахгүй. RAINY-ийн багц нь бусад платформын тусдаа захиалгыг багтаахгүй.</p>
     </section>
   </section></section></main>
 }
