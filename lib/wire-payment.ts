@@ -28,7 +28,25 @@ export async function confirmWirePayment(paymentId:string,intent:WirePaymentInte
       data:{status:"PAID",paidAt:new Date(),paymentId:transactionId||payment.paymentId,providerData}
     });
     if(changed.count!==1)return false;
-    if(payment.validityMonths===1) await tx.creditGrant.create({data:{userId:payment.userId,paymentId:payment.id,packageId:payment.packageId,remaining:payment.credits,expiresAt:monthAfter(now)}});
+    if(payment.validityMonths===1) {
+      const periodEnd=monthAfter(now);
+      // A single verified paid intent creates one grant and one immutable
+      // subscription period. All operations share the Wire payment transaction.
+      // No double renewal after webhook / status-query races.
+      await tx.creditGrant.create({data:{userId:payment.userId,paymentId:payment.id,packageId:payment.packageId,remaining:payment.credits,expiresAt:periodEnd}});
+      await tx.subscriptionCycle.create({data:{
+        userId:payment.userId,paymentId:payment.id,planId:payment.packageId,
+        amountMnt:payment.amountMnt,credits:payment.credits,
+        periodStart:now,periodEnd,
+      }});
+      await tx.subscription.upsert({
+        where:{userId:payment.userId},
+        create:{userId:payment.userId,planId:payment.packageId,status:"ACTIVE",renewalMode:"MANUAL",
+          startedAt:now,periodStart:now,periodEnd,lastPaymentId:payment.id},
+        update:{planId:payment.packageId,status:"ACTIVE",renewalMode:"MANUAL",
+          periodStart:now,periodEnd,lastPaymentId:payment.id},
+      });
+    }
     await tx.user.update({where:{id:payment.userId},data:{credits:{increment:payment.credits}}});
     await tx.creditLedger.create({
       data:{
