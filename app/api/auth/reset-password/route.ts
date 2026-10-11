@@ -6,7 +6,7 @@ import { consumeAuthLimit,isSameOriginMutation } from "@/lib/auth-security";
 import { env } from "@/lib/env";
 import { jsonError } from "@/lib/http";
 export async function POST(req:Request){
- if(!isSameOriginMutation(req,env.appUrl()))return jsonError("Хүсэлтийн эх сурвалж буруу.",403);
+ if(!isSameOriginMutation(req,process.env.EMAIL_PUBLIC_URL||env.appUrl()))return jsonError("Хүсэлтийн эх сурвалж буруу.",403);
  const ip=String(req.headers.get("x-forwarded-for")||"unknown").split(",")[0];
  if(!consumeAuthLimit("reset-confirm:"+ip,10,3600000).allowed)return jsonError("Түр хүлээгээд дахин оролдоно уу.",429);
  let data;try{data=await req.json();}catch{return jsonError("Хүсэлт буруу.",400);}
