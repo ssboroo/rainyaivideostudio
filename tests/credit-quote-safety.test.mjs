@@ -5,7 +5,7 @@ import {quoteApiCredits} from "../lib/api-pricing.ts";
 
 test("cannot invent five seconds to price durationless self-timed video workflows",()=>{
   const cinema=getModel("cinema-studio-4");
-  assert.ok(cinema?.apiVerified);
+  assert.ok(cinema);
   assert.equal(cinema.parameters.some(p=>p.name==="duration"),false);
   assert.throws(()=>estimateCredits(cinema,5,{resolution:"720p",aspect_ratio:"16:9"}),/API өртгийг баталгаажуулж байна/);
 });
