@@ -7,6 +7,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {spawn} from "node:child_process";
 import {validClipSourceType,validClipWindow} from "@/lib/clip-media";
+import {isTrustedClipRequest} from "@/lib/clip-origin";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -26,9 +27,7 @@ async function processMedia(args:string[],maxMs:number){
 export async function POST(request:Request){
  const user=await requireUser();
  if(!user)return error("Нэвтэрнэ үү.",401);
- const origin=request.headers.get("origin");
- if(origin){try{if(new URL(origin).host!==new URL(request.url).host)return error("Хүсэлтийн эх сурвалж зөвшөөрөгдөөгүй.",403);}
- catch{return error("Хүсэлтийн эх сурвалж буруу.",403);}}
+ if(!isTrustedClipRequest(request))return error("Хүсэлтийн эх сурвалж зөвшөөрөгдөөгүй.",403);
  if(processing)return error("Видео боловсруулалт үргэлжилж байна. Дахин оролдоно уу.",429);
  const contentLength=Number(request.headers.get("content-length")||0);
  if(contentLength>MAX_FILE+1024*1024)return error("Эх MP4 80MB-аас бага байна.",413);

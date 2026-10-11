@@ -50,11 +50,11 @@ test("YouTube-only segment becomes a replayable, non-downloadable share link",()
  assert.match(page,/youtubeClipEmbed\(v,startValue,endValue\)/);
  assert.match(page,/MP4 файл биш/);
  assert.match(page,/robots:\{index:false,follow:false\}/);
- assert.match(editor,/youtubeClipSharePath\(youtube.id,from,to\)/);
- assert.match(editor,/navigator.clipboard.writeText/);
- assert.match(editor,/Бэлдсэн үзэх клипийг нээх/);
- assert.match(editor,/MP4 видео файл үүсээгүй/);
- assert.match(editor,/support.google.com\/youtube\/answer\/56100/);
+ // Legacy /clip links remain backward-compatible; the Genjutsu editor no longer
+ // advertises YouTube extraction without a supported downloadable media source.
+ assert.doesNotMatch(editor,/youtubeClipSharePath|youtubeClipEmbed|navigator.clipboard.writeText/);
+ assert.match(editor,/Genjutsu · Эх видеогоор бүтээх/);
+ assert.match(editor,/\/api\/clips\/prepare/);
  assert.match(editor,/confirmRights/);
 });
 test("verified Genjutsu 1-30 second clip metering is distinct from unverified arbitrary URLs",()=>{
@@ -96,7 +96,7 @@ test("Studio lets all Genjutsu models prepare signed clips before quoting credit
  assert.match(studio,/Энэ Genjutsu хувилбарт хамгийн багадаа 4 секундын эх видео шаардлагатай/);
 });
 
-test("YouTube is used ONLY as official embed: FFmpeg accepts only user-uploaded MP4, generation validates clip proof",()=>{
+test("Genjutsu accepts only user uploaded files and validates clip proof without YouTube downloader",()=>{
  const api=read("app/api/clips/prepare/route.ts");
  const ui=read("components/youtube-genjutsu-source.tsx");
  const studio=read("components/studio-client.tsx");
@@ -107,7 +107,7 @@ test("YouTube is used ONLY as official embed: FFmpeg accepts only user-uploaded 
  assert.match(api,/file,pipe/);
  assert.match(api,/issueClipProof/);
  assert.doesNotMatch(api,/youtube\.com|youtu\.be|yt-dlp|ytdl/);
- assert.match(ui,/youtubeClipEmbed/);
+ assert.doesNotMatch(ui,/youtubeClipEmbed|youtubeClipSharePath|yt-dlp/);
  assert.match(ui,/confirmRights/);
  assert.match(ui,/\/api\/clips\/prepare/);
  assert.match(studio,/<YouTubeGenjutsuSource/);
@@ -128,12 +128,12 @@ test("iPhone MOV and MP4 generate real clips with safe bounded FFmpeg requests",
   const code=read(path);
   assert.match(code,/validClipSourceType/);
   assert.match(code,/validClipWindow/);
-  assert.match(code,/if\(origin\)/);
+  assert.match(code,/isTrustedClipRequest\(request\)/);
   assert.match(code,/ffprobe/);
   assert.match(code,/ffmpeg/);
  }
  const component=read("components/youtube-genjutsu-source.tsx");
- assert.match(component,/downloadClip\(\)/);
+ assert.match(component,/action\("\/api\/clips\/export"\)/);
  assert.match(component,/response\.blob\(\)/);
  assert.match(component,/a\.download=/);
  assert.match(component,/\.mov,\.m4v/);
