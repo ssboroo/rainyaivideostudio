@@ -14,7 +14,7 @@ test("declared generated durations and image batch still quote consistently",()=
   const input=buildProviderInput(video,{prompt:"A cinematic shot",duration:8,resolution:"720p",aspectRatio:"9:16"});
   assert.equal(estimateCredits(video,8,input),quoteApiCredits(video.modelId,input));
   const image=getModel("soul-2");
-  const inputs=buildProviderInput(image,{modelOptions:{batch_size:4},resolution:"1080p"});
+  const inputs=buildProviderInput(image,{prompt:"Cinematic portrait",modelOptions:{batch_size:4},resolution:"1080p"});
   assert.equal(inputs.batch_size,4);
   assert.equal(estimateCredits(image,undefined,inputs),quoteApiCredits(image.modelId,inputs));
   assert.ok(estimateCredits(image,undefined,inputs)>quoteApiCredits(image.modelId,{resolution:"1080p",batch_size:1}));
