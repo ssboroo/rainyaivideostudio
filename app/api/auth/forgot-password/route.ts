@@ -7,7 +7,7 @@ import { env } from "@/lib/env";
 import { jsonError } from "@/lib/http";
 const GENERIC={ok:true,message:"Бүртгэлтэй имэйл бол 30 минут хүчинтэй сэргээх холбоос илгээгдэнэ."};
 export async function POST(req:Request){
- if(!isSameOriginMutation(req,env.appUrl()))return jsonError("Хүсэлтийн эх сурвалж буруу.",403);
+ if(!isSameOriginMutation(req,process.env.EMAIL_PUBLIC_URL||env.appUrl()))return jsonError("Хүсэлтийн эх сурвалж буруу.",403);
  if(!mailEnabled())return jsonError("Имэйл үйлчилгээ түр боломжгүй.",503);
  let body;try{body=await req.json();}catch{return jsonError("Хүсэлт буруу.",400);}
  const email=String(body?.email||"").trim().toLowerCase().slice(0,254);
