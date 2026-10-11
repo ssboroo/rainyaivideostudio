@@ -47,6 +47,9 @@ model User {
   credits      Int            @default(0)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+  emailVerifiedAt DateTime?
+  passwordChangedAt DateTime?
+  emailTokens EmailToken[]
   creditGrants CreditGrant[]
   generations  Generation[]
   ledger       CreditLedger[]
@@ -283,4 +286,17 @@ model SubscriptionCycle {
   periodEnd DateTime
   createdAt DateTime @default(now())
   @@index([userId,createdAt])
+}
+
+model EmailToken {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  tokenHash String @unique
+  kind String
+  expiresAt DateTime
+  consumedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([userId,kind,createdAt])
+  @@index([expiresAt])
 }
