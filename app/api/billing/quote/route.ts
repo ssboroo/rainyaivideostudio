@@ -1,5 +1,6 @@
 import {NextResponse} from "next/server";
-import {models,estimateCredits,getModel} from "@/lib/models";
+import {models,getModel} from "@/lib/models";
+import {estimateCredits} from "@/lib/model-credit-estimate";
 import {providerCostUsd,PricingUnavailableError} from "@/lib/api-pricing";
 
 export const dynamic="force-dynamic";
