@@ -475,3 +475,29 @@ button:disabled{cursor:not-allowed;opacity:.55}
 .pricingGrid{grid-template-columns:repeat(4,minmax(0,1fr))}.bigPrice small{font-size:14px;color:#a1a1aa}@media(max-width:1200px){.pricingGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.pricingGrid{grid-template-columns:1fr}}
 
 .moviePromoHome{display:flex;justify-content:space-between;gap:22px;align-items:center;margin:22px 0 10px;padding:27px 30px;border:1px solid #65723a;background:linear-gradient(100deg,#20251a,#10110f);border-radius:17px}.moviePromoHome small{font-size:10px;letter-spacing:.13em;color:#d9ff63;font-weight:800}.moviePromoHome h2{font-size:clamp(21px,2.4vw,31px);letter-spacing:-.035em;margin:9px 0}.moviePromoHome p{color:#b0b8a6;font-size:12px;line-height:1.6;margin:0}.moviePromoHome>span{flex:none;border-radius:10px;background:#d9ff63;color:#111;font-size:12px;font-weight:850;padding:12px 16px}@media(max-width:740px){.moviePromoHome{flex-direction:column;align-items:flex-start;padding:21px}.moviePromoHome>span{width:100%;text-align:center}}
+
+/* Keep model names readable inside the narrow studio selector. */
+.modelBrowser .modelSearch{max-width:none}
+.modelBrowser .modelSearch input{min-width:0;font-size:12px}
+.modelBrowser .modelSearch svg{flex-shrink:0}
+.modelBrowser .surfaceTabs{display:flex;flex-wrap:wrap;overflow:visible;gap:5px;margin:12px 0}
+.modelBrowser .surfaceTabs button{font-size:11px;line-height:1.4;padding:7px 9px;color:#aaa}
+.modelBrowser .surfaceTabs button.active{color:#fff1a6}
+.modelBrowser .modelList{display:block;min-width:0}
+.modelBrowser .modelFamilyHead{gap:8px;padding:12px 6px}
+.modelBrowser .modelFamilyHead b{font-size:13px;line-height:1.5;word-break:normal;overflow-wrap:break-word}
+.modelBrowser .modelFamilyModes{padding:2px 0 10px 12px}
+.modelBrowser .modelFamilyModes .modelItem{display:flex;flex-direction:column;align-items:stretch;gap:5px;padding:10px 12px;margin-bottom:5px;min-width:0}
+.modelBrowser .modelItem>div{width:100%;min-width:0}
+.modelBrowser .modelFamilyModes .modelItem b{font-size:12px;line-height:1.55;word-break:normal;overflow-wrap:break-word}
+.modelBrowser .modelFamilyModes .modelItem small{font-size:11px;line-height:1.5;margin-top:4px;color:#aaa}
+.modelBrowser .modelItem>span{font-size:10px;line-height:1.5;padding-top:0;white-space:normal;color:#92928a}
+.modelBrowser .modelItem:focus-visible{outline:2px solid #ffe600;outline-offset:2px}
+@media(max-width:900px){
+ .modelBrowser .modelList{max-height:340px;overflow-y:auto;overflow-x:hidden}
+ .modelBrowser .modelFamilies{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:start}
+ .modelBrowser .modelFamily{border:1px solid #252525;background:#0d0d0d}
+}
+@media(max-width:520px){
+ .modelBrowser .modelFamilies{grid-template-columns:minmax(0,1fr)}
+}
