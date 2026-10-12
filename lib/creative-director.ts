@@ -4,7 +4,7 @@
 export type DirectorProvider="gpt"|"claude"|"gemini";
 export type DirectorScene={number:number;durationSeconds:number;shot:string;videoPrompt:string;voiceover:string;subtitle:string};
 export type DirectorPlan={title:string;logline:string;styleBible:string;characters:string[];scenes:DirectorScene[];subtitlesSrt:string;provider:DirectorProvider;model:string;estimatedOnly:true};
-export class DirectorError extends Error{constructor(message:string,public status=422){super(message);}}
+export class DirectorError extends Error{status:number;constructor(message:string,status=422){super(message);this.status=status;}}
 const read=(v:unknown,max:number)=>typeof v==="string"?v.trim().slice(0,max):"";
 const sys=`You are RAINY's creative film director for Mongolian-first branded videos.
 Return ONLY a valid JSON object, keys: title,logline,styleBible,characters,scenes.
