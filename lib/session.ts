@@ -18,8 +18,9 @@ export function verifyPassword(password: string, stored: string) {
   const expected = Buffer.from(key, "hex");
   return expected.length === candidate.length && timingSafeEqual(expected, candidate);
 }
-export async function createSession(userId: string) {
-  const token = makeSessionToken(userId, env.sessionSecret(), Math.floor(Date.now()/1000), MAX_AGE);
+export async function createSession(userId: string, authenticatedPasswordHash: string) {
+  const now = Date.now();
+  const token = makeSessionToken(userId, env.sessionSecret(), Math.floor(now/1000), MAX_AGE, now, authenticatedPasswordHash);
   (await cookies()).set(COOKIE, token, { httpOnly:true, secure:process.env.NODE_ENV==="production", sameSite:"lax", path:"/", maxAge:MAX_AGE });
 }
 export async function clearSession() { (await cookies()).set(COOKIE, "", { httpOnly:true, secure:process.env.NODE_ENV==="production", sameSite:"lax", path:"/", maxAge:0 }); }
@@ -28,6 +29,8 @@ export async function getSessionUser() {
   if (!token) return null;
   const userId = readSessionToken(token, env.sessionSecret(), Math.floor(Date.now()/1000));
   if (!userId) return null;
+  const security = await db.user.findUnique({ where:{id:userId}, select:{passwordChangedAt:true,passwordHash:true} });
+  if (!security || !readSessionToken(token, env.sessionSecret(), Math.floor(Date.now()/1000), {...security,maxAge:MAX_AGE})) return null;
   await expireUserCredits(userId);
   return db.user.findUnique({ where:{id:userId}, select:{id:true,email:true,name:true,role:true,credits:true,createdAt:true} });
 }

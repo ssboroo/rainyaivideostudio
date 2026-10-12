@@ -31,7 +31,7 @@ export async function POST(req: Request) {
         message:"Бүртгэл үүслээ. Баталгаажуулах имэйл хүрээгүй бол «Дахин илгээх»-ийг ашиглана уу."},{status:202});
     }
   }
-  await createSession(user.id);
+  await createSession(user.id,user.passwordHash);
   return NextResponse.json({user:{id:user.id,email:user.email,name:user.name,role:user.role,credits:user.credits}},{status:201});
  } catch(e) {
   if(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") return jsonError("Энэ имэйл бүртгэлтэй байна. Нэвтэрнэ үү.",409);

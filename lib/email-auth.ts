@@ -20,13 +20,15 @@ export async function sendEmailToken(userId:string,email:string,kind:TokenPurpos
   const url=mailOrigin()+route+encodeURIComponent(token);
   await sendTransactionalMail(email,kind==="VERIFY"?"verify":"reset",url,"video");
 }
-export async function consumeEmailToken(raw:unknown,kind:TokenPurpose) {
+export async function consumeEmailToken(raw:unknown,kind:TokenPurpose, apply?: (tx: Prisma.TransactionClient, userId: string, now: Date) => Promise<void>) {
   if(typeof raw!=="string"||raw.length<32||raw.length>180||!/^[A-Za-z0-9_-]+$/.test(raw))return null;
   const hash=tokenHash(raw),now=new Date();
   return db.$transaction(async tx=>{
     const prior=await tx.emailToken.findUnique({where:{tokenHash:hash}});
     if(!prior||prior.kind!==kind||prior.consumedAt||prior.expiresAt<=now)return null;
     const applied=await tx.emailToken.updateMany({where:{id:prior.id,consumedAt:null,expiresAt:{gt:now}},data:{consumedAt:now}});
-    return applied.count===1?prior.userId:null;
+    if(applied.count!==1)return null;
+    if(apply)await apply(tx,prior.userId,now);
+    return prior.userId;
   },{isolationLevel:Prisma.TransactionIsolationLevel.Serializable});
 }

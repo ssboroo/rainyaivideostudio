@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { consumeEmailToken } from "@/lib/email-auth";
 import { hashPassword } from "@/lib/session";
 import { consumeAuthLimit,isSameOriginMutation } from "@/lib/auth-security";
@@ -12,10 +11,14 @@ export async function POST(req:Request){
  let data;try{data=await req.json();}catch{return jsonError("Хүсэлт буруу.",400);}
  if(typeof data?.password!=="string"||data.password.length<12||data.password.length>128)return jsonError("Нууц үг 12–128 тэмдэгт байна.",422);
  try{
-  const userId=await consumeEmailToken(data.token,"RESET");
+  const passwordHash=hashPassword(data.password);
+  const userId=await consumeEmailToken(data.token,"RESET",async(tx,id,now)=>{
+   await tx.user.update({where:{id},data:{passwordHash,passwordChangedAt:now}});
+   await tx.oAuthGrant.updateMany({where:{userId:id,revokedAt:null},data:{revokedAt:now}});
+   await tx.oAuthCode.updateMany({where:{userId:id,usedAt:null},data:{usedAt:now}});
+   await tx.emailToken.deleteMany({where:{userId:id}});
+  });
   if(!userId)return jsonError("Сэргээх холбоос хүчингүй эсвэл хугацаа дууссан.",400);
-  await db.user.update({where:{id:userId},data:{passwordHash:hashPassword(data.password),passwordChangedAt:new Date()}});
-  await db.emailToken.deleteMany({where:{userId}});
   return NextResponse.json({ok:true,message:"Нууц үг шинэчлэгдлээ. Дахин нэвтэрнэ үү."});
  }catch{return jsonError("Нууц үг шинэчлэх хүсэлт амжилтгүй.",503);}
 }

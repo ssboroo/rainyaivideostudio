@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   const valid = verifyPassword(input.password,user?.passwordHash || dummyHash);
   if(!user || !valid) return jsonError("Имэйл эсвэл нууц үг буруу.",401);
   if (verificationEnabled() && !user.emailVerifiedAt) return jsonError("Имэйлээ баталгаажуулна уу. Баталгаажуулах захидлыг дахин авах боломжтой.",403);
-  await createSession(user.id);
+  await createSession(user.id,user.passwordHash);
   return NextResponse.json({user:{id:user.id,email:user.email,name:user.name,role:user.role,credits:user.credits}});
  } catch(e) {
   console.error("Login failed",e instanceof Error?e.name:"UnknownError");
