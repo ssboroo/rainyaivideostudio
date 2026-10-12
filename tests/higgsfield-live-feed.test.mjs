@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {validateTariffFeed,liveProviderCostUsd} from "../lib/higgsfield-live-feed.ts";
+import {validateTariffFeed,liveProviderCostUsd,quoteFromTariffs} from "../lib/higgsfield-live-feed.ts";
 const id="bytedance/seedance-2.5/text-to-video";
 test("strict official feed contract prevents imaginary or duplicate provider USD prices",()=>{
  const feed={revision:"v2026-10-12",tariffs:[{modelId:id,unit:"per_second",usdRate:0.3,parameters:{resolution:"720p",generate_audio:true}}]};
@@ -14,3 +14,4 @@ test("reviewed old rates are not replaced before provider feed is activated",()=
  const output=liveProviderCostUsd(id,{resolution:"720p",duration:5});
  assert.equal(output,null);
 });
+\ntest("fresh exact tariffs quote selected seconds but refuse ambiguous or unpriced variants",()=>{\n const list=[{modelId:id,unit:"per_second",usdRate:0.3,parameters:{resolution:"720p",generate_audio:true}}];\n assert.equal(quoteFromTariffs(list,id,{duration:8,resolution:"720p",generate_audio:true}),2.4);\n assert.throws(()=>quoteFromTariffs(list,id,{duration:8,resolution:"1080p",generate_audio:true}),/live үнэ/);\n assert.throws(()=>quoteFromTariffs([{...list[0],parameters:{}}],id,{duration:8,resolution:"720p",generate_audio:true}),/live үнэ/);\n assert.throws(()=>quoteFromTariffs(list,id,{duration:0,resolution:"720p",generate_audio:true}),/Хугацаа/);\n});\n
