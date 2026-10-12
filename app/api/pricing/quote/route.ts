@@ -21,7 +21,8 @@ export async function POST(request:Request){
  try{
   const input=buildProviderInput(model,raw);
   const user=await requireUser();
-  await ensureLiveHiggsfieldTariffs();\n  const quote=quoteValidatedGeneration(user?.id||null,model,input,raw.clipToken);
+  await ensureLiveHiggsfieldTariffs();
+  const quote=quoteValidatedGeneration(user?.id||null,model,input,raw.clipToken);
   return NextResponse.json({
    modelSlug:model.slug,credits:quote.credits,pricingStatus:"confirmed",catalogRevision:liveCatalogStatus().revision,
    resolution:input.resolution||null,durationSeconds:quote.verifiedSourceSeconds??input.duration??null,
