@@ -2,13 +2,13 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma
-RUN npm install
+RUN npm ci
 
 FROM node:22-alpine AS prod-deps
 WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma
-RUN npm install --omit=dev && npx prisma generate
+RUN npm ci --omit=dev && npx prisma generate
 
 FROM node:22-alpine AS builder
 WORKDIR /app
@@ -36,4 +36,4 @@ COPY --from=builder /app/tsconfig.json ./tsconfig.json
 USER nextjs
 EXPOSE 3000
 ENV HOSTNAME=0.0.0.0
-CMD ["sh","-c","node --import tsx scripts/movie-worker.mjs & worker=$!; PORT=${PORT:-3000} node server.js & web=$!; trap 'kill $web $worker 2>/dev/null || true' TERM INT; wait $web; rc=$?; kill $worker 2>/dev/null || true; wait $worker 2>/dev/null || true; exit $rc"]
+CMD ["node", "scripts/runtime-supervisor.mjs"]

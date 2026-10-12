@@ -91,6 +91,10 @@ RAVS is an independent product and is not an official Higgsfield product.
 
 The web Studio and MCP share the same generation service. Web requests require an idempotency key and an approved maximum credit cost. An ambiguous provider submission keeps its reservation and must be reconciled by an administrator; retrying the same request does not submit or charge again. Cancellation acknowledgement alone does not refund credits: the provider must report a terminal failure, moderation, or cancellation status. Only completed generations expose media, and provider internals stay server-side.
 
-`WELCOME_CREDITS` defaults to `0`. Enable a funded signup promotion explicitly; registration currently does not verify email ownership. Invalid or negative values grant no trial credits. Existing wallets are unaffected.
+`WELCOME_CREDITS` defaults to `0`. Enable a funded signup promotion explicitly. Set `EMAIL_VERIFICATION_REQUIRED=true`, `RESEND_API_KEY`, `EMAIL_FROM` and an HTTPS `EMAIL_PUBLIC_URL` to require verified email ownership. Invalid or negative welcome-credit values grant no trial credits. Existing wallets are unaffected.
+
+Password resets consume the reset token and update the password atomically, invalidate previous browser sessions, and revoke the user's previous MCP access/refresh grants and unused authorization codes. Email verification updates are atomic with token consumption as well.
+
+The production container supervises both the web process and movie worker. An unexpected exit of either shuts down the sibling and exits unsuccessfully so the platform can restart the entire service. Keep movie-generation feature flags disabled until their provider and final-media paths have been validated.
 
 Before paid launch, configure Wire credentials and the signed webhook, then verify one paid checkout and one failed-generation refund end to end. Configuration presence alone is not proof of provider availability.

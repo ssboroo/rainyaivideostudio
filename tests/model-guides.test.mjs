@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {models,getModel,buildProviderInput} from '../lib/models.ts';
-import {modelGuide,durationLabel,modelMode,resolutionLabel,parameterLabels} from '../lib/model-guides.ts';
+import {modelGuide,durationLabel,modelMode,resolutionLabel,aspectLabel,parameterLabels} from '../lib/model-guides.ts';
 test('every catalog endpoint has a Mongolian guide and clean identifier',()=>{
  for(const m of models){
   assert.match(m.modelId,/^[a-zA-Z0-9./_-]+$/);
@@ -17,9 +17,15 @@ test('guide duration and dimensions follow endpoint schema instead of marketing 
  assert.equal(durationLabel(ltx),'6 / 8 / 10 сек');
  assert.equal(resolutionLabel(getModel('kling-3-standard')),'Загварын тогтмол хэмжээ');
  assert.equal(modelMode(ltx),'Зураг → Видео');
- const pending=models.find(m=>!m.apiVerified);
+});
+test('unverified guides suppress requirements and unconfirmed dimensions',()=>{
+ const pending={...getModel('seedance-2-5'),apiVerified:false};
+ assert.ok(pending.parameters.some(p=>p.required));
+ assert.equal(durationLabel(pending),'Баримт нягталж байна');
  assert.equal(resolutionLabel(pending),'Баталгаажаагүй');
+ assert.equal(aspectLabel(pending),'Баталгаажаагүй');
  assert.deepEqual(modelGuide(pending).required,[]);
+ assert.match(modelGuide(pending).purpose,/үүсгэлт түр хаалттай/);
 });
 test('refreshed Wan image endpoint is usable and enforces its image',()=>{
  const m=getModel('wan-3-prime-image');assert.ok(m.apiVerified);

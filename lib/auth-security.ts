@@ -17,20 +17,26 @@ function signature(payload: string, secret: string) {
   if (secret.length < 32) throw new Error("Session тохиргоо дутуу байна.");
   return createHmac("sha256", secret).update(payload).digest("base64url");
 }
-export function makeSessionToken(id: string, secret: string, now: number, age: number) {
-  const payload = `${Buffer.from(id).toString("base64url")}.${now + age}`;
+export function makeSessionToken(id: string, secret: string, now: number, age: number, issuedAt?: number, passwordHash?: string) {
+  const credential = passwordHash === undefined ? "" : `.${signature(`credential:${passwordHash}`, secret)}`;
+  const payload = `${Buffer.from(id).toString("base64url")}.${now + age}${issuedAt === undefined ? "" : `.${issuedAt}`}${credential}`;
   return `${payload}.${signature(payload, secret)}`;
 }
-export function readSessionToken(token: string, secret: string, now: number) {
+export function readSessionToken(token: string, secret: string, now: number, options?: { passwordChangedAt: Date | null; maxAge: number; passwordHash?: string }) {
   if (token.length > 512 || secret.length < 32) return null;
   const parts = token.split(".");
-  if (parts.length !== 3) return null;
-  const [id, expiration, mac] = parts;
+  if (parts.length < 3 || parts.length > 5) return null;
+  const [id, expiration] = parts;
+  const mac = parts.at(-1)!;
   if (!/^[A-Za-z0-9_-]+$/.test(id) || !/^\d+$/.test(expiration)) return null;
   const exp = Number(expiration);
   if (!Number.isSafeInteger(exp) || exp <= now) return null;
-  const expected = Buffer.from(signature(`${id}.${expiration}`, secret)), received = Buffer.from(mac);
+  const issuedAt = parts.length >= 4 ? Number(parts[2]) : (exp - (options?.maxAge ?? 0)) * 1000;
+  if (parts.length >= 4 && (!/^\d+$/.test(parts[2]) || !Number.isSafeInteger(issuedAt) || issuedAt >= exp * 1000)) return null;
+  const expected = Buffer.from(signature(parts.slice(0, -1).join("."), secret)), received = Buffer.from(mac);
   if (received.length !== expected.length || !timingSafeEqual(received, expected)) return null;
+  if (parts.length === 5 && options && (!options.passwordHash || parts[3] !== signature(`credential:${options.passwordHash}`, secret))) return null;
+  if (options?.passwordChangedAt && issuedAt <= options.passwordChangedAt.getTime()) return null;
   return Buffer.from(id, "base64url").toString("utf8") || null;
 }
 
