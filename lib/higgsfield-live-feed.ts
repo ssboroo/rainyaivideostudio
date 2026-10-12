@@ -97,3 +97,9 @@ export function liveCatalogStatus(){
    fetchedAt:cached?new Date(cached.fetchedAt).toISOString():null,
    catalogCount:cached?.tariffs.length||0};
 }
+
+/** Discovered upstream IDs are informational until local parameters and costs are audited. */
+export function liveCatalogIds():string[]{
+ if(!cached||Date.now()-cached.fetchedAt>=TTL)return [];
+ return [...new Set(cached.tariffs.map(t=>t.modelId))].sort();
+}
