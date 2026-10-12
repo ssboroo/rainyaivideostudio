@@ -14,4 +14,11 @@ test("reviewed old rates are not replaced before provider feed is activated",()=
  const output=liveProviderCostUsd(id,{resolution:"720p",duration:5});
  assert.equal(output,null);
 });
-\ntest("fresh exact tariffs quote selected seconds but refuse ambiguous or unpriced variants",()=>{\n const list=[{modelId:id,unit:"per_second",usdRate:0.3,parameters:{resolution:"720p",generate_audio:true}}];\n assert.equal(quoteFromTariffs(list,id,{duration:8,resolution:"720p",generate_audio:true}),2.4);\n assert.throws(()=>quoteFromTariffs(list,id,{duration:8,resolution:"1080p",generate_audio:true}),/live үнэ/);\n assert.throws(()=>quoteFromTariffs([{...list[0],parameters:{}}],id,{duration:8,resolution:"720p",generate_audio:true}),/live үнэ/);\n assert.throws(()=>quoteFromTariffs(list,id,{duration:0,resolution:"720p",generate_audio:true}),/Хугацаа/);\n});\n
+
+test("fresh exact tariffs quote selected seconds but refuse ambiguous or unpriced variants",()=>{
+ const list=[{modelId:id,unit:"per_second",usdRate:0.3,parameters:{resolution:"720p",generate_audio:true}}];
+ assert.equal(quoteFromTariffs(list,id,{duration:8,resolution:"720p",generate_audio:true}),2.4);
+ assert.throws(()=>quoteFromTariffs(list,id,{duration:8,resolution:"1080p",generate_audio:true}),/live үнэ/);
+ assert.throws(()=>quoteFromTariffs([{...list[0],parameters:{}}],id,{duration:8,resolution:"720p",generate_audio:true}),/live үнэ/);
+ assert.throws(()=>quoteFromTariffs(list,id,{duration:0,resolution:"720p",generate_audio:true}),/Хугацаа/);
+});
