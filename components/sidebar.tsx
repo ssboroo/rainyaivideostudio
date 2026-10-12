@@ -31,6 +31,7 @@ const groups = [
     items: [
       ["/", "Нүүр", Home],
       ["/studio", "Бүтээх студи", Clapperboard],
+      ["/director", "AI Director · GPT/Claude/Gemini", Sparkles],
       ["/explore", "Хэрэгсэл үзэх", Compass],
       ["/video-guide", "Видео гарын авлага", CirclePlay],
       ["/youtube", "YouTube видео татах", Film],
