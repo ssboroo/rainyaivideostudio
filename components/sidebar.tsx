@@ -30,11 +30,12 @@ const groups = [
     label: "Бүтээх",
     items: [
       ["/", "Нүүр", Home],
-      ["/studio", "Бүтээх студи", Clapperboard],
-      ["/director", "AI Director · GPT/Claude/Gemini", Sparkles],
-      ["/explore", "Хэрэгсэл үзэх", Compass],
+      ["/studio", "Видео ба зураг үүсгэх", Clapperboard],
+      ["/director", "AI Director · Зохиол, storyboard", Sparkles],
+      ["/movie-producer", "Movie Producer · Кино төлөвлөх", Film],
+      ["/explore", "Загвар ба workflow сонгох", Compass],
       ["/video-guide", "Видео гарын авлага", CirclePlay],
-      ["/youtube", "YouTube видео татах", Film],
+      ["/youtube", "YouTube · Эрхтэй клип", Film],
       ["/trends", "Тренд видео", TrendingUp],
       ["/community", "Бүтээлчдийн сан", UsersRound],
     ],
@@ -44,10 +45,8 @@ const groups = [
     items: [
       ["/cinema", "Кино студи", Film],
       ["/studio?group=Genjutsu", "Genjutsu", WandSparkles],
-      ["/studio?model=genjutsu-motion&source=youtube", "YouTube → Genjutsu", CirclePlay],
       ["/marketing", "Маркетинг", Megaphone],
       ["/influencer", "AI дүр бүтээх", ScanFace],
-      ["/apps", "Эффект ба хэрэгсэл", Sparkles],
     ],
   },
   {
