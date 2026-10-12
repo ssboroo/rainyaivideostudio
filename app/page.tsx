@@ -64,8 +64,8 @@ export default function Home() {
           </div>
         </section>
 
-        <Link href="/movie-producer" className="moviePromoHome" aria-label="AI Director / One-Prompt Movie">
-          <div><small>AI DIRECTOR · ONE-PROMPT MOVIE</small><h2>Нэг санаанаас олон кадрын кино.</h2><p>Киноны storyboard, scene чанарын QA, Монгол дуу, MP4 post-production, 1080p/4K экспортын боломж ба бодит төлөв.</p></div>
+        <Link href="/director" className="moviePromoHome" aria-label="AI Director · Зохиол, storyboard">
+          <div><small>AI DIRECTOR · GPT / CLAUDE / GEMINI</small><h2>Нэг санаанаас зохиол, storyboard.</h2><p>Монгол хэлний санаагаар кадр бүрийн тайлбар, дүрийн хэв маяг, өгүүлэгчийн бичвэр болон хадмалын ноорог бэлтгэнэ. AI API холболт шаардлагатай.</p></div>
           <span>Боломжуудыг харах →</span>
         </Link>
         <section className="productSection">
@@ -164,7 +164,7 @@ export default function Home() {
         <section className="bottomCta"><div><small>NEW · RAINY MOVIE PRODUCER BETA</small>
           <h2>Нэг prompt. Олон кадр. Нэг cinematic төсөл.</h2>
           <p>ChatGPT / Claude-аас удирдах persistent scene scheduler, AI storyboard QA, Монгол voice-over ба FFmpeg export roadmap. Туршилтын боломж, бодит лимит болон идэвхжүүлэлтийн төлөвтэй танилц.</p></div>
-          <Link href="/movie" className="primary large">Movie Producer <ArrowRight size={17}/></Link>
+          <Link href="/movie-producer" className="primary large">Movie Producer <ArrowRight size={17}/></Link>
         </section>
         <section className="bottomCta">
           <div>
