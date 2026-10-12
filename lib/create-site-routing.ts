@@ -1,0 +1,2 @@
+const pages=new Set(['/','/create','/login','/register','/forgot-password','/reset-password','/verify-email','/request-verification']);
+export function createSiteAllowed(path:string){return pages.has(path)||path.startsWith('/_next/')||path.startsWith('/brand/')||path==='/icon.svg'||path==='/favicon.ico'||path.startsWith('/api/auth/')||path==='/api/health'||path.startsWith('/api/campaigns')||path==='/api/billing/wire/webhook';}

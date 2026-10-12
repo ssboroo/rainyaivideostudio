@@ -18,7 +18,7 @@ export async function sendEmailToken(userId:string,email:string,kind:TokenPurpos
   const token=await createEmailToken(userId,kind);
   const route=kind==="VERIFY"?"/verify-email?token=":"/reset-password?token=";
   const url=mailOrigin()+route+encodeURIComponent(token);
-  await sendTransactionalMail(email,kind==="VERIFY"?"verify":"reset",url,"video");
+  await sendTransactionalMail(email,kind==="VERIFY"?"verify":"reset",url,process.env.STUDIO_ONLY==="true"?"create":"video");
 }
 export async function consumeEmailToken(raw:unknown,kind:TokenPurpose, apply?: (tx: Prisma.TransactionClient, userId: string, now: Date) => Promise<void>) {
   if(typeof raw!=="string"||raw.length<32||raw.length>180||!/^[A-Za-z0-9_-]+$/.test(raw))return null;

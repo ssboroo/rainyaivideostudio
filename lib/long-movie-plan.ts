@@ -8,7 +8,7 @@ export type LongMoviePlanInput={
   prompt:string; targetSeconds:number; modelSlug:string;
   aspectRatio:string; resolution:string; generateAudio:boolean;
   qualityProfile?:"cinematic"|"balanced"|"fast";
-  styleBible?:string;
+  styleBible?:string;imageUrl?:string;
 };
 export function createLongMoviePlan(input:LongMoviePlanInput) {
   if(typeof input.prompt!=="string" || input.prompt.trim().length<12 || input.prompt.length>6000)
@@ -16,7 +16,7 @@ export function createLongMoviePlan(input:LongMoviePlanInput) {
   if(!Number.isInteger(input.targetSeconds) || input.targetSeconds<4 || input.targetSeconds>3600)
     throw new MoviePlanError("Энэ хувилбарт 4–3600 секундийн кино төлөвлөнө.");
   const model=getModel(input.modelSlug);
-  if(!model || !model.apiVerified || model.kind!=="video" || !model.maxDuration || !model.minDuration || model.supportsImage)
+  if(!model || !model.apiVerified || model.kind!=="video" || !model.maxDuration || !model.minDuration || (model.supportsImage&&!input.imageUrl) || (input.imageUrl&&!model.supportsImage))
     throw new MoviePlanError("Зөвхөн API баталгаажсан text-to-video модель дэмжинэ.");
   if(model.resolutions.length && !model.resolutions.includes(input.resolution))
     throw new MoviePlanError("Сонгосон нягтаршил дэмжигдээгүй.");
@@ -56,7 +56,7 @@ export function createLongMoviePlan(input:LongMoviePlanInput) {
       `Avoid reusing the previous shot action. Keep on-screen text and logos exactly as reference only where explicitly provided.`
     ].join(" ").slice(0,5800);
     const inputPayload={prompt:scenePrompt,duration,resolution:input.resolution,
-      aspectRatio:input.aspectRatio,generateAudio:input.generateAudio};
+      aspectRatio:input.aspectRatio,generateAudio:input.generateAudio,...(input.imageUrl?{imageUrl:input.imageUrl}:{})};
     const provider=buildProviderInput(model,inputPayload);
     const credits=estimateCredits(model,duration,provider);
     if(!Number.isSafeInteger(credits) || credits<=0)

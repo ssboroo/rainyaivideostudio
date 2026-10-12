@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect,useState } from "react";
-export function EmailConfirmation({token}:{token:string}){
+export function EmailConfirmation({token,createSite=false}:{token:string;createSite?:boolean}){
  const[status,setStatus]=useState("Баталгаажуулж байна..."),[done,setDone]=useState(false);
  useEffect(()=>{
   if(!token){setStatus("Баталгаажуулах холбоос дутуу байна.");return;}
@@ -12,5 +12,5 @@ export function EmailConfirmation({token}:{token:string}){
    }).catch(()=>active&&setStatus("Сүлжээний алдаа. Дахин нээнэ үү."));
   return()=>{active=false;};
  },[token]);
- return <main className="authLayout"><article className="authCard"><h1>RAINY Video Studio</h1><p role="status">{status}</p><Link className="primary wide" href={done?"/studio":"/request-verification"}>{done?"Студи рүү орох":"Шинээр холбоос авах"}</Link></article></main>;
+ return <main className="authLayout"><article className="authCard"><h1>{createSite?"RAINY Create":"RAINY Video Studio"}</h1><p role="status">{status}</p><Link className="primary wide" href={done?(createSite?"/create":"/studio"):"/request-verification"}>{done?"Студи рүү орох":"Шинээр холбоос авах"}</Link></article></main>;
 }

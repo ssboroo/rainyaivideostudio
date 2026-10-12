@@ -1,0 +1,15 @@
+export type UploadedAsset={url:string;name:string;mimeType:string;kind:'product'|'video'|'frame';proof:string;data?:string};
+function event(target:HTMLImageElement|HTMLVideoElement,name:string){return new Promise<void>((resolve,reject)=>{const timer=setTimeout(()=>finish(new Error('Файл унших хугацаа хэтэрсэн.')),15000);const ok=()=>finish(),bad=()=>finish(new Error('Зураг эсвэл видеог уншиж чадсангүй.'));function finish(error?:Error){clearTimeout(timer);target.removeEventListener(name,ok);target.removeEventListener('error',bad);error?reject(error):resolve();}target.addEventListener(name,ok,{once:true});target.addEventListener('error',bad,{once:true});});}
+async function jpeg(source:CanvasImageSource,width:number,height:number,name:string){const canvas=document.createElement('canvas'),scale=Math.min(1,1200/Math.max(width,height));canvas.width=Math.max(1,Math.round(width*scale));canvas.height=Math.max(1,Math.round(height*scale));const ctx=canvas.getContext('2d');if(!ctx)throw new Error('Зураг бэлтгэж чадсангүй.');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(source,0,0,canvas.width,canvas.height);const blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(v=>v?resolve(v):reject(new Error('Зураг бэлтгэж чадсангүй.')),'image/jpeg',.88));return new File([blob],name,{type:'image/jpeg'});}
+export async function productPhoto(file:File){if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>20*1024*1024)throw new Error('20MB хүртэлх JPG, PNG, WebP зураг оруулна уу.');const image=new Image(),url=URL.createObjectURL(file);try{const loaded=event(image,'load');image.src=url;await loaded;return await jpeg(image,image.naturalWidth,image.naturalHeight,file.name.replace(/\.[^.]+$/,'')+'.jpg');}finally{URL.revokeObjectURL(url);}}
+export async function referenceFrames(file:File){
+ if(file.type!=='video/mp4'||file.size>100*1024*1024)throw new Error('100MB хүртэлх MP4 видео оруулна уу.');
+ const video=document.createElement('video'),url=URL.createObjectURL(file);video.muted=true;video.preload='auto';video.playsInline=true;
+ try{const loaded=event(video,'loadeddata');video.src=url;await loaded;
+ if(!Number.isFinite(video.duration)||video.duration<.3||video.duration>60)throw new Error('Жишиг видео 0.3–60 секунд байна.');
+ const frames:File[]=[];
+ for(const seconds of [.05,video.duration/2,Math.max(.1,video.duration-.1)]){const seek=event(video,'seeked');video.currentTime=seconds;await seek;frames.push(await jpeg(video,video.videoWidth,video.videoHeight,`frame-${seconds.toFixed(2)}s.jpg`));}
+ return frames;
+ }finally{video.removeAttribute('src');video.load();URL.revokeObjectURL(url);}
+}
+export async function uploadAsset(file:File,kind:UploadedAsset['kind']){const form=new FormData();form.set('file',file);form.set('kind',kind);const response=await fetch('/api/campaigns/uploads',{method:'POST',body:form});const data=await response.json();if(!response.ok)throw new Error(data.error||'Файл байршуулж чадсангүй.');return data.asset as UploadedAsset;}

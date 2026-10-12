@@ -11,6 +11,10 @@ COPY prisma ./prisma
 RUN npm ci --omit=dev && npx prisma generate
 
 FROM node:22-alpine AS builder
+ARG STUDIO_ONLY=false
+ARG APP_URL
+ENV STUDIO_ONLY=$STUDIO_ONLY
+ENV APP_URL=$APP_URL
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL=postgresql://build:build@localhost:5432/ravs?schema=public

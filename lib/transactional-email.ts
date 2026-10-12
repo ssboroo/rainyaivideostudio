@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 /** Branded account emails. Provider secrets are only read server-side. */
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 const defaults = {
+  create: {name:"RAINY Create",accent:"#536FDF",heading:"Санаанаас бэлэн бичлэг хүртэл.",emoji:"☂️"},
   video: { name: "RAINY Video Studio", accent: "#E9F35B", heading: "Бүтээх шинэ боломж нээгдлээ.", emoji: "🎬" },
   voice: { name: "RAINY Voice Studio", accent: "#8AFFC1", heading: "Таны дуу хоолой. Таны бүтээл.", emoji: "🎙️" },
 };

@@ -57,7 +57,7 @@ also stop for review without automatically collecting more customer money.
 Operational limitations: no automated cash refund, no automatic retry of uncertain
 paid submissions, and no guaranteed face/brand consistency. Manual refunds must use
 the original Wire invoice. Failed campaign provider consumption needs reconciliation.
-This version does not burn subtitles or offer product-photo references. The director's
+This version does not burn subtitles. Product JPEG/PNG/WebP input is resized for upload and passed to the director as real image data. One MP4 reference (up to 60 seconds/100 MB) contributes three sampled frames for visual storyboard guidance, not full video/audio analysis. The product image, or first sampled frame when no product photo is supplied, is passed to every image-to-video scene. Upload receipts bind user, hosted URL, media kind and image bytes. Approved storyboard hashes also bind all reference assets. The director's
 narration is shown before payment; draft quote creation may consume merchant LLM API
 usage but never customer wallet credits. The server limits requests per account.
 
@@ -68,3 +68,7 @@ unpaid/failed/mismatched payments never start work; one paid 15-second campaign
 runs HF → TTS → assembly → authenticated MP4 download; foreign user download fails;
 OAuth refresh survives restart; ambiguous POST recovery does not repeat provider
 charges; quote expiry rejects new checkout; failed paid work has a refund procedure.
+
+## Standalone website
+
+The `rainy-create` Railway service uses `STUDIO_ONLY=true`, a dedicated public domain, independent deployment and its own Create login/recovery branding. Its public route allowlist excludes the Video workspace, admin, MCP and wallet-generation APIs. The PostgreSQL account records and provider configuration are shared integration infrastructure; the Create invoice/production budgets remain per-campaign. No new database or copied credentials are required. The original Video service remains a separate deployment. Declare Docker build arguments STUDIO_ONLY and APP_URL so static metadata and standalone pages build with the proper brand.
