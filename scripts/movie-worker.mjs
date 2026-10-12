@@ -1,5 +1,6 @@
 import { tickMovieJobs, movieEnabled } from "../lib/movie-producer.ts";
 import { tickMovieProducer } from "../lib/movie-producer-v2.ts";
+import { tickCampaign } from "../lib/studio-campaign.ts";
 let stopped=false;
 for(const signal of ["SIGTERM","SIGINT"]) process.on(signal,()=>{stopped=true});
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -8,6 +9,7 @@ async function main(){
  while(!stopped){
   let worked=false;
   try{
+   if(process.env.STUDIO_CAMPAIGNS_ENABLED==="true")await tickCampaign();
    if(movieEnabled()){const result=await tickMovieJobs();worked=!!result}
    if(process.env.MOVIE_SCHEDULER_ENABLED==="true"){
     // Durable Postgres lease + idempotent per-scene provider requests.
