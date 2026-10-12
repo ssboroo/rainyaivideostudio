@@ -67,7 +67,8 @@ export function createGenerationService(deps: typeof defaults = defaults) {
     if (replay) return replay;
     let cost: number;
     try {
-      await ensureLiveHiggsfieldTariffs();\n      cost = quoteValidatedGeneration(userId,model,input,raw.clipToken).credits;
+      await ensureLiveHiggsfieldTariffs();
+      cost = quoteValidatedGeneration(userId,model,input,raw.clipToken).credits;
     } catch(error) {
       throw new GenerationServiceError(error instanceof Error ? error.message : "Үнэ баталгаажаагүй. Кредит суутгаагүй.", 422);
     }
