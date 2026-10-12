@@ -112,6 +112,11 @@ export function providerCostUsd(id: string, input: Record<string, unknown>): num
   if (id.startsWith('alibaba/happy-horse/v1.1/')) return perSecond({'720p':.14,'1080p':.18});
   if (id.startsWith('xai/grok-imagine-video/v1.5/')) return perSecond({'480p':.08,'720p':.14,'1080p':.25});
   if (id.startsWith('lightricks/ltx-2.5/')) return perSecond(id.endsWith('/fast') ? {'720p':.09,'1080p':.13,'2k':.19,'4k':.30} : {'720p':.12,'1080p':.17});
+  // Official Kling 2.6 list price, excluding the temporary 50% promotion.
+  if (/^kling-video\/v2\.6\/pro\/(text-to-video|image-to-video)$/.test(id)) {
+    if (![5,10].includes(seconds)) return unavailable();
+    return .14 * seconds;
+  }
   if (id.startsWith('kling-video/v3.0/4k/')) return perSecond({ '720p': .42, '1080p': .42, '4k': .42 });
   // Upper rate covers sound-on/off variants; discounts are deliberately ignored.
   if (id.startsWith('kling-video/v3.0/pro/')) return .168 * seconds;
@@ -156,3 +161,4 @@ export function quoteApiCredits(id:string, input:Record<string,unknown>) {
   if (!Number.isSafeInteger(credits) || credits <= 0) return unavailable();
   return credits;
 }
+

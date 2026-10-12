@@ -16,7 +16,7 @@ export const env = {
   },
   generationRateLimit: () => intEnv("GENERATION_RATE_LIMIT_PER_MINUTE", 6),
   higgsfieldBaseUrl: () => (process.env.HIGGSFIELD_BASE_URL || "https://api.higgsfield.ai").replace(/\/$/, ""),
-  higgsfieldCredentials: () => process.env.HF_CREDENTIALS?.trim() || (process.env.HF_API_KEY_ID && process.env.HF_API_KEY_SECRET ? `${process.env.HF_API_KEY_ID.trim()}:${process.env.HF_API_KEY_SECRET.trim()}` : ""),
+  higgsfieldCredentials: () => process.env.HF_CREDENTIALS?.trim() || process.env.HIGGSFIELD_API_KEY?.trim() || process.env.HF_KEY?.trim() || (process.env.HF_API_KEY_ID && process.env.HF_API_KEY_SECRET ? `${process.env.HF_API_KEY_ID.trim()}:${process.env.HF_API_KEY_SECRET.trim()}` : ""),
   wireApiUrl: () => (process.env.WIRE_MN_API_URL || "https://api.wire.mn/v1").replace(/\/$/, ""),
   wireApiKey: () => (process.env.WIRE_MN_API_KEY || "").trim(),
   wireWebhookSecret: () => (process.env.WIRE_MN_WEBHOOK_SECRET || "").trim(),
@@ -29,3 +29,4 @@ export function assertRuntimeConfig() {
   if (env.sessionSecret().length < 32) missing.push("SESSION_SECRET(>=32 chars)");
   return missing;
 }
+

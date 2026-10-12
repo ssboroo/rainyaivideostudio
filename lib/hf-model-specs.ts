@@ -1,7 +1,7 @@
 export type HfParameter = {name:string;type:string;required:boolean;default?:unknown;options?:string[];minimum?:number;maximum?:number;minLength?:number;maxLength?:number};
 export type HfModelSpec = {id:string;name:string;source:string;parameters:HfParameter[];verified:boolean;reason:string};
-// Model-specific official references inspected 2026-10-06. No credentials or account access claims.
-export const hfModelSpecs:HfModelSpec[] = [
+// Model-specific official references inspected 2026-10-12. No credentials or account access claims.
+export const hfModelSpecs: HfModelSpec[] = [
   {
     "id": "bytedance/seedance-2.5/text-to-video",
     "name": "Seedance 2.5",
@@ -277,10 +277,41 @@ export const hfModelSpecs:HfModelSpec[] = [
     "name": "Kling 3.0 Turbo Text to Video",
     "source": "https://open.higgsfield.ai/models/kling-video/v3.0-turbo/text-to-video/api-reference",
     "parameters": [
-      {"name":"prompt","type":"string","required":true,"minLength":1},
-      {"name":"duration","type":"integer","required":false,"default":5,"minimum":3,"maximum":15},
-      {"name":"resolution","type":"string","required":false,"default":"720p","options":["720p","1080p"]},
-      {"name":"aspect_ratio","type":"string","required":false,"default":"16:9","options":["16:9","9:16","1:1"]}
+      {
+        "name": "prompt",
+        "type": "string",
+        "required": true,
+        "minLength": 1
+      },
+      {
+        "name": "duration",
+        "type": "integer",
+        "required": false,
+        "default": 5,
+        "minimum": 3,
+        "maximum": 15
+      },
+      {
+        "name": "resolution",
+        "type": "string",
+        "required": false,
+        "default": "720p",
+        "options": [
+          "720p",
+          "1080p"
+        ]
+      },
+      {
+        "name": "aspect_ratio",
+        "type": "string",
+        "required": false,
+        "default": "16:9",
+        "options": [
+          "16:9",
+          "9:16",
+          "1:1"
+        ]
+      }
     ],
     "verified": true,
     "reason": ""
@@ -497,9 +528,48 @@ export const hfModelSpecs:HfModelSpec[] = [
     "id": "higgsfield/cinema-studio/4.0",
     "name": "Cinema Studio 4.0",
     "source": "https://open.higgsfield.ai/models/higgsfield/cinema-studio/4.0/api-reference",
-    "parameters": [],
-    "verified": false,
-    "reason": "Тусгай холболтын нөхцөлийг баталгаажуулж байна."
+    "parameters": [
+      {
+        "name": "prompt",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "duration",
+        "type": "integer",
+        "required": false,
+        "default": 5,
+        "options": [
+          "5"
+        ]
+      },
+      {
+        "name": "resolution",
+        "type": "string",
+        "required": false,
+        "default": "720p",
+        "options": [
+          "720p"
+        ]
+      },
+      {
+        "name": "aspect_ratio",
+        "type": "string",
+        "required": false,
+        "default": "16:9",
+        "options": [
+          "16:9"
+        ]
+      },
+      {
+        "name": "generate_audio",
+        "type": "boolean",
+        "required": false,
+        "default": true
+      }
+    ],
+    "verified": true,
+    "reason": ""
   },
   {
     "id": "kling-video/v3/motion-control/std",
@@ -590,10 +660,36 @@ export const hfModelSpecs:HfModelSpec[] = [
     "name": "Genjutsu Object Swap",
     "source": "https://open.higgsfield.ai/models/higgsfield/genjutsu/object-swap/v1.0/api-reference",
     "parameters": [
-      {"name":"prompt","type":"string","required":false,"default":"","maxLength":10000},
-      {"name":"video_url","type":"string (URL)","required":true,"minLength":1,"maxLength":2083},
-      {"name":"image_urls","type":"array[string]","required":true},
-      {"name":"resolution","type":"string","required":false,"default":"720p","options":["480p","720p","1080p"]}
+      {
+        "name": "prompt",
+        "type": "string",
+        "required": false,
+        "default": "",
+        "maxLength": 10000
+      },
+      {
+        "name": "video_url",
+        "type": "string (URL)",
+        "required": true,
+        "minLength": 1,
+        "maxLength": 2083
+      },
+      {
+        "name": "image_urls",
+        "type": "array[string]",
+        "required": true
+      },
+      {
+        "name": "resolution",
+        "type": "string",
+        "required": false,
+        "default": "720p",
+        "options": [
+          "480p",
+          "720p",
+          "1080p"
+        ]
+      }
     ],
     "verified": true,
     "reason": ""
@@ -786,16 +882,76 @@ export const hfModelSpecs:HfModelSpec[] = [
     "name": "AI Influencer",
     "source": "https://open.higgsfield.ai/models/higgsfield/ai-influencer/api-reference",
     "parameters": [
-      {"name":"tier","type":"string","required":false,"default":"normal","options":["normal","freak","total","insects","frogs","cats","dogs","capybaras","birds"]},
-      {"name":"brief","type":"string","required":false,"default":"","maxLength":4000},
-      {"name":"seed","type":"integer","required":false,"minimum":1,"maximum":1000000},
-      {"name":"image_url","type":"string (URL)","required":false},
-      {"name":"selection","type":"object","required":false,"default":{}},
-      {"name":"item_image_urls","type":"array[string]","required":false,"default":[]},
-      {"name":"variation_index","type":"integer","required":false,"default":0,"minimum":0},
-      {"name":"body_color","type":"string","required":false},
-      {"name":"pinned_species","type":"string","required":false},
-      {"name":"trait_variants","type":"object","required":false}
+      {
+        "name": "tier",
+        "type": "string",
+        "required": false,
+        "default": "normal",
+        "options": [
+          "normal",
+          "freak",
+          "total",
+          "insects",
+          "frogs",
+          "cats",
+          "dogs",
+          "capybaras",
+          "birds"
+        ]
+      },
+      {
+        "name": "brief",
+        "type": "string",
+        "required": false,
+        "default": "",
+        "maxLength": 4000
+      },
+      {
+        "name": "seed",
+        "type": "integer",
+        "required": false,
+        "minimum": 1,
+        "maximum": 1000000
+      },
+      {
+        "name": "image_url",
+        "type": "string (URL)",
+        "required": false
+      },
+      {
+        "name": "selection",
+        "type": "object",
+        "required": false,
+        "default": {}
+      },
+      {
+        "name": "item_image_urls",
+        "type": "array[string]",
+        "required": false,
+        "default": []
+      },
+      {
+        "name": "variation_index",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "minimum": 0
+      },
+      {
+        "name": "body_color",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "pinned_species",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "trait_variants",
+        "type": "object",
+        "required": false
+      }
     ],
     "verified": true,
     "reason": ""
@@ -2382,21 +2538,147 @@ export const hfModelSpecs:HfModelSpec[] = [
     "id": "alibaba/wan-3.0-prime/reference-to-video",
     "name": "Wan 3.0 Prime Reference to Video",
     "source": "https://open.higgsfield.ai/models/alibaba/wan-3.0-prime/reference-to-video/api-reference",
-    "parameters": [],
-    "verified": false,
-    "reason": "Загварын API баримт одоогоор баталгаажаагүй."
+    "parameters": [
+      {
+        "name": "seed",
+        "type": "integer",
+        "required": false,
+        "minimum": 0,
+        "maximum": 2147483647
+      },
+      {
+        "name": "prompt",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "duration",
+        "type": "integer",
+        "required": false,
+        "default": 5,
+        "minimum": 2,
+        "maximum": 30
+      },
+      {
+        "name": "file_url",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "link_url",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "audio_urls",
+        "type": "array[string]",
+        "required": false
+      },
+      {
+        "name": "image_urls",
+        "type": "array[string]",
+        "required": false
+      },
+      {
+        "name": "resolution",
+        "type": "string",
+        "required": false,
+        "default": "1080p",
+        "options": [
+          "480p",
+          "720p",
+          "1080p"
+        ]
+      },
+      {
+        "name": "video_urls",
+        "type": "array[string]",
+        "required": false
+      },
+      {
+        "name": "aspect_ratio",
+        "type": "string",
+        "required": false,
+        "default": "adaptive",
+        "options": [
+          "16:9",
+          "4:3",
+          "1:1",
+          "3:4",
+          "9:16",
+          "adaptive"
+        ]
+      },
+      {
+        "name": "generate_audio",
+        "type": "boolean",
+        "required": false,
+        "default": true
+      },
+      {
+        "name": "enable_thinking",
+        "type": "boolean",
+        "required": false,
+        "default": false
+      }
+    ],
+    "verified": true,
+    "reason": ""
   },
   {
     "id": "alibaba/wan-3.0/image-to-video",
     "name": "Wan 3.0 Image to Video",
     "source": "https://open.higgsfield.ai/models/alibaba/wan-3.0/image-to-video/api-reference",
     "parameters": [
-      {"name":"prompt","type":"string","required":true,"minLength":1},
-      {"name":"image_url","type":"string (URL)","required":true},
-      {"name":"duration","type":"integer","required":false,"default":5,"minimum":2,"maximum":30},
-      {"name":"resolution","type":"string","required":false,"default":"720p","options":["480p","720p","1080p"]},
-      {"name":"aspect_ratio","type":"string","required":false,"default":"adaptive","options":["adaptive","16:9","9:16","1:1"]},
-      {"name":"seed","type":"integer","required":false,"minimum":0,"maximum":2147483647}
+      {
+        "name": "prompt",
+        "type": "string",
+        "required": true,
+        "minLength": 1
+      },
+      {
+        "name": "image_url",
+        "type": "string (URL)",
+        "required": true
+      },
+      {
+        "name": "duration",
+        "type": "integer",
+        "required": false,
+        "default": 5,
+        "minimum": 2,
+        "maximum": 30
+      },
+      {
+        "name": "resolution",
+        "type": "string",
+        "required": false,
+        "default": "720p",
+        "options": [
+          "480p",
+          "720p",
+          "1080p"
+        ]
+      },
+      {
+        "name": "aspect_ratio",
+        "type": "string",
+        "required": false,
+        "default": "adaptive",
+        "options": [
+          "adaptive",
+          "16:9",
+          "9:16",
+          "1:1"
+        ]
+      },
+      {
+        "name": "seed",
+        "type": "integer",
+        "required": false,
+        "minimum": 0,
+        "maximum": 2147483647
+      }
     ],
     "verified": true,
     "reason": ""
@@ -2546,7 +2828,7 @@ export const hfModelSpecs:HfModelSpec[] = [
         "name": "prompt_extend",
         "type": "boolean",
         "required": false,
-        "default": "false  |"
+        "default": false
       },
       {
         "name": "negative_prompt",
@@ -2562,17 +2844,116 @@ export const hfModelSpecs:HfModelSpec[] = [
     "id": "wan/v2.7/reference-to-video",
     "name": "Wan 2.7 Reference to Video",
     "source": "https://open.higgsfield.ai/models/wan/v2.7/reference-to-video/api-reference",
-    "parameters": [],
-    "verified": false,
-    "reason": "Загварын API баримт одоогоор баталгаажаагүй."
+    "parameters": [
+      {
+        "name": "seed",
+        "type": "integer",
+        "required": false,
+        "minimum": 1,
+        "maximum": 2147483646
+      },
+      {
+        "name": "prompt",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "duration",
+        "type": "integer",
+        "required": false,
+        "default": 5,
+        "minimum": 2,
+        "maximum": 10
+      },
+      {
+        "name": "image_urls",
+        "type": "array[string]",
+        "required": false
+      },
+      {
+        "name": "resolution",
+        "type": "string",
+        "required": false,
+        "default": "720p",
+        "options": [
+          "720p",
+          "1080p"
+        ]
+      },
+      {
+        "name": "video_urls",
+        "type": "array[string]",
+        "required": false
+      },
+      {
+        "name": "aspect_ratio",
+        "type": "string",
+        "required": false,
+        "default": "16:9",
+        "options": [
+          "16:9",
+          "9:16"
+        ]
+      },
+      {
+        "name": "prompt_extend",
+        "type": "boolean",
+        "required": false,
+        "default": false
+      },
+      {
+        "name": "negative_prompt",
+        "type": "string",
+        "required": false,
+        "default": ""
+      }
+    ],
+    "verified": true,
+    "reason": ""
   },
   {
     "id": "alibaba/happy-horse/v1.1/image-to-video",
     "name": "HappyHorse 1.1 Image to Video",
     "source": "https://open.higgsfield.ai/models/alibaba/happy-horse/v1.1/image-to-video/api-reference",
-    "parameters": [],
-    "verified": false,
-    "reason": "Загварын API баримт одоогоор баталгаажаагүй."
+    "parameters": [
+      {
+        "name": "seed",
+        "type": "integer",
+        "required": false,
+        "minimum": 1,
+        "maximum": 2147483646
+      },
+      {
+        "name": "prompt",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "duration",
+        "type": "integer",
+        "required": false,
+        "default": 5,
+        "minimum": 2,
+        "maximum": 15
+      },
+      {
+        "name": "image_url",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "resolution",
+        "type": "string",
+        "required": false,
+        "default": "1080p",
+        "options": [
+          "720p",
+          "1080p"
+        ]
+      }
+    ],
+    "verified": true,
+    "reason": ""
   },
   {
     "id": "alibaba/happy-horse/v1.1/reference-to-video",
@@ -2710,9 +3091,72 @@ export const hfModelSpecs:HfModelSpec[] = [
     "id": "wan/v2.6/image-to-video",
     "name": "Wan 2.6 Image to Video",
     "source": "https://open.higgsfield.ai/models/wan/v2.6/image-to-video/api-reference",
-    "parameters": [],
-    "verified": false,
-    "reason": "Загварын API баримт одоогоор баталгаажаагүй."
+    "parameters": [
+      {
+        "name": "seed",
+        "type": "integer",
+        "required": false,
+        "minimum": -1,
+        "maximum": 10000000
+      },
+      {
+        "name": "prompt",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "duration",
+        "type": "integer",
+        "required": false,
+        "default": 5,
+        "options": [
+          "5",
+          "10",
+          "15"
+        ]
+      },
+      {
+        "name": "audio_url",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "image_url",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "resolution",
+        "type": "string",
+        "required": false,
+        "default": "720p",
+        "options": [
+          "480p",
+          "720p",
+          "1080p"
+        ]
+      },
+      {
+        "name": "multi_shots",
+        "type": "boolean",
+        "required": false,
+        "default": false
+      },
+      {
+        "name": "prompt_extend",
+        "type": "boolean",
+        "required": false,
+        "default": false
+      },
+      {
+        "name": "negative_prompt",
+        "type": "string",
+        "required": false,
+        "default": ""
+      }
+    ],
+    "verified": true,
+    "reason": ""
   },
   {
     "id": "wan/v2.6/reference-to-video",
@@ -3148,8 +3592,7 @@ export const hfModelSpecs:HfModelSpec[] = [
       {
         "name": "elements",
         "type": "array[string]",
-        "required": false,
-        "default": "—  |"
+        "required": false
       },
       {
         "name": "cfg_scale",
@@ -3168,13 +3611,12 @@ export const hfModelSpecs:HfModelSpec[] = [
         "name": "multi_shots",
         "type": "boolean",
         "required": false,
-        "default": "false  |"
+        "default": false
       },
       {
         "name": "multi_prompt",
         "type": "array[object]",
-        "required": false,
-        "default": "—  |"
+        "required": false
       },
       {
         "name": "last_image_url",
@@ -3471,8 +3913,7 @@ export const hfModelSpecs:HfModelSpec[] = [
       {
         "name": "elements",
         "type": "array[string]",
-        "required": false,
-        "default": "—  |"
+        "required": false
       },
       {
         "name": "shot_type",
@@ -3487,14 +3928,13 @@ export const hfModelSpecs:HfModelSpec[] = [
       {
         "name": "image_urls",
         "type": "array[string]",
-        "required": false,
-        "default": "—  |"
+        "required": false
       },
       {
         "name": "multi_shots",
         "type": "boolean",
         "required": false,
-        "default": "false  |"
+        "default": false
       },
       {
         "name": "aspect_ratio",
@@ -3509,8 +3949,7 @@ export const hfModelSpecs:HfModelSpec[] = [
       {
         "name": "multi_prompt",
         "type": "array[object]",
-        "required": false,
-        "default": "—  |"
+        "required": false
       },
       {
         "name": "last_frame_url",
@@ -3597,20 +4036,17 @@ export const hfModelSpecs:HfModelSpec[] = [
       {
         "name": "elements",
         "type": "array[string]",
-        "required": false,
-        "default": "—  |"
+        "required": false
       },
       {
         "name": "image_urls",
         "type": "array[string]",
-        "required": false,
-        "default": "—  |"
+        "required": false
       },
       {
         "name": "video_urls",
         "type": "array[string]",
-        "required": true,
-        "default": "—  |"
+        "required": true
       },
       {
         "name": "aspect_ratio",
@@ -3777,17 +4213,109 @@ export const hfModelSpecs:HfModelSpec[] = [
     "id": "kling-video/v2.6/pro/text-to-video",
     "name": "Kling 2.6 Pro Text to Video (Pro)",
     "source": "https://open.higgsfield.ai/models/kling-video/v2.6/pro/text-to-video/api-reference",
-    "parameters": [],
-    "verified": false,
-    "reason": "Загварын API баримт одоогоор баталгаажаагүй."
+    "parameters": [
+      {
+        "name": "sound",
+        "type": "string",
+        "required": false,
+        "default": "on",
+        "options": [
+          "on",
+          "off"
+        ]
+      },
+      {
+        "name": "prompt",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "duration",
+        "type": "integer",
+        "required": false,
+        "default": 5,
+        "options": [
+          "5",
+          "10"
+        ]
+      },
+      {
+        "name": "cfg_scale",
+        "type": "number",
+        "required": false,
+        "default": 0.5,
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "name": "aspect_ratio",
+        "type": "string",
+        "required": false,
+        "default": "16:9",
+        "options": [
+          "16:9",
+          "9:16",
+          "1:1"
+        ]
+      }
+    ],
+    "verified": true,
+    "reason": ""
   },
   {
     "id": "kling-video/omni/first-last-frame",
     "name": "Kling Omni First/Last Frame",
     "source": "https://open.higgsfield.ai/models/kling-video/omni/first-last-frame/api-reference",
-    "parameters": [],
-    "verified": false,
-    "reason": "Загварын API баримт одоогоор баталгаажаагүй."
+    "parameters": [
+      {
+        "name": "mode",
+        "type": "string",
+        "required": false,
+        "default": "pro",
+        "options": [
+          "std",
+          "pro"
+        ]
+      },
+      {
+        "name": "prompt",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "duration",
+        "type": "integer",
+        "required": false,
+        "default": 5,
+        "options": [
+          "5",
+          "10"
+        ]
+      },
+      {
+        "name": "aspect_ratio",
+        "type": "string",
+        "required": false,
+        "default": "16:9",
+        "options": [
+          "16:9",
+          "9:16",
+          "1:1"
+        ]
+      },
+      {
+        "name": "last_frame_url",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "first_frame_url",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "verified": true,
+    "reason": ""
   },
   {
     "id": "kling-video/omni/image-reference",
@@ -4024,9 +4552,44 @@ export const hfModelSpecs:HfModelSpec[] = [
     "id": "kling-video/v2.5-turbo/standard/image-to-video",
     "name": "Kling 2.5 Turbo Standard Image to Video (Standard)",
     "source": "https://open.higgsfield.ai/models/kling-video/v2.5-turbo/standard/image-to-video/api-reference",
-    "parameters": [],
-    "verified": false,
-    "reason": "Загварын API баримт одоогоор баталгаажаагүй."
+    "parameters": [
+      {
+        "name": "prompt",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "duration",
+        "type": "integer",
+        "required": false,
+        "default": 5,
+        "options": [
+          "5",
+          "10"
+        ]
+      },
+      {
+        "name": "cfg_scale",
+        "type": "number",
+        "required": false,
+        "default": 0.5,
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "name": "image_url",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "negative_prompt",
+        "type": "string",
+        "required": false,
+        "default": ""
+      }
+    ],
+    "verified": true,
+    "reason": ""
   },
   {
     "id": "minimax/h3/image-to-video",
