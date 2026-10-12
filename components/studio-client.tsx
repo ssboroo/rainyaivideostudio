@@ -179,6 +179,7 @@ export function StudioClient() {
   }, [group, params.get("model"), params.get("surface")]);
 
   useEffect(()=>{const queryPrompt=params.get("prompt");if(queryPrompt)setPrompt(queryPrompt);},[params.get("prompt")]);
+  useEffect(()=>{try{const imported=sessionStorage.getItem("rainy_director_scene_prompt");if(imported&&imported.length<=3000){setPrompt(imported);sessionStorage.removeItem("rainy_director_scene_prompt");}}catch{}},[]);
 
   useEffect(() => {
     const requestedDuration = params.has("duration") ? Number(params.get("duration")) : Number(model.parameters?.find(f=>f.name==="duration")?.default || model.minDuration || 5);
