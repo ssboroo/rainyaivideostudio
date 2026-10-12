@@ -1,6 +1,7 @@
 import {randomUUID} from 'node:crypto';
 import {db} from './db.ts';
-import {createDirectorPlan,validateDirectorInput,DirectorProvider} from './creative-director.ts';
+import {createDirectorPlan,validateDirectorInput,DirectorProvider,DirectorPlan} from './creative-director.ts';
+import {storyboardHash,approvedStoryboard,storyboardTimeline,storyboardNarrationSrt} from './storyboard-policy.ts';
 import {createLongMoviePlan} from './long-movie-plan.ts';
 import {getModel,buildProviderInput} from './models.ts';
 import {ensureLiveHiggsfieldTariffs} from './higgsfield-live-feed.ts';
@@ -14,9 +15,14 @@ import {createPaymentIntent,createCheckoutSession,retrievePaymentIntent,mapInten
 import {confirmWirePayment,checkoutUrlFromProviderData} from './wire-payment.ts';
 
 type Scene={credits:number;duration:number;input:Record<string,unknown>;state:'pending'|'dispatching'|'submitted'|'done';requestId?:string;statusUrl?:string;url?:string};
-type Payload={brief:string;seconds:number;ratio:string;modelSlug:string;title:string;narration:string;scenes:Scene[];expiresAt:number;voiceCredits:number;assemblyCredits:number;price:ReturnType<typeof campaignPrice>;voiceJob?:string;assemblyJob?:string;artifact?:string;error?:string};
+type Payload={brief:string;seconds:number;ratio:string;modelSlug:string;title:string;narration:string;scenes:Scene[];expiresAt:number;voiceCredits:number;assemblyCredits:number;price:ReturnType<typeof campaignPrice>|null;storyboard?:DirectorPlan;storyboardApproval?:string;voiceJob?:string;assemblyJob?:string;artifact?:string;error?:string};
 type Row={id:string;userId:string;status:string;payload:Payload;paymentId:string|null;leaseToken:string|null;createdAt:Date};
 const origin=()=>process.env.STUDIO_PUBLIC_ORIGIN||'https://create.rainy.studio';
+function directorConfigured(){
+ const provider=process.env.STUDIO_DIRECTOR_PROVIDER||'gemini';
+ const pair=provider==='gpt'?['OPENAI_API_KEY','RAINY_OPENAI_MODEL']:provider==='claude'?['ANTHROPIC_API_KEY','RAINY_CLAUDE_MODEL']:['GEMINI_API_KEY','RAINY_GEMINI_MODEL'];
+ return pair.every(key=>!!process.env[key]);
+}
 export function campaignReadiness(){
  const missing:string[]=[];
  for(const key of ['STUDIO_VOICE_REFRESH_TOKEN','STUDIO_VOICE_CLIENT_ID','STUDIO_VOICE_ID','STUDIO_VOICE_CREDIT_MNT','STUDIO_ASSEMBLY_CREDITS_PER_MIN'])if(!process.env[key])missing.push(key);
@@ -27,17 +33,30 @@ export function campaignReadiness(){
  if(!env.wireApiKey())missing.push('WIRE_MN_API_KEY');
  if(!env.wireWebhookSecret())missing.push('WIRE_MN_WEBHOOK_SECRET');
  if(process.env.STUDIO_CAMPAIGNS_ENABLED!=='true')missing.push('STUDIO_CAMPAIGNS_ENABLED');
- return {ready:missing.length===0,missing};
+ return {ready:missing.length===0,storyboardReady:directorConfigured(),missing};
 }
 function requireReady(){if(!campaignReadiness().ready)throw new Error('Нэгдсэн үүсгэлт, төлбөрийн холболтыг бэлтгэж байна. Одоогоор төлбөр авахгүй.');}
 export async function ownCampaign(userId:string,id:string){
  const rows=await db.$queryRawUnsafe<Row[]>('SELECT * FROM "StudioCampaign" WHERE "id"=$1 AND "userId"=$2',id,userId);
  if(!rows[0])throw new Error('Төсөл олдсонгүй.');return rows[0];
 }
-export function publicCampaign(row:Row){const p=row.payload;return {id:row.id,status:row.status,title:p.title,seconds:p.seconds,ratio:p.ratio,narration:p.narration,price:p.price,expiresAt:p.expiresAt,completedScenes:p.scenes.filter(s=>s.state==='done').length,sceneCount:p.scenes.length,error:p.error,downloadUrl:row.status==='COMPLETED'?`/api/campaigns/${row.id}/download`:null};}
-export async function quoteCampaign(userId:string,input:{brief:string;seconds:number;ratio:string}){
- requireReady();await ensureLiveHiggsfieldTariffs();
+export function publicCampaign(row:Row){const p=row.payload;return {id:row.id,status:row.status,title:p.title,seconds:p.seconds,ratio:p.ratio,narration:p.narration,storyboard:p.storyboard?{logline:p.storyboard.logline,styleBible:p.storyboard.styleBible,characters:p.storyboard.characters,scenes:storyboardTimeline(p.storyboard)}:null,storyboardApproved:approvedStoryboard(p.storyboard,p.storyboardApproval),price:p.price,expiresAt:p.expiresAt,completedScenes:p.scenes.filter(s=>s.state==='done').length,sceneCount:p.scenes.length,error:p.error,downloadUrl:row.status==='COMPLETED'?`/api/campaigns/${row.id}/download`:null};}
+export async function createCampaignStoryboard(userId:string,input:{brief:string;seconds:number;ratio:string}){
+ if(!directorConfigured())throw new Error('AI storyboard найруулагчийн API тохиргоо дутуу байна. Одоогоор storyboard үүсгэх боломжгүй.');
  const plan=await createDirectorPlan(validateDirectorInput({provider:(process.env.STUDIO_DIRECTOR_PROVIDER||'gemini') as DirectorProvider,brief:input.brief,durationSeconds:input.seconds,aspectRatio:input.ratio}));
+ storyboardNarrationSrt(plan);
+ const payload:Payload={brief:input.brief,seconds:input.seconds,ratio:input.ratio,modelSlug:process.env.STUDIO_VIDEO_MODEL||'kling-3-turbo',title:plan.title,narration:plan.scenes.map(s=>s.voiceover).filter(Boolean).join(' '),scenes:[],storyboard:plan,price:null,expiresAt:0,voiceCredits:0,assemblyCredits:0};
+ const id=randomUUID();
+ await db.$executeRawUnsafe('INSERT INTO "StudioCampaign"("id","userId","status","payload") VALUES($1,$2,\'STORYBOARD\',$3::jsonb)',id,userId,JSON.stringify(payload));
+ return publicCampaign(await ownCampaign(userId,id));
+}
+export async function quoteCampaign(userId:string,id:string,confirmStoryboard:boolean){
+ if(confirmStoryboard!==true)throw new Error('Эхлээд storyboard-оо батална уу.');
+ requireReady();const row=await ownCampaign(userId,id);
+ if(row.status==='QUOTED'&&approvedStoryboard(row.payload.storyboard,row.payload.storyboardApproval))return publicCampaign(row);
+ if(row.status!=='STORYBOARD'||!row.payload.storyboard)throw new Error('Батлах storyboard олдсонгүй. Санаагаа дахин боловсруулна уу.');
+ await ensureLiveHiggsfieldTariffs();
+ const plan=row.payload.storyboard,input={brief:row.payload.brief,seconds:row.payload.seconds,ratio:row.payload.ratio};
  const modelSlug=process.env.STUDIO_VIDEO_MODEL||'kling-3-turbo';
  let videoCredits=0;const scenes:Scene[]=[];
  for(const shot of plan.scenes){
@@ -47,17 +66,18 @@ export async function quoteCampaign(userId:string,input:{brief:string;seconds:nu
  }
  const narration=plan.scenes.map(s=>s.voiceover).filter(Boolean).join(' ');
  if(!narration||narration.length>6000)throw new Error('Уншлагын текст буруу.');
- const voice=await voiceTool('rainy_voice_quote_tts',{voice_id:process.env.STUDIO_VOICE_ID,text:narration,model_id:process.env.STUDIO_VOICE_MODEL||'eleven_v4_turbo'});
+ const voice=await voiceTool('rainy_voice_quote_tts',{voice_id:process.env.STUDIO_VOICE_ID,srt:storyboardNarrationSrt(plan),model_id:process.env.STUDIO_VOICE_MODEL||'eleven_v4_turbo'});
  const voiceCredits=boundedVoiceQuote(voice.credits);
  const assemblyCredits=boundedVoiceQuote(Math.ceil(input.seconds/60)*Number(process.env.STUDIO_ASSEMBLY_CREDITS_PER_MIN));
  const price=campaignPrice(videoCredits,voiceCredits,assemblyCredits,{video:10,voice:Number(process.env.STUDIO_VOICE_CREDIT_MNT)});
  const wallet=await voiceTool('rainy_voice_wallet');
  if(Number(wallet.balance)<voiceCredits+assemblyCredits)throw new Error('Үүсгэх үйлчилгээний нөөц хүрэлцэхгүй. Одоогоор төлбөр авахгүй.');
- const payload:Payload={brief:input.brief,seconds:input.seconds,ratio:input.ratio,modelSlug,title:plan.title,narration,scenes,expiresAt:Date.now()+15*60_000,voiceCredits,assemblyCredits,price};
- const id=randomUUID();
- await db.$executeRawUnsafe('INSERT INTO "StudioCampaign"("id","userId","payload") VALUES($1,$2,$3::jsonb)',id,userId,JSON.stringify(payload));
+ const payload:Payload={...row.payload,modelSlug,narration,scenes,expiresAt:Date.now()+15*60_000,voiceCredits,assemblyCredits,price,storyboardApproval:storyboardHash(plan)};
+ const changed=await db.$executeRawUnsafe('UPDATE "StudioCampaign" SET "status"=\'QUOTED\',"payload"=$1::jsonb,"updatedAt"=now() WHERE "id"=$2 AND "userId"=$3 AND "status"=\'STORYBOARD\' AND "payload"=$4::jsonb',JSON.stringify(payload),id,userId,JSON.stringify(row.payload));
+ if(changed!==1)throw new Error('Storyboard-ийн төлөв өөрчлөгдсөн. Шинээр ачаална уу.');
  return publicCampaign(await ownCampaign(userId,id));
 }
+
 export async function checkoutCampaign(userId:string,id:string){
  requireReady();let row=await ownCampaign(userId,id);
  if(row.status==='QUOTED'&&row.payload.expiresAt<Date.now())throw new Error('Үнийн саналын хугацаа дууссан. Шинээр тооцоолно уу.');
@@ -66,6 +86,7 @@ export async function checkoutCampaign(userId:string,id:string){
  const paymentId=await db.$transaction(async tx=>{
   const [locked]=await tx.$queryRawUnsafe<Row[]>('SELECT * FROM "StudioCampaign" WHERE "id"=$1 AND "userId"=$2 FOR UPDATE',id,userId);
   if(!locked)throw new Error('Төсөл олдсонгүй.');
+  if(!locked.payload.price||!approvedStoryboard(locked.payload.storyboard,locked.payload.storyboardApproval))throw new Error('Storyboard баталгаажаагүй. Эхлээд төлөвлөгөөгөө батална уу.');
   if(locked.paymentId)return locked.paymentId;
   if(locked.status!=='QUOTED'||locked.payload.expiresAt<Date.now())throw new Error('Үнийн саналын хугацаа дууссан.');
   const p=await tx.payment.create({data:{userId,provider:'wire',packageId:'campaign:'+id,amountMnt:locked.payload.price.totalMnt,credits:0}});
@@ -102,6 +123,7 @@ export async function tickCampaign(){
  const row=rows[0];if(!row)return;
  const p=row.payload;
  try{
+  if(!approvedStoryboard(p.storyboard,p.storyboardApproval))throw new Error('Баталгаажсан storyboard шаардлагатай.');
   if(row.status.startsWith('DISPATCH_'))throw new Error('Provider хүсэлтийн хүлээн авалт тодорхойгүй. Давхар төлбөр гаргахгүйгээр админ нягтална.');
   if(!canProduce(row.status,'PAID'))return;
   if(row.status==='AWAITING_PAYMENT')await persist(row,'VIDEO');
@@ -127,7 +149,7 @@ export async function tickCampaign(){
   if(row.status==='VOICE'){
    if(!p.voiceJob){
     await persist(row,'DISPATCH_VOICE');
-    const result=await voiceTool('rainy_voice_create_tts',{voice_id:process.env.STUDIO_VOICE_ID,text:p.narration,model_id:process.env.STUDIO_VOICE_MODEL||'eleven_v4_turbo',title:p.title.slice(0,100),maxCredits:p.voiceCredits,confirmGeneration:true,idempotencyKey:'campaign_voice_'+row.id.replaceAll('-','')});
+    const result=await voiceTool('rainy_voice_create_tts',{voice_id:process.env.STUDIO_VOICE_ID,srt:storyboardNarrationSrt(p.storyboard!),model_id:process.env.STUDIO_VOICE_MODEL||'eleven_v4_turbo',title:p.title.slice(0,100),maxCredits:p.voiceCredits,confirmGeneration:true,idempotencyKey:'campaign_voice_'+row.id.replaceAll('-','')});
     if(typeof result.id!=='string')throw new Error('Дууны ажлын дугаар буруу.');p.voiceJob=result.id;await persist(row,'VOICE');return;
    }
    const result=await voiceTool('rainy_voice_job_status',{job_id:p.voiceJob});

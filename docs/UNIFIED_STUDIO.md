@@ -3,7 +3,9 @@
 Entry: `https://create.rainy.studio`, or `/create` on the existing Video service.
 
 One authenticated customer submits a Mongolian brief and a 15/30/60-second format.
-The director creates a structured storyboard and narration. A server-owned quote
+The director first creates a saved STORYBOARD draft with Mongolian visual descriptions, shot timings, narration and subtitle drafts. The customer reviews it and explicitly approves the exact plan before any price/payment step. Approval stores a hash of the full plan; checkout and worker execution reject a changed or missing plan. The director is not called again after approval. Storyboard generation only requires the director API, independently of payment/Voice readiness.
+
+Approved narration uses scene-timed SRT input in the Voice worker. A server-owned quote
 includes all video scenes, Voice TTS and MP4 assembly. Wire hosted checkout charges
 one fixed MNT amount. Only an independently verified PAID intent makes the job
 eligible for the existing persistent worker. A campaign purchase grants no wallet
