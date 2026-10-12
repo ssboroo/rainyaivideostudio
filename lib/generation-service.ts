@@ -1,3 +1,4 @@
+import {ensureLiveHiggsfieldTariffs} from "@/lib/higgsfield-live-feed";
 import { expireUserCredits } from "@/lib/credit-expiry";
 import { createHash } from "node:crypto";
 import { Generation, GenerationStatus, Prisma } from "@prisma/client";
@@ -66,6 +67,7 @@ export function createGenerationService(deps: typeof defaults = defaults) {
     if (replay) return replay;
     let cost: number;
     try {
+      await ensureLiveHiggsfieldTariffs();
       cost = quoteValidatedGeneration(userId,model,input,raw.clipToken).credits;
     } catch(error) {
       throw new GenerationServiceError(error instanceof Error ? error.message : "Үнэ баталгаажаагүй. Кредит суутгаагүй.", 422);

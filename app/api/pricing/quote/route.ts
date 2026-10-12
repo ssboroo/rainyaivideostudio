@@ -1,3 +1,4 @@
+import {ensureLiveHiggsfieldTariffs,liveCatalogStatus} from "@/lib/higgsfield-live-feed";
 import {NextResponse} from "next/server";
 import {getModel,buildProviderInput} from "@/lib/models";
 import {quoteValidatedGeneration} from "@/lib/generation-credit-quote";
@@ -20,9 +21,10 @@ export async function POST(request:Request){
  try{
   const input=buildProviderInput(model,raw);
   const user=await requireUser();
+  await ensureLiveHiggsfieldTariffs();
   const quote=quoteValidatedGeneration(user?.id||null,model,input,raw.clipToken);
   return NextResponse.json({
-   modelSlug:model.slug,credits:quote.credits,pricingStatus:"confirmed",
+   modelSlug:model.slug,credits:quote.credits,pricingStatus:"confirmed",catalogRevision:liveCatalogStatus().revision,
    resolution:input.resolution||null,durationSeconds:quote.verifiedSourceSeconds??input.duration??null,
    disclaimer:"Энэ нь одоогийн API-т суурилсан үнийн тооцоо. Үүсгэх товч дарахад сервер дахин шалгаж, зөвшөөрсөн кредитээс хэтрүүлэхгүй.",
   },{headers});
