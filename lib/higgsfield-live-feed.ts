@@ -76,12 +76,12 @@ export async function ensureLiveHiggsfieldTariffs():Promise<void>{
   cached=null;throw e instanceof LiveTariffError?e:new LiveTariffError("Higgsfield шинэ тариф татаж чадсангүй. Үүсгэлт түр хаалттай.");
  }
 }
-export function liveProviderCostUsd(modelId:string,input:Record<string,unknown>):number|null{
- if(!enabled())return null; // Existing reviewed price snapshot stays unchanged until the official feed is provisioned.
- if(!cached||Date.now()-cached.fetchedAt>=TTL)
-  throw new LiveTariffError("Higgsfield тариф шинэчлэгдээгүй. Кредит суутгахгүй.");
- const candidates=cached.tariffs.filter(t=>t.modelId===modelId&&Object.entries(t.parameters).every(([k,v])=>input[k]===v));
- // A single exact tariff is required. An ambiguous resolution/audio variant is unsafe.
+/** Exact match by every billing-relevant selector; never price unknown variants. */
+export function quoteFromTariffs(tariffs:HfTariff[],modelId:string,input:Record<string,unknown>):number{
+ const selectors=["resolution","aspect_ratio","generate_audio","audio","quality","fps","output_format","mode","tier","model_variant"];
+ const candidates=tariffs.filter(t=>t.modelId===modelId
+  && Object.entries(t.parameters).every(([k,v])=>input[k]===v)
+  && selectors.every(key=>input[key]===undefined||Object.prototype.hasOwnProperty.call(t.parameters,key)));
  if(candidates.length!==1)throw new LiveTariffError("Энэ моделийн сонголтын live үнэ тодорхойгүй.");
  const tariff=candidates[0];
  const seconds=Number(input.duration??input.__verifiedClipSeconds);
@@ -90,7 +90,17 @@ export function liveProviderCostUsd(modelId:string,input:Record<string,unknown>)
   throw new LiveTariffError("Хугацааг баталгаажуулах шаардлагатай.");
  if(tariff.unit==="per_image"&&(!Number.isInteger(count)||count<1||count>100))
   throw new LiveTariffError("Зургийн тоо буруу.");
- return tariff.usdRate*(tariff.unit==="per_second"?seconds:tariff.unit==="per_image"?count:1);
+ if(tariff.unit==="flat"&&(input.batch_size!==undefined||input.num_images!==undefined)&&count!==1)
+  throw new LiveTariffError("Batch багцын flat үнэ баталгаагүй.");
+ const usd=tariff.usdRate*(tariff.unit==="per_second"?seconds:tariff.unit==="per_image"?count:1);
+ if(!Number.isFinite(usd)||usd<=0||usd>100000)throw new LiveTariffError("Нийт USD өртөг буруу.");
+ return usd;
+}
+export function liveProviderCostUsd(modelId:string,input:Record<string,unknown>):number|null{
+ if(!enabled())return null;
+ if(!cached||Date.now()-cached.fetchedAt>=TTL)
+  throw new LiveTariffError("Higgsfield тариф шинэчлэгдээгүй. Кредит суутгахгүй.");
+ return quoteFromTariffs(cached.tariffs,modelId,input);
 }
 export function liveCatalogStatus(){
  return {enabled:enabled(),ready:!!cached&&Date.now()-cached.fetchedAt<TTL,revision:cached?.revision||null,
