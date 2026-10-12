@@ -35,7 +35,7 @@ const groups = [
       ["/movie-producer", "Movie Producer · Кино төлөвлөх", Film],
       ["/explore", "Загвар ба workflow сонгох", Compass],
       ["/video-guide", "Видео гарын авлага", CirclePlay],
-      ["/youtube", "YouTube · Эрхтэй клип", Film],
+      ["/youtube", "YouTube видео татах", Film],
       ["/trends", "Тренд видео", TrendingUp],
       ["/community", "Бүтээлчдийн сан", UsersRound],
     ],
