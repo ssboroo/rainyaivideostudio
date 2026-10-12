@@ -1,6 +1,5 @@
 "use client";
 import {useEffect,useState} from "react";
-import Link from "next/link";
 type Scene={number:number;durationSeconds:number;shot:string;videoPrompt:string;voiceover:string;subtitle:string};
 type Plan={title:string;logline:string;styleBible:string;characters:string[];scenes:Scene[];subtitlesSrt:string;provider:string;model:string;estimatedOnly:true};
 const fields:React.CSSProperties={width:"100%",border:"1px solid #404044",background:"#161619",color:"white",borderRadius:12,padding:14,fontSize:14};
