@@ -1,3 +1,4 @@
+import {liveProviderCostUsd} from "./higgsfield-live-feed.ts";
 // Higgsfield API list-price estimates (NOT Higgsfield's website subscription).
 // 3,900 MNT/USD is a CONSERVATIVE INTERNAL PLANNING RATE, not a claimed live FX quote.
 // Reviewed against official provider catalog 2026-10-11; no promotional prices assumed.
@@ -35,7 +36,7 @@ export function estimatePackContribution(priceMnt:number,credits:number) {
 }
 export class PricingUnavailableError extends Error {}
 const unavailable = () => { throw new PricingUnavailableError('Энэ тохиргооны API өртгийг баталгаажуулж байна. Өөр загвар сонгоно уу.'); };
-export function providerCostUsd(id: string, input: Record<string, unknown>): number {
+export function providerCostUsd(id: string, input: Record<string, unknown>): number {\n  const live=liveProviderCostUsd(id,input);\n  if(live!==null)return live;
   const resolution = String(input.resolution || '720p').toLowerCase();
   // A missing duration can produce a silent undercharge on usage-metered
   // video requests. Images do not use duration.
