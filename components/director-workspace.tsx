@@ -66,6 +66,9 @@ export function DirectorWorkspace(){
     <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:15}}>
      <button type="button" className="primary" onClick={()=>openVoice(narration)}>Монгол Voice → ElevenLabs</button>
      <button type="button" onClick={downloadSrt}>SRT хадмал татах</button>
+     <a href="https://voice.rainy.studio/?tool=stt" target="_blank" rel="noopener noreferrer">Scribe STT · Транскрипт</a>
+     <a href="https://voice.rainy.studio/?tool=dubbing" target="_blank" rel="noopener noreferrer">Dubbing v2 · Орчуулга</a>
+     <a href="https://voice.rainy.studio/movie" target="_blank" rel="noopener noreferrer">Видео + дуу · MP4</a>
      <button type="button" onClick={()=>navigator.clipboard.writeText(JSON.stringify(plan,null,2))}>Төлөвлөгөө хуулах</button>
     </div>
     <p style={{color:"#aaa",fontSize:12,marginTop:12}}>SRT-ийн timecode нь storyboard-ийн хугацааны ноорог; TTS/STT-ийн бодит аудиотой тааруулж нягтлах шаардлагатай.</p>
