@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {issueAssetProof,verifyAssets,imageSignatureValid} from '../lib/campaign-assets.ts';
 import {createLongMoviePlan} from '../lib/long-movie-plan.ts';
 import {getModel,buildProviderInput} from '../lib/models.ts';
-import {createSiteAllowed} from '../lib/create-site-routing.ts';
+import {createSiteAllowed,createSiteTarget} from '../lib/create-site-routing.ts';
 import {storyboardHash,approvedStoryboard} from '../lib/storyboard-policy.ts';
 const secret='x'.repeat(40),data=Buffer.from([255,216,255,0]).toString('base64');
 function asset(){const a={url:'https://cdn.example.com/product.jpg',name:'product.jpg',mimeType:'image/jpeg',kind:'product',data};return {...a,proof:issueAssetProof(a,'owner',secret,100)};}
@@ -21,4 +21,12 @@ test('approved storyboard also binds reference material',()=>{const plan={scenes
 test('standalone Create serves its flow but excludes Video workspace and paid APIs',()=>{
  for(const path of ['/','/login','/register','/create','/api/health','/api/campaigns/uploads'])assert.equal(createSiteAllowed(path),true);
  for(const path of ['/studio','/admin','/mcp','/api/generations','/api/billing/wire/create'])assert.equal(createSiteAllowed(path),false);
+});
+
+test('custom Create host forwards to its own deployment without a loop or URL escape',()=>{
+ const upstream='https://rainy-create-production.up.railway.app';
+ assert.equal(createSiteTarget('video.rainy.studio','/','',false,'https://create.rainy.studio',upstream),null);
+ assert.equal(createSiteTarget('create.rainy.studio','/','',true,'https://create.rainy.studio',upstream),null);
+ const target=createSiteTarget('create.rainy.studio','//evil.example/path','?project=123',false,'https://create.rainy.studio',upstream);assert.equal(target.origin,upstream);assert.equal(target.search,'?project=123');
+ assert.throws(()=>createSiteTarget('create.rainy.studio','/','',false,'https://create.rainy.studio','https://evil.example/'));
 });
