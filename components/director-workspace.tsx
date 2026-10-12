@@ -77,7 +77,7 @@ export function DirectorWorkspace(){
     <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
      <button type="button" onClick={()=>navigator.clipboard.writeText(s.videoPrompt)}>Видео prompt хуулах</button>
      <button type="button" onClick={()=>openVoice(s.voiceover)}>Энэ кадрын дууг үүсгэх</button>
-     <Link href="/studio">Видео загвар сонгох →</Link>
+     <button type="button" onClick={()=>{sessionStorage.setItem("rainy_director_scene_prompt",s.videoPrompt);window.location.assign("/studio");}}>Энэ кадрыг Video Studio-д бэлтгэх →</button>
     </div>
    </article>)}
    <p style={{color:"#999"}}>Сануулга: Видео generation эхлэхээс өмнө RAINY-ийн Studio дээр сонгосон загвар, хугацаа, resolution бүрийн баталгаажсан кредитийг шалгаж зөвшөөрнө.</p>
