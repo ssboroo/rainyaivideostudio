@@ -21,6 +21,7 @@ export default function ExplorePage() {
             <div className="eyebrow"><Compass size={14} /> RAVS Explore</div>
             <h1>Юу хийхээ сонго. <em>Яаж хийхийг RAVS шийднэ.</em></h1>
             <p>Хэрэгсэл, бэлэн тайлбар болон AI загваруудаас өөрийн ажилд тохирохыг сонго.</p>
+            <p><Link href="/apps" className="ghost">Эффект, Genjutsu болон хурдан хэрэгслүүд →</Link></p>
           </div>
 
           <div className="catalogSection">
