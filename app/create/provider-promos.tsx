@@ -13,6 +13,6 @@ function Promo({provider}:{provider:typeof providers[number]}){
   update();preference.addEventListener('change',update);
   return()=>{preference.removeEventListener('change',update);video.pause();};
  },[]);
- return <article className="createPromo"><div className="createPromoHeading"><a href={provider.href} target="_blank" rel="noreferrer"><img src={provider.logo} alt={provider.name}/></a><span>Танилцуулга</span></div><video ref={ref} src={provider.video} muted loop playsInline controls preload="metadata" aria-label={provider.name+' танилцуулга видео'}><a href={provider.href}>{provider.name} танилцуулга үзэх</a></video><div className="createPromoCaption"><strong>{provider.label}</strong><span>Дууг тоглуулагчаас нээнэ</span></div></article>;
+ return <article className="createPromo"><div className="createPromoHeading"><a href={provider.href} target="_blank" rel="noreferrer"><img src={provider.logo} alt={provider.name}/>{provider.name==='Higgsfield'?<b>Higgsfield</b>:null}</a><span>Танилцуулга</span></div><video ref={ref} src={provider.video} muted loop playsInline controls preload="metadata" aria-label={provider.name+' танилцуулга видео'}><a href={provider.href}>{provider.name} танилцуулга үзэх</a></video><div className="createPromoCaption"><strong>{provider.label}</strong><span>Дууг тоглуулагчаас нээнэ</span></div></article>;
 }
 export function ProviderPromos(){return <div className="createPromos" aria-label="AI үйлчилгээний танилцуулга">{providers.map(provider=><Promo key={provider.name} provider={provider}/>)}</div>;}
