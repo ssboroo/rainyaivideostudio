@@ -11,12 +11,14 @@ import {estimateCredits} from './model-credit-estimate.ts';
 import {mediaFrom} from './generation-media.ts';
 import {env,higgsfieldKeyConfigured} from './env.ts';
 import {voiceTool,artifactPath} from './studio-bridge.ts';
+import {campaignProviderCost} from './campaign-cost.ts';
+import {providerCostUsd,pricingPolicy} from './api-pricing.ts';
 import {campaignPrice,canProduce,boundedVoiceQuote} from './campaign-policy.ts';
 import {createPaymentIntent,createCheckoutSession,retrievePaymentIntent,mapIntentStatus} from './wire.ts';
 import {confirmWirePayment,checkoutUrlFromProviderData} from './wire-payment.ts';
 
 type Scene={credits:number;duration:number;input:Record<string,unknown>;state:'pending'|'dispatching'|'submitted'|'done';requestId?:string;statusUrl?:string;url?:string};
-type Payload={assets?:CampaignAsset[];productInfo?:string;brief:string;seconds:number;ratio:string;modelSlug:string;title:string;narration:string;scenes:Scene[];expiresAt:number;voiceCredits:number;assemblyCredits:number;price:ReturnType<typeof campaignPrice>|null;storyboard?:DirectorPlan;storyboardApproval?:string;voiceJob?:string;assemblyJob?:string;artifact?:string;error?:string};
+type Payload={assets?:CampaignAsset[];productInfo?:string;brief:string;seconds:number;ratio:string;modelSlug:string;title:string;narration:string;scenes:Scene[];expiresAt:number;voiceCredits:number;assemblyCredits:number;providerCost?:ReturnType<typeof campaignProviderCost>;price:ReturnType<typeof campaignPrice>|null;storyboard?:DirectorPlan;storyboardApproval?:string;voiceJob?:string;assemblyJob?:string;artifact?:string;error?:string};
 type Row={id:string;userId:string;status:string;payload:Payload;paymentId:string|null;leaseToken:string|null;createdAt:Date};
 const origin=()=>process.env.STUDIO_PUBLIC_ORIGIN||'https://create.rainy.studio';
 function directorConfigured(){
@@ -41,7 +43,7 @@ export async function ownCampaign(userId:string,id:string){
  const rows=await db.$queryRawUnsafe<Row[]>('SELECT * FROM "StudioCampaign" WHERE "id"=$1 AND "userId"=$2',id,userId);
  if(!rows[0])throw new Error('Төсөл олдсонгүй.');return rows[0];
 }
-export function publicCampaign(row:Row){const p=row.payload;return {id:row.id,status:row.status,title:p.title,seconds:p.seconds,ratio:p.ratio,narration:p.narration,assets:(p.assets||[]).filter(a=>a.kind!=='frame').map(({name,url,mimeType,kind})=>({name,url,mimeType,kind})),productInfo:p.productInfo||'',storyboard:p.storyboard?{logline:p.storyboard.logline,styleBible:p.storyboard.styleBible,characters:p.storyboard.characters,scenes:storyboardTimeline(p.storyboard)}:null,storyboardApproved:approvedStoryboard(p.storyboard,p.storyboardApproval,p.assets),price:p.price,expiresAt:p.expiresAt,completedScenes:p.scenes.filter(s=>s.state==='done').length,sceneCount:p.scenes.length,error:p.error,downloadUrl:row.status==='COMPLETED'?`/api/campaigns/${row.id}/download`:null};}
+export function publicCampaign(row:Row){const p=row.payload;return {id:row.id,status:row.status,title:p.title,seconds:p.seconds,ratio:p.ratio,narration:p.narration,assets:(p.assets||[]).filter(a=>a.kind!=='frame').map(({name,url,mimeType,kind})=>({name,url,mimeType,kind})),productInfo:p.productInfo||'',storyboard:p.storyboard?{logline:p.storyboard.logline,styleBible:p.storyboard.styleBible,characters:p.storyboard.characters,scenes:storyboardTimeline(p.storyboard)}:null,storyboardApproved:approvedStoryboard(p.storyboard,p.storyboardApproval,p.assets),price:p.price,providerCost:p.providerCost||null,providerCredits:{video:p.scenes.reduce((n,s)=>n+s.credits,0),voice:p.voiceCredits,assembly:p.assemblyCredits},expiresAt:p.expiresAt,completedScenes:p.scenes.filter(s=>s.state==='done').length,sceneCount:p.scenes.length,error:p.error,downloadUrl:row.status==='COMPLETED'?`/api/campaigns/${row.id}/download`:null};}
 export async function createCampaignStoryboard(userId:string,input:{brief:string;seconds:number;ratio:string;productInfo?:string;assets?:unknown}){
  if(!directorConfigured())throw new Error('AI storyboard найруулагчийн API тохиргоо дутуу байна. Одоогоор storyboard үүсгэх боломжгүй.');
  const assets=verifyAssets(input.assets,userId,env.sessionSecret());
@@ -74,10 +76,12 @@ export async function quoteCampaign(userId:string,id:string,confirmStoryboard:bo
  const voice=await voiceTool('rainy_voice_quote_tts',{voice_id:process.env.STUDIO_VOICE_ID,srt:storyboardNarrationSrt(plan),model_id:process.env.STUDIO_VOICE_MODEL||'eleven_v4_turbo'});
  const voiceCredits=boundedVoiceQuote(voice.credits);
  const assemblyCredits=boundedVoiceQuote(Math.ceil(input.seconds/60)*Number(process.env.STUDIO_ASSEMBLY_CREDITS_PER_MIN));
+ const model=getModel(modelSlug);if(!model)throw new Error('Видео загвар олдсонгүй.');
+ const providerCost=campaignProviderCost(scenes.reduce((n,s)=>n+providerCostUsd(model.modelId,buildProviderInput(model,s.input)),0),{model_id:voice.model_id,billableCharacters:voice.billableCharacters,voice_multiplier:voice.voice_multiplier},Number(process.env.STUDIO_COST_USD_MNT||pricingPolicy.usdMnt));
  const price=campaignPrice(videoCredits,voiceCredits,assemblyCredits,{video:10,voice:Number(process.env.STUDIO_VOICE_CREDIT_MNT)});
  const wallet=await voiceTool('rainy_voice_wallet');
  if(Number(wallet.balance)<voiceCredits+assemblyCredits)throw new Error('Үүсгэх үйлчилгээний нөөц хүрэлцэхгүй. Одоогоор төлбөр авахгүй.');
- const payload:Payload={...row.payload,modelSlug,narration,scenes,expiresAt:Date.now()+15*60_000,voiceCredits,assemblyCredits,price,storyboardApproval:storyboardHash(plan,row.payload.assets)};
+ const payload:Payload={...row.payload,modelSlug,narration,scenes,expiresAt:Date.now()+15*60_000,voiceCredits,assemblyCredits,price,providerCost,storyboardApproval:storyboardHash(plan,row.payload.assets)};
  const changed=await db.$executeRawUnsafe('UPDATE "StudioCampaign" SET "status"=\'QUOTED\',"payload"=$1::jsonb,"updatedAt"=now() WHERE "id"=$2 AND "userId"=$3 AND "status"=\'STORYBOARD\' AND "payload"=$4::jsonb',JSON.stringify(payload),id,userId,JSON.stringify(row.payload));
  if(changed!==1)throw new Error('Storyboard-ийн төлөв өөрчлөгдсөн. Шинээр ачаална уу.');
  return publicCampaign(await ownCampaign(userId,id));
