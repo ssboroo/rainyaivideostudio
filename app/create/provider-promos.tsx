@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useRef} from 'react';
 const providers=[
- {name:'Higgsfield',label:'Кино мэт AI видео',logo:'/brand/higgsfield.svg',href:'https://higgsfield.ai/higgsfield-api',video:'https://static.higgsfield.ai/higgsfield-api/launch-video.mp4'},
+ {name:'Higgsfield',label:'Кино мэт AI видео',logo:'/brand/higgsfield.svg',href:'https://higgsfield.ai/higgsfield-api',video:'/brand/higgsfield-promo.mp4'},
  {name:'ElevenLabs',label:'Сэтгэл хөдлөлтэй AI дуу',logo:'/brand/elevenlabs.svg',href:'https://elevenlabs.io/text-to-speech',video:'https://eleven-public-cdn.elevenlabs.io/payloadcms/Narrative%20_%20Story-optimised.mp4'},
 ];
 function Promo({provider}:{provider:typeof providers[number]}){
@@ -13,6 +13,6 @@ function Promo({provider}:{provider:typeof providers[number]}){
   update();preference.addEventListener('change',update);
   return()=>{preference.removeEventListener('change',update);video.pause();};
  },[]);
- return <article className="createPromo"><div className="createPromoHeading"><a href={provider.href} target="_blank" rel="noreferrer"><img src={provider.logo} alt={provider.name}/>{provider.name==='Higgsfield'?<b>Higgsfield</b>:null}</a><span>Танилцуулга</span></div><video ref={ref} src={provider.video} muted loop playsInline controls preload="metadata" aria-label={provider.name+' танилцуулга видео'}><a href={provider.href}>{provider.name} танилцуулга үзэх</a></video><div className="createPromoCaption"><strong>{provider.label}</strong><span>Дууг тоглуулагчаас нээнэ</span></div></article>;
+ return <article className="createPromo"><div className="createPromoHeading"><a href={provider.href} target="_blank" rel="noreferrer"><img src={provider.logo} alt={provider.name}/>{provider.name==='Higgsfield'?<b>Higgsfield</b>:null}</a><span>Танилцуулга</span></div><video ref={ref} src={provider.video} muted loop playsInline controls preload="metadata" aria-label={provider.name+' танилцуулга видео'}><a href={provider.href}>{provider.name} танилцуулга үзэх</a></video><div className="createPromoCaption"><strong>{provider.label}</strong><span>{provider.name==='Higgsfield'?'Богино танилцуулга':'Дууг тоглуулагчаас нээнэ'}</span></div></article>;
 }
 export function ProviderPromos(){return <div className="createPromos" aria-label="AI үйлчилгээний танилцуулга">{providers.map(provider=><Promo key={provider.name} provider={provider}/>)}</div>;}
