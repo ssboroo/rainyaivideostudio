@@ -22,7 +22,7 @@ const HINTS:[RegExp,string][]=[
 ];
 const CONSTRAINTS:[RegExp,string][]=[
  [/(царай|нүүр|төрх).{0,35}(өөрчл(өхгүй|игдөхгүй|ж болохгүй)|солихгүй|хэвээр|адил|ижил)/i,'Keep the same face identity and facial features as the approved reference; no face swap.'],
- [/(хувцас|өмсгөл|дээл).{0,30}(солихгүй|өөрчлөхгүй|хэвээр|ижил)/i,'Do not alter clothing, outfit colors or garments from the approved reference.'],
+ [/(хувцас|хувцсыг|хувцсыг|хувцасны|өмсгөл|дээл).{0,30}(солихгүй|өөрчлөхгүй|хэвээр|ижил)/i,'Do not alter clothing, outfit colors or garments from the approved reference.'],
  [/(лого|брэндийн тэмдэг|сав баглаа|бүтээгдэхүүн).{0,35}(өөрчлөхгүй|хэвээр|ижил|эвдэхгүй)/i,'Preserve the exact approved product and logo reference; do not invent or redraw labels.'],
  [/текст (оруулахгүй|бичихгүй)|үсэг (гаргахгүй|оруулахгүй)|бичиг (гаргахгүй|оруулахгүй)/i,'No added on-screen text, captions or logos unless the user explicitly changes this instruction.'],
  [/монгол хэлээр|монголоор (ярих|ярь|дуугарах|унших|хэлэх)/i,'Spoken dialogue in Mongolian (mn-MN); preserve the exact approved words and natural Mongolian pronunciation.'],
