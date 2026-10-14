@@ -37,7 +37,7 @@ export function createLocalDirectorPlan(input:LocalDirectorInput):LocalDirectorP
   const scenes=Array.from({length:count},(_,i)=>{
     const shot=i===count-1?SHOTS[11]:SHOTS[Math.min(i,10)];
     const camera=staticCamera?'locked-off static tripod; no camera movement.':shot.camera;
-    const beat=beats[Math.min(i,beats.length-1)]||context;
+    const beat=(beats[Math.min(i,beats.length-1)]||context).slice(0,240);
     return {
       number:i+1,durationSeconds:base+(i<remainder?1:0),shot:shot.name,
       videoPrompt:'Format '+ratio+'. Shot '+(i+1)+'/'+count+': '+camera+". Narrative focus: "+beat+". Client's original creative brief (review before use): "+improved+'. Preserve the real product shape, permitted logos, character identity, clothing, palette, and lighting from approved references across shots. Do not add invented on-screen text, celebrity likeness, or unverified product claims.',
