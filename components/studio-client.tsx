@@ -34,6 +34,7 @@ import { ModelExamples } from "@/components/model-examples";
 import { YouTubeGenjutsuSource } from "@/components/youtube-genjutsu-source";
 import { EconomyModelChoices } from "@/components/economy-model-choices";
 import { buildProviderInput, getModel, models, type ModelKind, type RavsModel } from "@/lib/models";
+import {analyzeMongolianPrompt,enhanceMongolianPrompt} from "@/lib/mongolian-prompt";
 
 type User = {
   id: string;
@@ -91,6 +92,7 @@ export function StudioClient() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState((models.find(m=>m.modelId==="minimax/hailuo-2.3/standard/text-to-video") || models[0]).slug);
   const [prompt, setPrompt] = useState("");
+  const mongolianPromptReview=useMemo(()=>analyzeMongolianPrompt(prompt),[prompt]);
   const [duration, setDuration] = useState(5);
   const [resolution, setResolution] = useState("720p");
   const [aspect, setAspect] = useState("9:16");
@@ -428,6 +430,21 @@ export function StudioClient() {
                   : "Гол дүр → үйлдэл → камер → гэрэл → орчин. Санаагаа тодорхой бич…"}
               />
 
+              {mongolianPromptReview.isMongolian && <div style={{padding:"12px 14px",border:"1px solid #56504a",borderRadius:12,marginTop:10,marginBottom:10,display:"grid",gap:7}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap"}}>
+                  <b>Монгол prompt · утга ба хориглосон өөрчлөлтийн шалгалт</b>
+                  <button type="button" onClick={()=>{
+                    const improved=enhanceMongolianPrompt(prompt);
+                    if(improved===prompt){setMessage("Текст өмнө нь боловсруулагдсан эсвэл урт байна. Эх зааврыг хэвээр хадгаллаа.");return;}
+                    setPrompt(improved);setMessage("Монгол зааврын англи тайлбаруудыг prompt дээр нэмж бэлтгэлээ. Гадаад API дуудсангүй; үүсгэхээс өмнө шалгана уу.");
+                  }} style={{padding:"8px 12px",border:"1px solid #aaa",borderRadius:9}}>
+                    Монгол зааврыг бататгах · 0 API
+                  </button>
+                </div>
+                {!!mongolianPromptReview.hints.length&&<small>Танигдсан дүрслэл: {mongolianPromptReview.hints.join(" · ")}</small>}
+                {!!mongolianPromptReview.constraints.length&&<small>Заавал хадгалах нөхцөл: {mongolianPromptReview.constraints.join(" · ")}</small>}
+                <small>Энэ нь дүрэмд суурилсан бэлтгэл: дурын Монгол өгүүлбэрийг AI шиг бүрэн орчуулж ойлгохгүй. Хавсаргасан reference, эх prompt, provider-ийн preview-г заавал нягтална.</small>
+              </div>}
               <div className="quickPromptRow">
                 {quickPrompts(model).map((item,index) => (
                   <button key={item} onClick={() => setPrompt((current) => current ? current + ", " + item : item)}>

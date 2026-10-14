@@ -1,7 +1,8 @@
+import {draftSubtitleSrt} from "./director-timeline.ts";
 /** RAINY Creative Director. API credentials stay exclusively on the server.
  * All LLM output is untrusted data; there is no autonomous paid video generation.
  */
-export type DirectorProvider="gpt"|"claude"|"gemini";
+export type DirectorProvider="gpt"|"claude"|"gemini"|"local";
 export type DirectorScene={number:number;durationSeconds:number;shot:string;videoPrompt:string;voiceover:string;subtitle:string};
 export type DirectorPlan={title:string;logline:string;styleBible:string;characters:string[];scenes:DirectorScene[];subtitlesSrt:string;provider:DirectorProvider;model:string;estimatedOnly:true};
 export class DirectorError extends Error{status:number;constructor(message:string,status=422){super(message);this.status=status;}}
@@ -22,11 +23,9 @@ function parseText(raw:string):Record<string,unknown>{
  if(!value||typeof value!=="object"||Array.isArray(value))throw new DirectorError("AI төлөвлөгөөний бүтэц буруу байна.",502);
  return value as Record<string,unknown>;
 }
-function stamp(s:number){const h=Math.floor(s/3600),m=Math.floor(s/60)%60,sec=Math.floor(s)%60,ms=Math.round((s%1)*1000);return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")},${String(ms).padStart(3,"0")}`;}
 export function validateDirectorPlan(raw:string,provider:DirectorProvider,model:string,requestedSeconds:number):DirectorPlan{
  const o=parseText(raw),list=o.scenes;
  if(!Array.isArray(list)||!list.length||list.length>12)throw new DirectorError("Storyboard 1–12 кадртай байх ёстой.",502);
- let offset=0;
  const scenes=list.map((v,index)=>{
   if(!v||typeof v!=="object"||Array.isArray(v))throw new DirectorError("Storyboard-ийн кадр буруу байна.",502);
   const item=v as Record<string,unknown>;
@@ -38,11 +37,7 @@ export function validateDirectorPlan(raw:string,provider:DirectorProvider,model:
  });
  const total=scenes.reduce((sum,s)=>sum+s.durationSeconds,0);
  if(total!==requestedSeconds)throw new DirectorError(`AI төлөвлөсөн хугацаа (${total}с) хүссэн хугацаатай (${requestedSeconds}с) таарсангүй.`,502);
- const subtitlesSrt=scenes.reduce((out,scene)=>{
-  const start=offset;offset+=scene.durationSeconds;
-  if(!scene.subtitle)return out;
-  return out+`${scene.number}\n${stamp(start)} --> ${stamp(offset)}\n${scene.subtitle}\n\n`;
- },"");
+ const subtitlesSrt=draftSubtitleSrt(scenes);
  return {title:read(o.title,120)||"RAINY төсөл",logline:read(o.logline,900),styleBible:read(o.styleBible,2200),
  characters:Array.isArray(o.characters)?o.characters.slice(0,10).map(x=>read(x,500)).filter(Boolean):[],scenes,subtitlesSrt,provider,model,estimatedOnly:true};
 }
@@ -50,7 +45,7 @@ export function validateDirectorInput(input:unknown){
  if(!input||typeof input!=="object"||Array.isArray(input))throw new DirectorError("Хүсэлт буруу байна.");
  const p=input as Record<string,unknown>;
  const provider=p.provider,brief=read(p.brief,4000),seconds=Number(p.durationSeconds),ratio=p.aspectRatio;
- if(provider!=="gpt"&&provider!=="claude"&&provider!=="gemini")throw new DirectorError("AI загвар сонгоно уу.");
+ if(provider!=="gpt"&&provider!=="claude"&&provider!=="gemini"&&provider!=="local")throw new DirectorError("AI загвар сонгоно уу.");
  if(brief.length<20||brief.length>4000)throw new DirectorError("Санаа 20–4000 тэмдэгттэй байна.");
  if(!Number.isInteger(seconds)||seconds<6||seconds>120)throw new DirectorError("6–120 секунд сонгоно уу.");
  if(ratio!=="9:16"&&ratio!=="16:9"&&ratio!=="1:1")throw new DirectorError("Формат буруу байна.");
@@ -64,6 +59,7 @@ async function providerJson(url:string,headers:Record<string,string>,body:unknow
 }
 export async function createDirectorPlan(input:ReturnType<typeof validateDirectorInput>,references:{mimeType:string;data:string;label:string}[]=[]):Promise<DirectorPlan>{
  const {provider,brief,seconds,ratio}=input;
+ if(provider==="local")throw new DirectorError("Local storyboard-д API provider ашиглахгүй.",422);
  if(references.length>4||references.some(r=>!['image/jpeg','image/png','image/webp'].includes(r.mimeType)||r.data.length>3_000_000))throw new DirectorError('Жишиг зургийн хэмжээ буруу.');
  const user=`Create exactly ${seconds} seconds of  ${ratio} video. Break into 2–12 scenes,
  each lasting 2–30 whole seconds, durations summing EXACTLY to ${seconds}.

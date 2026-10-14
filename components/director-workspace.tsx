@@ -1,10 +1,11 @@
 "use client";
 import {useEffect,useState} from "react";
+import {draftSubtitleSrt} from "@/lib/director-timeline";
 type Scene={number:number;durationSeconds:number;shot:string;videoPrompt:string;voiceover:string;subtitle:string};
 type Plan={title:string;logline:string;styleBible:string;characters:string[];scenes:Scene[];subtitlesSrt:string;provider:string;model:string;estimatedOnly:true};
 const fields:React.CSSProperties={width:"100%",border:"1px solid #404044",background:"#161619",color:"white",borderRadius:12,padding:14,fontSize:14};
 export function DirectorWorkspace(){
- const [brief,setBrief]=useState("");const [provider,setProvider]=useState<"gpt"|"claude"|"gemini">("gpt");
+ const [brief,setBrief]=useState("");const [provider,setProvider]=useState<"local"|"gpt"|"claude"|"gemini">("local");
  const [durationSeconds,setDuration]=useState(30),[aspectRatio,setAspect]=useState("9:16");
  const [ready,setReady]=useState<{enabled:boolean;providers:Record<string,boolean>;note:string}|null>(null);
  const [busy,setBusy]=useState(false),[error,setError]=useState(""),[plan,setPlan]=useState<Plan|null>(null);
@@ -18,6 +19,15 @@ export function DirectorWorkspace(){
    setPlan(result.plan);
   }catch(e){setError(e instanceof Error?e.message:"Сүлжээний алдаа.");}
   finally{setBusy(false);}
+ }
+ function editScene(number:number,field:"shot"|"videoPrompt"|"voiceover"|"subtitle",value:string){
+  if(!plan)return;
+  const scenes=plan.scenes.map(scene=>scene.number===number?{...scene,[field]:value}:scene);
+  try{
+   const subtitlesSrt=draftSubtitleSrt(scenes);
+   setPlan({...plan,scenes,subtitlesSrt});
+   setError("");
+  }catch(e){setError(e instanceof Error?e.message:"Хадмалын формат буруу.");}
  }
  function voiceLink(text:string){
   const payload=JSON.stringify({v:1,source:"rainy-video",title:plan?.title||"RAINY Video",text:text.slice(0,3000)});
@@ -35,11 +45,11 @@ export function DirectorWorkspace(){
   <div style={{padding:"32px 28px",background:"linear-gradient(130deg,#24231c,#0b0b0d)",border:"1px solid #454023",borderRadius:22,marginBottom:24}}>
    <p style={{color:"#fbd600",letterSpacing:2,fontWeight:700,fontSize:12}}>RAINY · CREATIVE AGENT</p>
    <h1 style={{fontSize:"clamp(30px,5vw,56px)",lineHeight:1.05,margin:"12px 0"}}>Нэг санаанаас зохиол, storyboard, дуу, хадмал.</h1>
-   <p style={{color:"#aaa",lineHeight:1.65,maxWidth:730}}>GPT, Claude эсвэл Gemini-ээр Монгол хэлний бүтээлийн төлөвлөгөө гарга. Видео үүсгэх, ElevenLabs дуу бичих нь тусдаа хэрэглэгчийн зөвшөөрөл, кредиттэй.</p>
+   <p style={{color:"#aaa",lineHeight:1.65,maxWidth:730}}>Үнэгүй template горимоор API ашиглалгүй кадр, хугацаа, prompt бэлтгэ. GPT / Claude / Gemini нь зөвхөн тохируулсан beta үед ажиллана. Видео, дуу үүсгэхэд тусдаа зөвшөөрөл ба кредит хэрэгтэй.</p>
   </div>
   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))",gap:15}}>
-   <label>AI загвар<select style={fields} value={provider} onChange={e=>setProvider(e.target.value as typeof provider)}>
-     <option value="gpt">OpenAI GPT</option><option value="claude">Anthropic Claude</option><option value="gemini">Google Gemini</option>
+   <label>Storyboard бэлтгэх горим<select style={fields} value={provider} onChange={e=>setProvider(e.target.value as typeof provider)}>
+     <option value="local">Үнэгүй template · 0 API дуудлага</option><option value="gpt">OpenAI GPT</option><option value="claude">Anthropic Claude</option><option value="gemini">Google Gemini</option>
    </select></label>
    <label>Видео хугацаа<select style={fields} value={durationSeconds} onChange={e=>setDuration(Number(e.target.value))}>
     {[10,15,20,30,45,60,90,120].map(s=><option key={s} value={s}>{s} секунд</option>)}
@@ -52,7 +62,7 @@ export function DirectorWorkspace(){
    <textarea style={{...fields,minHeight:180,marginTop:7,resize:"vertical"}} maxLength={4000} value={brief} onChange={e=>setBrief(e.target.value)} placeholder="Жишээ: Монгол гэрт гэр бүл өглөөний цайгаа ууж байна. Дулаан, бодит мэдрэмжтэй, 30 секундийн cinematic реклам. Монгол өгүүлэгч, зөөлөн хөгжим, гол дүрийн хувцас болон төрх тогтвортой..."/>
   </label>
   <div style={{display:"flex",alignItems:"center",gap:16,margin:"17px 0 26px",flexWrap:"wrap"}}>
-   <button type="button" className="primary" disabled={busy||!ready?.enabled||!ready.providers[provider]||brief.trim().length<20} onClick={generate}>{busy?"AI төлөвлөгөө гаргаж байна…":"Зохиол, storyboard гаргах →"}</button>
+   <button type="button" className="primary" disabled={busy||!ready?.enabled||!ready.providers[provider]||brief.trim().length<20} onClick={generate}>{busy?"Төлөвлөгөө бэлтгэж байна…":provider==="local"?"Үнэгүй storyboard бэлтгэх →":"AI storyboard гаргах →"}</button>
    <small style={{color:"#aaa"}}>{ready&&!ready.enabled?"AI Director админы туршилтаар хаалттай.":ready&&!ready.providers[provider]?"Энэ AI-ийн API key/model тохируулаагүй.":ready?.note||"Provider холболт шалгаж байна…"}</small>
   </div>
   {error&&<p role="alert" style={{padding:15,border:"1px solid #884444",borderRadius:10,color:"#ffc1c1"}}>{error}</p>}
@@ -63,8 +73,8 @@ export function DirectorWorkspace(){
     <p>{plan.logline}</p><h3>Дүр, брэндийн тогтвортой хэв маяг</h3><p style={{whiteSpace:"pre-wrap",color:"#aaa"}}>{plan.styleBible}</p>
     {plan.characters.map((c,i)=><p key={i}>• {c}</p>)}
     <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:15}}>
-     <button type="button" className="primary" onClick={()=>openVoice(narration)}>Монгол Voice → ElevenLabs</button>
-     <button type="button" onClick={downloadSrt}>SRT хадмал татах</button>
+     <button type="button" className="primary" disabled={!narration.trim()} onClick={()=>openVoice(narration)}>Монгол Voice → ElevenLabs</button>
+     <button type="button" disabled={!plan.subtitlesSrt.trim()} onClick={downloadSrt}>SRT хадмал татах</button>
      <a href="https://voice.rainy.studio/?tool=stt" target="_blank" rel="noopener noreferrer">Scribe STT · Транскрипт</a>
      <a href="https://voice.rainy.studio/?tool=dubbing" target="_blank" rel="noopener noreferrer">Dubbing v2 · Орчуулга</a>
      <a href="https://voice.rainy.studio/movie" target="_blank" rel="noopener noreferrer">Видео + дуу · MP4</a>
@@ -76,9 +86,16 @@ export function DirectorWorkspace(){
     <small style={{color:"#ffd800"}}>SCENE {String(s.number).padStart(2,"0")} · {s.durationSeconds}с · {s.shot}</small>
     <p style={{lineHeight:1.7,whiteSpace:"pre-wrap"}}>{s.videoPrompt}</p>
     <p style={{color:"#aaa"}}>🎙 {s.voiceover||"Дуугүй кадр"}</p><p style={{color:"#aaa"}}>CC {s.subtitle||"Хадмалгүй"}</p>
+    <details style={{margin:"12px 0"}}><summary style={{cursor:"pointer",color:"#ffd800"}}>Prompt, Монгол дуу, хадмал засах · нэмэлт API төлбөргүй</summary>
+     {([["shot","Кадрын тайлбар",200],["videoPrompt","Видео prompt",3000],["voiceover","Монгол дууны текст",900],["subtitle","Хадмалын текст",400]] as const).map(([key,label,max])=>
+      <label key={key} style={{display:"block",marginTop:10}}>{label}
+       <textarea style={{...fields,marginTop:5,minHeight:key==="videoPrompt"?120:64,resize:"vertical"}} maxLength={max}
+        value={s[key]} onChange={e=>editScene(s.number,key,e.target.value)}/>
+      </label>)}
+    </details>
     <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
      <button type="button" onClick={()=>navigator.clipboard.writeText(s.videoPrompt)}>Видео prompt хуулах</button>
-     <button type="button" onClick={()=>openVoice(s.voiceover)}>Энэ кадрын дууг үүсгэх</button>
+     <button type="button" disabled={!s.voiceover.trim()} onClick={()=>openVoice(s.voiceover)}>Энэ кадрын дууг үүсгэх</button>
      <button type="button" onClick={()=>{sessionStorage.setItem("rainy_director_scene_prompt",s.videoPrompt);window.location.assign("/studio");}}>Энэ кадрыг Video Studio-д бэлтгэх →</button>
     </div>
    </article>)}
