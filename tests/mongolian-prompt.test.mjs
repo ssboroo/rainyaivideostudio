@@ -41,3 +41,9 @@ test('deterministic and never invokes a remote API',()=>{
  const input='Улаанбаатар хотод бороо орно, камер хөдөлнө, монгол хүн харуул.';
  assert.equal(enhanceMongolianPrompt(input),enhanceMongolianPrompt(input));
 });
+
+test('enhancement is idempotent so double-clicking never doubles the prompt',()=>{
+ const original='Монгол охин цастай талд инээнэ. Царай өөрчлөхгүй.';
+ const once=enhanceMongolianPrompt(original);
+ assert.equal(enhanceMongolianPrompt(once),once);
+});
