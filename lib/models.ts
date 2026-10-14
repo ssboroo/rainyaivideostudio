@@ -1,4 +1,5 @@
 import { hfModelSpecs, type HfParameter } from "./hf-model-specs.ts";
+import {prepareQwenMongolianPrompt} from "./qwen-mongolian.ts";
 export type ModelKind = "video" | "image" | "workflow";
 
 export type RavsModel = {
@@ -283,7 +284,7 @@ export function buildProviderInput(model:RavsModel,raw:Record<string,unknown>){
  if(Array.isArray(raw.referenceUrls)&&raw.referenceUrls.length+(raw.imageUrl?1:0)>(model.maxReferences||8))throw new Error("Жишиг материалын тоо хэтэрсэн байна.");
  const image=url(raw.imageUrl),video=url(raw.videoUrl),refs=urls(raw.referenceUrls,model.maxReferences||8);
  const candidates:Record<string,unknown>={
-  prompt:typeof raw.prompt==="string"?raw.prompt.trim():undefined,
+  prompt:typeof raw.prompt==="string"?(["qwen-image-3","qwen-image-3-edit"].includes(model.slug)?prepareQwenMongolianPrompt(raw.prompt,model.slug==="qwen-image-3-edit"?"edit":"create"):raw.prompt.trim()):undefined,
   duration:raw.duration===undefined?undefined:Number(raw.duration),resolution:raw.resolution,aspect_ratio:raw.aspectRatio,
   image_url:image,video_url:video,image_urls:[image,...refs].filter(Boolean),video_urls:video?[video]:[],reference_urls:[image,video,...refs].filter(Boolean),
   first_frame_url:image,start_image_url:image,
