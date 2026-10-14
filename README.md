@@ -18,6 +18,14 @@
 - Railway Docker deployment, healthcheck and pre-deploy migrations
 - GitHub Actions security/type/schema/build/Docker verification
 
+## No-extra-API-cost storyboard drafting (October 2026)
+
+The existing `/director` page now defaults to **Үнэгүй template (0 API calls)** for any signed-in user. It uses deterministic local templates with exactly 6–120 seconds of scenes, and makes **no** LLM, ElevenLabs, or Higgsfield calls. The user can edit shot prompts, narration, and subtitles in the existing page, export planned SRT, and hand approved text to the existing Video/Voice workflows.
+
+This is **not** AI-authored dialogue or rendered media: the template deliberately leaves narration and captions empty until the user writes them. The storyboard is a draft; actual speech/video generation uses the existing separate quote/approval/credit path. External GPT/Claude/Gemini Director remains gated behind the existing admin beta flags and configured provider keys. The local template is rate-limited to 30 requests/hour/account, and no new public menu or provider subscription is added.
+
+Tests: `node --test tests/local-director.test.mjs tests/director-timeline.test.mjs` on CI Node 22; full suite: `npm test`.
+
 ## Local development
 
 ```bash
