@@ -1,3 +1,4 @@
+import {enhanceMongolianPrompt} from "./mongolian-prompt.ts";
 /** Free, deterministic shot planning. No provider request or generation charges. */
 export type LocalDirectorInput={
   provider:'local';brief:string;seconds:number;ratio:'9:16'|'16:9'|'1:1';
@@ -28,13 +29,14 @@ export function createLocalDirectorPlan(input:LocalDirectorInput):LocalDirectorP
   if(!(['9:16','16:9','1:1'] as string[]).includes(ratio))throw new Error('Формат буруу байна.');
   const clean=brief.trim().replace(/\s+/g,' ');
   const context=clean.slice(0,1400);
+  const improved=enhanceMongolianPrompt(clean.slice(0,1800));
   const count=Math.min(12,Math.max(2,Math.ceil(seconds/10)));
   const base=Math.floor(seconds/count),remainder=seconds%count;
   const scenes=Array.from({length:count},(_,i)=>{
     const shot=i===count-1?SHOTS[11]:SHOTS[Math.min(i,10)];
     return {
       number:i+1,durationSeconds:base+(i<remainder?1:0),shot:shot.name,
-      videoPrompt:'Format '+ratio+'. Shot '+(i+1)+'/'+count+': '+shot.camera+" Client's original creative brief (review before use): "+context+'. Preserve the real product shape, permitted logos, character identity, clothing, palette, and lighting from approved references across shots. Do not add invented on-screen text, celebrity likeness, or unverified product claims.',
+      videoPrompt:'Format '+ratio+'. Shot '+(i+1)+'/'+count+': '+shot.camera+" Client's original creative brief (review before use): "+improved+'. Preserve the real product shape, permitted logos, character identity, clothing, palette, and lighting from approved references across shots. Do not add invented on-screen text, celebrity likeness, or unverified product claims.',
       voiceover:'',subtitle:'',
     };
   });
