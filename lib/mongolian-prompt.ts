@@ -40,7 +40,7 @@ export function analyzeMongolianPrompt(value:string):MongolianPromptAnalysis{
  */
 export function enhanceMongolianPrompt(value:string,maxLength=2800):string{
  const original=typeof value==='string'?value.trim():'';
- if(!original)return original;
+ if(!original||original.includes('MONGOLIAN PROMPT FIDELITY NOTES'))return original;
  const analysis=analyzeMongolianPrompt(original);
  if(!analysis.isMongolian)return original;
  const checklist=[
