@@ -64,3 +64,9 @@ test('English input is passed unchanged; long Mongolian source never truncated; 
  assert.equal(input.resolution,'2k');
  assert.equal(input.aspect_ratio,'1:1');
 });
+
+test('Ulaanbaatar does not accidentally imply the color red',()=>{
+ const result=getQwenMongolianAdvice('Монгол хүн Улаанбаатарын гудамжинд зогсоно.','create');
+ assert.ok(result.recognized.includes('Улаанбаатар'));
+ assert.ok(!result.recognized.includes('Улаан өнгө'));
+});
