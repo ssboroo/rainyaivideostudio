@@ -1,4 +1,4 @@
-import {draftSubtitleSrt} from "./director-timeline";
+import {draftSubtitleSrt} from "./director-timeline.ts";
 /** RAINY Creative Director. API credentials stay exclusively on the server.
  * All LLM output is untrusted data; there is no autonomous paid video generation.
  */
