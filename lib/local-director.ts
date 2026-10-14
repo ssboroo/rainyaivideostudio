@@ -10,9 +10,9 @@ export type LocalDirectorPlan={
 };
 const SHOTS=[
   {name:'Нээлтийн зураг',camera:'Wide establishing shot; gentle dolly-in; establish the setting and mood.'},
-  {name:'Бүтээгдэхүүний танилцуулга',camera:'Hero medium shot; reveal the subject clearly with a slow camera arc.'},
+  {name:'Гол дүрийн танилцуулга',camera:'Medium shot; reveal only the subject identified by the user with an intentional camera angle.'},
   {name:'Ойрын деталь',camera:'Close-up of real textures and materials; shallow depth of field; precise focus pull.'},
-  {name:'Хэрэглээний нөхцөл',camera:'Natural context shot; show a credible everyday use case without inventing claims.'},
+  {name:'Үйл явдлын орчин',camera:'Natural context shot; stay faithful to the action, place and props explicitly described by the user.'},
   {name:'Хөдөлгөөний кадр',camera:'Tracking shot with deliberate motion; maintain exact subject continuity.'},
   {name:'Сэтгэл хөдлөлийн өнгө',camera:'Intimate medium close-up; authentic ambient light and restrained acting.'},
   {name:'Орчны деталь',camera:'Macro environment insert; grounded physical details and textures.'},
@@ -20,7 +20,7 @@ const SHOTS=[
   {name:'Өөрчлөлтийн мөч',camera:'Match-cut friendly composition; show visual progression without claims.'},
   {name:'Гол санааны тодруулга',camera:'Centered hero composition; consistent silhouette and brand appearance.'},
   {name:'Төгсгөлийн шилжилт',camera:'Slow pullback to a wider environment, preserving spatial continuity.'},
-  {name:'Сүүлийн кадр',camera:'Clean closing frame with empty safe area for a manually verified CTA.'},
+  {name:'Сүүлийн кадр',camera:'Clean final composition grounded in the last story beat; never invent a call to action.'},
 ] as const;
 export function createLocalDirectorPlan(input:LocalDirectorInput):LocalDirectorPlan {
   const {brief,seconds,ratio}=input;
@@ -30,13 +30,17 @@ export function createLocalDirectorPlan(input:LocalDirectorInput):LocalDirectorP
   const clean=brief.trim().replace(/\s+/g,' ');
   const context=clean.slice(0,1400);
   const improved=enhanceMongolianPrompt(clean.slice(0,1800));
+  const beats=clean.split(/(?<=[.!?…])\s+/u).map(x=>x.trim()).filter(Boolean);
+  const staticCamera=/камер.{0,28}(хөдөлгөөнгүй|хөдлөхгүй|суурин|тогтвортой)/i.test(clean);
   const count=Math.min(12,Math.max(2,Math.ceil(seconds/10)));
   const base=Math.floor(seconds/count),remainder=seconds%count;
   const scenes=Array.from({length:count},(_,i)=>{
     const shot=i===count-1?SHOTS[11]:SHOTS[Math.min(i,10)];
+    const camera=staticCamera?'locked-off static tripod; no camera movement.':shot.camera;
+    const beat=beats[Math.min(i,beats.length-1)]||context;
     return {
       number:i+1,durationSeconds:base+(i<remainder?1:0),shot:shot.name,
-      videoPrompt:'Format '+ratio+'. Shot '+(i+1)+'/'+count+': '+shot.camera+" Client's original creative brief (review before use): "+improved+'. Preserve the real product shape, permitted logos, character identity, clothing, palette, and lighting from approved references across shots. Do not add invented on-screen text, celebrity likeness, or unverified product claims.',
+      videoPrompt:'Format '+ratio+'. Shot '+(i+1)+'/'+count+': '+camera+". Narrative focus: "+beat+". Client's original creative brief (review before use): "+improved+'. Preserve the real product shape, permitted logos, character identity, clothing, palette, and lighting from approved references across shots. Do not add invented on-screen text, celebrity likeness, or unverified product claims.',
       voiceover:'',subtitle:'',
     };
   });
