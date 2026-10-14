@@ -39,7 +39,7 @@ const cues:Cue[]=[
  {pattern:/цэнхэр/i,english:'blue as specified',mongolian:'Цэнхэр өнгө',group:'color'},
  {pattern:/хар (дээл|цамц|хувцас|өнгө|дэвсгэр)/i,english:'black as specified',mongolian:'Хар өнгө',group:'color'},
  {pattern:/цагаан/i,english:'white as specified',mongolian:'Цагаан өнгө',group:'color'},
- {pattern:/улаан/i,english:'red as specified',mongolian:'Улаан өнгө',group:'color'},
+ {pattern:/улаан(?!баатар)/i,english:'red as specified',mongolian:'Улаан өнгө',group:'color'},
  {pattern:/шар(гал)?/i,english:'yellow or golden color as specified',mongolian:'Шар өнгө',group:'color'},
  {pattern:/(нүүр|нүүрийг|царай|царайг|төрх|төрхийг).{0,32}(өөрчлөхгүй|өөрчилж болохгүй|хэвээр|солихгүй|хадгал)/i,english:'Preserve the same face identity and facial features; do not alter the approved face.',mongolian:'Нүүр, царайг хадгалах',group:'preserve'},
  {pattern:/(хувцас|хувцсыг|дээл|өнгө).{0,32}(өөрчлөхгүй|солихгүй|хэвээр|хадгал)/i,english:'Do not change the specified clothing or colors.',mongolian:'Хувцас, өнгийг хадгалах',group:'preserve'},
