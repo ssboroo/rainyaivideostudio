@@ -35,3 +35,16 @@ test('local planner uses bounded source context for long briefs',()=>{
   assert.ok(plan.scenes.every(s=>s.videoPrompt.length<3000));
   assert.ok(plan.styleBible.length<1200);
 });
+test('Mongolian multi-sentence story keeps narrative beats in correct scene order',()=>{
+ const story='Эхлээд Монгол залуу гудамжинд алхана. Дараа нь кафе орж кофе авна. Төгсгөлд нь цонхны дэргэд сууна. Царай өөрчлөхгүй.';
+ const p=createLocalDirectorPlan({provider:'local',brief:story,seconds:30,ratio:'9:16'});
+ assert.match(p.scenes[0].videoPrompt,/Narrative focus: Эхлээд Монгол залуу гудамжинд алхана/);
+ assert.match(p.scenes[1].videoPrompt,/Narrative focus: Дараа нь кафе орж кофе авна/);
+ assert.match(p.scenes[2].videoPrompt,/Narrative focus: Төгсгөлд нь цонхны дэргэд сууна/);
+});
+test('static camera overrides cinematic camera motion in every shot',()=>{
+ const story='Монгол залуу кофены өрөөнд инээнэ. Камер хөдөлгөөнгүй, хөдлөхгүй. Хүний царай өөрчлөхгүй.';
+ const p=createLocalDirectorPlan({provider:'local',brief:story,seconds:20,ratio:'16:9'});
+ assert.ok(p.scenes.every(s=>s.videoPrompt.includes('locked-off static tripod')));
+ assert.ok(p.scenes.every(s=>!s.videoPrompt.includes('dolly-in')));
+});
