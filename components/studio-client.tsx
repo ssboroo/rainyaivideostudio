@@ -35,6 +35,7 @@ import { YouTubeGenjutsuSource } from "@/components/youtube-genjutsu-source";
 import { EconomyModelChoices } from "@/components/economy-model-choices";
 import { buildProviderInput, getModel, models, type ModelKind, type RavsModel } from "@/lib/models";
 import {analyzeMongolianPrompt,enhanceMongolianPrompt} from "@/lib/mongolian-prompt";
+import {getQwenMongolianAdvice,prepareQwenMongolianPrompt} from "@/lib/qwen-mongolian";
 
 type User = {
   id: string;
@@ -93,6 +94,10 @@ export function StudioClient() {
   const [selected, setSelected] = useState((models.find(m=>m.modelId==="minimax/hailuo-2.3/standard/text-to-video") || models[0]).slug);
   const [prompt, setPrompt] = useState("");
   const mongolianPromptReview=useMemo(()=>analyzeMongolianPrompt(prompt),[prompt]);
+  const isQwenModel=selected==="qwen-image-3"||selected==="qwen-image-3-edit";
+  const qwenPurpose=selected==="qwen-image-3-edit"?"edit":"create";
+  const qwenAdvice=useMemo(()=>getQwenMongolianAdvice(prompt,qwenPurpose),[prompt,qwenPurpose]);
+  const qwenPrepared=useMemo(()=>prepareQwenMongolianPrompt(prompt,qwenPurpose),[prompt,qwenPurpose]);
   const [duration, setDuration] = useState(5);
   const [resolution, setResolution] = useState("720p");
   const [aspect, setAspect] = useState("9:16");
@@ -425,12 +430,32 @@ export function StudioClient() {
               <textarea
                 value={prompt}
                 onChange={(event) => setPrompt(event.target.value)}
-                placeholder={model.requiresPrompt === false
-                  ? "Тайлбар нэмэх эсвэл шаардлагатай жишиг материалаа оруул…"
-                  : "Гол дүр → үйлдэл → камер → гэрэл → орчин. Санаагаа тодорхой бич…"}
+                placeholder={isQwenModel
+                  ? qwenPurpose==="edit"
+                    ? "Монгол хэлээр: Зөвхөн арын дэвсгэрийг ... болгон өөрчил. Нүүр, хувцас, бүтээгдэхүүний шошгыг хэвээр үлдээ..."
+                    : "Монгол хэлээр: Гол дүр, үйлдэл, орчин, гэрэл, хэв маяг, өнгө, хүсэхгүй зүйлийг тодорхой бич..."
+                  : model.requiresPrompt === false
+                    ? "Тайлбар нэмэх эсвэл шаардлагатай жишиг материалаа оруул…"
+                    : "Гол дүр → үйлдэл → камер → гэрэл → орчин. Санаагаа тодорхой бич…"}
               />
 
-              {mongolianPromptReview.isMongolian && <div style={{padding:"12px 14px",border:"1px solid #56504a",borderRadius:12,marginTop:10,marginBottom:10,display:"grid",gap:7}}>
+              {isQwenModel && <div style={{padding:"12px 14px",border:"1px solid #56504a",borderRadius:12,marginTop:10,marginBottom:10,display:"grid",gap:9}} aria-label="Qwen Монгол prompt зөвлөх">
+                <b>Qwen · Монгол хэлний тайлбарын зөвлөх</b>
+                <small>Монгол хэлээр шууд бичээрэй. RAINY таны эх текстийг хэвээр хадгалж, танигдсан дүрслэл ба хориглосон өөрчлөлтүүдэд англи техникийн заавар нэг хүсэлтээр нэмж дамжуулна. Тусдаа орчуулгын API, нэмэлт генераци шаардахгүй.</small>
+                {qwenAdvice.isMongolian && <>
+                  {!!qwenAdvice.recognized.length&&<small><b>Таньсан утга:</b> {qwenAdvice.recognized.join(" · ")}</small>}
+                  <div style={{display:"grid",gap:4}}><b style={{fontSize:13}}>Үр дүнг сайжруулах Монгол зөвлөгөө</b>
+                    {qwenAdvice.suggestions.map(item=><small key={item}>• {item}</small>)}
+                  </div>
+                  <small>{qwenAdvice.note}</small>
+                  <details><summary style={{cursor:"pointer"}}>Qwen API-д очих prompt-ыг шалгах</summary>
+                    <pre style={{whiteSpace:"pre-wrap",overflowWrap:"anywhere",fontSize:12,marginTop:8,maxHeight:250,overflow:"auto"}}>{qwenPrepared}</pre>
+                  </details>
+                </>}
+                {!qwenAdvice.isMongolian && <small>Монгол тайлбараа бичмэгц систем утга, дутуу мэдээлэл болон Qwen-д дамжих зааврыг харуулна.</small>}
+              </div>}
+
+              {!isQwenModel && mongolianPromptReview.isMongolian && <div style={{padding:"12px 14px",border:"1px solid #56504a",borderRadius:12,marginTop:10,marginBottom:10,display:"grid",gap:7}}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap"}}>
                   <b>Монгол prompt · утга ба хориглосон өөрчлөлтийн шалгалт</b>
                   <button type="button" onClick={()=>{
